@@ -19,17 +19,26 @@ body {
   margin: 0px;
   user-select: none;
   overflow: hidden;
-  cursor: move;
+}
+
+.hidden {
+  display: none;
 }
 
 #gameContainer {
+  background: tan;
 }
 
 #gameGrid {
   position: absolute;
   transform: translate(0px, 0px);
   display: grid;
-  grid-template-columns: repeat(100, 1fr);
+  grid-template-columns: repeat(128, 1fr);
+  background: white;
+}
+
+.gameGridMovable {
+  cursor: move;
 }
 
 #mainUI {
@@ -38,7 +47,10 @@ body {
 }
 
 .cell {
-  outline: 1px solid black;
   width: 32px;
   height: 32px;
+}
+
+.cellSelected {
+  outline: 1px solid black;
 }
