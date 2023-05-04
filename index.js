@@ -49,6 +49,7 @@ class App {
 
 
     this.initGrid(this.UI.gameGrid);
+    this.selectedCellIndex = undefined;
 
     this.fps = 60;
     setInterval(() => this.tick(), 1000/this.fps);
@@ -91,6 +92,12 @@ class App {
         if (cellIndex === 33) {
           this.cells[cellIndex].content = new CellObjectBoss();
         }
+        if (cellIndex === 65) {
+          this.cells[cellIndex].content = new CellObjectBoss();
+        }
+        if (cellIndex === 97) {
+          this.cells[cellIndex].content = new CellObjectBoss();
+        }
 
         if (cellIndex === 2) {
           this.cells[cellIndex].content = new CellObjectEnemy();
@@ -117,9 +124,11 @@ class App {
         for (let dx = -1; dx <= 1; dx++) {
           for (let dy = -1; dy <= 1; dy++) {
             if (dx === 0 && dy === 0) { continue; }
-            if (dx < 0 || dy < 0) { continue; }
-            if (dx >= this.gridWidth || dy >= this.gridHeight) { continue; }
-            const nIndex = (x + dx) + (y + dy) * this.gridWidth;
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || ny < 0) { continue; }
+            if (nx >= this.gridWidth || ny >= this.gridHeight) { continue; }
+            const nIndex = nx + ny * this.gridWidth;
             cell.neighbors.push(this.cells[nIndex]);
           }
         }
@@ -174,6 +183,11 @@ class App {
       cell.content.draw(cell.ui, cell.progress);
     });
 
+    if (this.selectedCellIndex !== undefined) {
+      const selectedCell = this.cells[this.selectedCellIndex];
+      selectedCell.content.displayCellInfo(this.UI.cellInfoDetails);
+    }
+
   }
 
   clearAllSelectedCells() {
@@ -183,6 +197,7 @@ class App {
     }
     this.UI.cellInfoTitle.innerText = '-';
     this.UI.cellInfoDetails.innerText = '-';
+    this.selectedCellIndex = undefined;
   }
 
   clickCell(evt, cellIndex) {
@@ -192,6 +207,7 @@ class App {
       this.clearAllSelectedCells();
       e.classList.add('cellSelected');
       this.displayCellInfo(cell);
+      this.selectedCellIndex = cellIndex;
     }
   }
 
