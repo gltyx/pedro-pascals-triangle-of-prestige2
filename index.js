@@ -16,6 +16,7 @@
     - lawnmower game
     - cheese game - idle
     - adventure capitalist
+  merge using a merge terminal?
 
   the game works from top left to bottom right
   can we have different paths that allow more/less idle?
@@ -26,9 +27,9 @@
   s  active
    \   ---
     \ /  |
-     /b  |
-  i / \t |
-  d |  \h|
+     /p  |
+  i / \z |
+  d |  \l|
   l |   \|
   e |----f
 
@@ -38,7 +39,7 @@ class App {
   constructor() {
     this.UI = {};
 
-    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails';
+    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer';
     uiIDs.split`,`.forEach( id => {
       this.UI[id] = document.getElementById(id);
     });
@@ -115,6 +116,7 @@ class App {
 
         progress.style.width = '0%';
 
+        const worldClass = CHAR_TO_CLASS_MAP[WORLD[y][x]];
 
         this.cells[cellIndex] = {
           ui: cell,
@@ -122,28 +124,9 @@ class App {
           index: cellIndex,
           x,
           y,
-          content: new CellObject()
+          content: new worldClass()
         };
 
-        /*
-        if (cellIndex === 0) {
-          this.cells[cellIndex].content = new CellObjectBoss();
-        }
-
-        if (cellIndex === 33) {
-          this.cells[cellIndex].content = new CellObjectBoss();
-        }
-        if (cellIndex === 65) {
-          this.cells[cellIndex].content = new CellObjectBoss();
-        }
-        if (cellIndex === 97) {
-          this.cells[cellIndex].content = new CellObjectBoss();
-        }
-
-        if (cellIndex === 2) {
-          this.cells[cellIndex].content = new CellObjectEnemy();
-        }
-        */
 
         this.drawCell(this.cells[cellIndex]);
 
@@ -186,7 +169,7 @@ class App {
 
   oncelldrag(evt, cellIndex) {
     //turn off selection to make the drag image better
-    this.clearAllSelectedCells();
+    //this.clearAllSelectedCells();
     this.dragSrcIndex = cellIndex;
     if (!this.cells[cellIndex].content.isDragable()) {
       evt.preventDefault(); //call this if drag is not ok
@@ -207,12 +190,14 @@ class App {
   oncelldrop(evt, cellIndex) {
     evt.preventDefault(); //call this always 
     const srcIndex = this.dragSrcIndex;
-    console.log('dropped', srcIndex, 'on', cellIndex);
     //TODO: fix how dropping works so it's possible to merge
     [this.cells[srcIndex].content,this.cells[cellIndex].content] = [
       this.cells[cellIndex].content, this.cells[srcIndex].content];
     this.drawCell(this.cells[srcIndex]);
     this.drawCell(this.cells[cellIndex]);
+    if (srcIndex === this.selectedCellIndex) {
+      this.clickCell({ctrlKey: false}, cellIndex);
+    }
   }
 
   tick() {
@@ -233,6 +218,9 @@ class App {
   }
 
   clearAllSelectedCells() {
+    if (this.selectedCellIndex !== undefined) {
+      this.cells[this.selectedCellIndex].content.closeGame();
+    }
     const oldSelected = document.getElementsByClassName('cellSelected');
     for (let i = 0; i < oldSelected.length; i++) {
       oldSelected.item(i).classList.remove('cellSelected');
@@ -243,18 +231,19 @@ class App {
   }
 
   clickCell(evt, cellIndex) {
-    if (!evt.ctrlKey) {
+    if (!evt.ctrlKey && cellIndex !== this.selectedCellIndex) {
       const cell = this.cells[cellIndex];
       const e = cell.ui;
       this.clearAllSelectedCells();
       e.classList.add('cellSelected');
       this.displayCellInfo(cell);
       this.selectedCellIndex = cellIndex;
+      cell.content.initGame(this.UI.cellInfoGameContainer);
     }
   }
 
   displayCellInfo(cell) {
-    const type = cell.content.type;
+    const type = cell.content.state.type;
     this.UI.cellInfoTitle.innerText = `(${cell.x},${cell.y}) - ${type}`;
     cell.content.displayCellInfo(this.UI.cellInfoDetails);
   }
