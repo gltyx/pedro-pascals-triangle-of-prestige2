@@ -1,15 +1,33 @@
 "use strict";
 
 /*
-  map is made up of buildings containing equipment/resources/enemies
   need to create your own units to go fight the enemies and collect the resources
-  when disassembling equipment, it is made of a hierarchy of parts, different
-    units are needed for different types of disassembly
+  when disassembling equipment, it is made of a hierarchy of parts
   unit actions are always successful, they just take time
-  units are always on grid
-  instant travel
   may need to have smaller "worlds" instead of just 1 big grid for performance
-  can enemies flood from a source?
+  snails can be the antagonists
+  defeating enemies and disassembling resources shouldn't just be a time wait
+    it should be simple/short versions of other basic incrementals
+    - pedro - idle
+    - prestige 
+    - cookie clicker
+    - crank - active
+    - antimatter dimensions
+    - lawnmower game
+    - cheese game - idle
+    - adventure capitalist
+
+  the game works from top left to bottom right
+  can we have different paths that allow more/less idle?
+
+  s  active
+   \   ---
+    \ /  |
+     /b  |
+  i / \t |
+  d |  \h|
+  l |   \|
+  e |----f
 
 */
 
@@ -47,19 +65,15 @@ class App {
           index: cellIndex,
           x,
           y,
-          content: undefined
+          content: new CellObject('empty')
         };
 
         if (cellIndex === 0) {
-          this.cells[cellIndex].content = {
-            type: 'player'
-          };
+          this.cells[cellIndex].content = new CellObjectBoss();
         }
 
         if (cellIndex === 2) {
-          this.cells[cellIndex].content = {
-            type: 'enemy'
-          };
+          this.cells[cellIndex].content = new CellObjectEnemy();
         }
 
         this.drawCell(this.cells[cellIndex]);
@@ -79,22 +93,15 @@ class App {
   drawCell(cell) {
     const e = cell.ui;
     const content = cell.content;
-
-    if (content === undefined) {
-      e.style.background = spriteNameToStyle('border1');
-    } else {
-      e.style.background = spriteNameToStyle(content.type);
-    }
+    content.draw(e);
   }
 
   oncelldrag(evt, cellIndex) {
     //turn off selection to make the drag image better
     this.clearAllSelectedCells();
     this.dragSrcIndex = cellIndex;
-    const srcType = this.cells[cellIndex]?.content?.type;
-    if (srcType !== 'player') {
+    if (!this.cells[cellIndex].content.isDragable()) {
       evt.preventDefault(); //call this if drag is not ok
-    } else {
     }
     if (evt.ctrlKey) {
       //don't drag if trying to pan
@@ -103,8 +110,7 @@ class App {
   }
 
   oncelldragover(evt, cellIndex) {
-    const dstType = this.cells[cellIndex]?.content?.type;
-    if (dstType === undefined) {
+    if (this.cells[cellIndex].content.isDropable(this.cells[this.dragSrcIndex].content)) {
       evt.preventDefault(); //call this if drop on this cell is ok
       evt.dataTransfer.dropEffect = 'move'; //set the feedback to show item is movable
     }
@@ -114,6 +120,7 @@ class App {
     evt.preventDefault(); //call this always 
     const srcIndex = this.dragSrcIndex;
     console.log('dropped', srcIndex, 'on', cellIndex);
+    //TODO: fix this
     [this.cells[srcIndex].content,this.cells[cellIndex].content] = [
       this.cells[cellIndex].content, this.cells[srcIndex].content];
     this.drawCell(this.cells[srcIndex]);
@@ -144,21 +151,9 @@ class App {
   }
 
   displayCellInfo(cell) {
-    const type = cell?.content?.type ?? 'None';
+    const type = cell.content.type;
     this.UI.cellInfoTitle.innerText = `(${cell.x},${cell.y}) - ${type}`;
-    switch (type) {
-      case 'player': {
-        this.UI.cellInfoDetails.innerText = 'player details';
-        break;
-      }
-      case 'enemy': {
-        this.UI.cellInfoDetails.innerText = 'enemy details';
-        break;
-      }
-      default: {
-        this.UI.cellInfoDetails.innerText = '-';
-      }
-    }
+    cell.content.displayCellInfo(this.UI.cellInfoDetails);
   }
 
   onmousemove(evt) {
