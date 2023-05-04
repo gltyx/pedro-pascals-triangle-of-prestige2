@@ -51,8 +51,48 @@ class App {
     this.initGrid(this.UI.gameGrid);
     this.selectedCellIndex = undefined;
 
+    this.loadFromStorage();
+
     this.fps = 60;
     setInterval(() => this.tick(), 1000/this.fps);
+  }
+
+  loadFromStorage() {
+    const rawState = localStorage.getItem('gridGame');
+
+    this.state = {
+    };
+
+    if (rawState !== null) {
+      const loadedState = JSON.parse(rawState);
+      this.state = {...this.state, ...loadedState};
+    } else {
+      this.state.gameStart = (new Date()).getTime();
+    }
+
+    if (this.state.cellSaves !== undefined) {
+      this.state.cellSaves.forEach( (c, i) => {
+        this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type];
+      });
+    }
+    this.saveToStorage();
+  }
+
+  saveToStorage() {
+    if (this.disableSaves) {return;}
+
+    this.state.cellSaves = this.cells.map( c => {
+      return c.content.getSaveObj();
+    });
+
+    const saveString = JSON.stringify(this.state);
+    localStorage.setItem('gridGame', saveString);
+  }
+
+  reset() {
+    this.disableSaves = true;
+    localStorage.removeItem('gridGame');
+    window.location.reload();
   }
 
   initGrid(container) {
@@ -82,9 +122,10 @@ class App {
           index: cellIndex,
           x,
           y,
-          content: new CellObject('empty')
+          content: new CellObject()
         };
 
+        /*
         if (cellIndex === 0) {
           this.cells[cellIndex].content = new CellObjectBoss();
         }
@@ -102,6 +143,7 @@ class App {
         if (cellIndex === 2) {
           this.cells[cellIndex].content = new CellObjectEnemy();
         }
+        */
 
         this.drawCell(this.cells[cellIndex]);
 

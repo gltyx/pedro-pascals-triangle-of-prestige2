@@ -2,17 +2,16 @@
 
 class CellObject {
   constructor() {
-    this.state = {};
-    this.type = 'None';
+    this.state = {type: 'none'};
     this.bgStyle = spriteNameToStyle('border1');
     this.percent = 0;
   }
 
-  save() {
+  getSaveObj() {
     return this.state;
   }
 
-  load(saveObject) {
+  loadFromObj(saveObject) {
     this.state = saveObject;
   }
 
@@ -46,14 +45,14 @@ class CellObject {
 class CellObjectEnemy extends CellObject {
   constructor() {
     super();
-    this.type = 'Enemy';
+    this.state.type = 'enemy';
     this.bgStyle = spriteNameToStyle('enemy');
     this.percent = 100;
   }
 
   update(curTime, neighbors) {
     this.nPower = neighbors.reduce( (acc, e) => {
-      return acc + (e.content.type === 'boss' ? 1 : 0);
+      return acc + (e.content.state.type === 'boss' ? 1 : 0);
     }, 0);
 
     this.percent -= this.nPower * 0.5;
@@ -72,7 +71,7 @@ class CellObjectEnemy extends CellObject {
 class CellObjectBoss extends CellObject {
   constructor() {
     super();
-    this.type = 'boss';
+    this.state.type = 'boss';
     this.bgStyle = spriteNameToStyle('boss');
   }
 
@@ -84,3 +83,9 @@ class CellObjectBoss extends CellObject {
     return true;
   }
 }
+
+const TYPE_TO_CLASS_MAP = {
+  'boss': CellObjectBoss,
+  'enemy': CellObjectEnemy,
+  'none': CellObject
+};
