@@ -4,6 +4,8 @@ class CellObject {
   constructor() {
     this.state = {};
     this.type = 'None';
+    this.bgStyle = spriteNameToStyle('border1');
+    this.percent = '0%';
   }
 
   save() {
@@ -14,11 +16,16 @@ class CellObject {
     this.state = saveObject;
   }
 
-  update() {
+  update(curTime, neighbors) {
   }
 
-  draw(cell) {
-    cell.style.background = spriteNameToStyle('border1');
+  draw(cell, progress) {
+    if (cell.style.background !== this.bgStyle) {
+      cell.style.background = this.bgStyle;
+    }
+    if (progress.style.width !== this.percent) {
+      progress.style.width = this.percent;
+    }
   }
 
   displayCellInfo(container) {
@@ -39,13 +46,13 @@ class CellObjectEnemy extends CellObject {
   constructor() {
     super();
     this.type = 'Enemy';
+    this.bgStyle = spriteNameToStyle('enemy');
+    this.percent = '25%';
   }
 
-  update() {
-  }
-
-  draw(cell) {
-    cell.style.background = spriteNameToStyle('enemy');
+  update(curTime, neighbors) {
+    const percent = 100 - (curTime % 10) * 100 / 10;
+    this.percent = `${percent}%`;
   }
 
   displayCellInfo(container) {
@@ -61,13 +68,7 @@ class CellObjectBoss extends CellObject {
   constructor() {
     super();
     this.type = 'boss';
-  }
-
-  update() {
-  }
-
-  draw(cell) {
-    cell.style.background = spriteNameToStyle('boss');
+    this.bgStyle = spriteNameToStyle('boss');
   }
 
   displayCellInfo(container) {

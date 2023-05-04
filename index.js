@@ -19,6 +19,9 @@
 
   the game works from top left to bottom right
   can we have different paths that allow more/less idle?
+  different types of units near enemies give upgrades based on the unit type and level
+    tick speed
+    click power
 
   s  active
    \   ---
@@ -47,12 +50,13 @@ class App {
 
     this.initGrid(this.UI.gameGrid);
 
-    setInterval(() => this.tick(), 1000/60);
+    this.fps = 60;
+    setInterval(() => this.tick(), 1000/this.fps);
   }
 
   initGrid(container) {
-    this.gridWidth = 128;
-    this.gridHeight = 128;
+    this.gridWidth = 32;
+    this.gridHeight = 32;
     this.cells = new Array(this.gridWidth * this.gridHeight);
     for (let y = 0; y < this.gridHeight; y++) {
       for (let x = 0; x < this.gridWidth; x++) {
@@ -60,8 +64,20 @@ class App {
         const cell = document.createElement('div');
         cell.draggable = true;
         cell.classList.add('cell');
+        
+        const progressContainer = document.createElement('div');
+        progressContainer.classList.add('progressContainer');
+        const progress = document.createElement('div');
+        progress.classList.add('progress');
+        progressContainer.appendChild(progress);
+        cell.appendChild(progressContainer);
+
+        progress.style.width = '0%';
+
+
         this.cells[cellIndex] = {
           ui: cell,
+          progress,
           index: cellIndex,
           x,
           y,
@@ -69,6 +85,10 @@ class App {
         };
 
         if (cellIndex === 0) {
+          this.cells[cellIndex].content = new CellObjectBoss();
+        }
+
+        if (cellIndex === 33) {
           this.cells[cellIndex].content = new CellObjectBoss();
         }
 
@@ -88,12 +108,29 @@ class App {
 
       }
     }
+
+    for (let y = 0; y < this.gridHeight; y++) {
+      for (let x = 0; x < this.gridWidth; x++) {
+        const cellIndex = x + y * this.gridWidth;
+        const cell = this.cells[cellIndex];
+        cell.neighbors = [];
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            if (dx === 0 && dy === 0) { continue; }
+            if (dx < 0 || dy < 0) { continue; }
+            if (dx >= this.gridWidth || dy >= this.gridHeight) { continue; }
+            const nIndex = (x + dx) + (y + dy) * this.gridWidth;
+            cell.neighbors.push(this.cells[nIndex]);
+          }
+        }
+      }
+    }
   }
 
   drawCell(cell) {
     const e = cell.ui;
     const content = cell.content;
-    content.draw(e);
+    content.draw(e, cell.progress);
   }
 
   oncelldrag(evt, cellIndex) {
@@ -120,7 +157,7 @@ class App {
     evt.preventDefault(); //call this always 
     const srcIndex = this.dragSrcIndex;
     console.log('dropped', srcIndex, 'on', cellIndex);
-    //TODO: fix this
+    //TODO: fix how dropping works so it's possible to merge
     [this.cells[srcIndex].content,this.cells[cellIndex].content] = [
       this.cells[cellIndex].content, this.cells[srcIndex].content];
     this.drawCell(this.cells[srcIndex]);
@@ -128,6 +165,14 @@ class App {
   }
 
   tick() {
+    const curTime = (new Date()).getTime() / 1000;
+    this.cells.forEach( cell => {
+      cell.content.update(curTime, cell.neighbors);
+    });
+
+    this.cells.forEach( cell => {
+      cell.content.draw(cell.ui, cell.progress);
+    });
 
   }
 
