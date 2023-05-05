@@ -14,6 +14,11 @@ class CellObject {
 
   loadFromObj(saveObject) {
     this.state = {...this.state, ...saveObject};
+    Object.keys(this.state).forEach( k => {
+      if (this.state[k] === null) {
+        this.state[k] = Infinity;
+      }
+    });
   }
 
   update(curTime, neighbors) { }
@@ -108,7 +113,7 @@ class CellObjectEnemy extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = 'enemy details ' + Math.ceil(this.percent) + ' power: ' + this.tPower;
+    container.innerText = `Object Details - T Power: ${this.tPower} C Power: ${this.cPower} Remaining: ${Math.ceil(this.percent)}`;
   }
 
   isDropable(srcObject) {
@@ -146,14 +151,13 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
     this.baseStrength = 100;
     this.state.start = Infinity;
     this.state.milk = 0;
-    this.state.cheese = 0;
     this.state.strength = this.baseStrength;
   }
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
-    if (this.tPower !== this.lasttPower) {
+    if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
       if (this.lasttPower > 0) {
         this.state.strength = this.state.strength - (curTime - this.state.start) * this.lasttPower;
       }
@@ -179,10 +183,9 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
   }
 
   displayCellInfo(container) {
-    container.innerText = 'enemy details ' + Math.ceil(this.percent) + ' power: ' + this.tPower;
+    super.displayCellInfo(container);
 
     this.UI.milk.innerText = this.state.milk;
-    this.UI.cheese.innerText = this.state.cheese;
     if (this.state.start !== undefined) {
       this.UI.ferment.innerText = Math.ceil(this.ferment);
     } else {
@@ -196,11 +199,13 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
     this.createElement('span', '', gameContainer, '', ' gallons of milk ');
     this.createElement('a', 'hmilk', gameContainer, '', 'milk the cow').href = '#';
     this.createElement('br', '', gameContainer);
-    this.createElement('span', 'cheese', gameContainer, '', 'CHEESE');
+    this.createElement('span', '', gameContainer, '', '0');
     this.createElement('span', '', gameContainer, '', ' chunks of cottage cheese ');
     this.createElement('span', '', gameContainer, '', '(fermenting ');
     this.createElement('span', 'ferment', gameContainer, '', 'FERMENT');
     this.createElement('span', '', gameContainer, '', ' more seconds)');
+    this.createElement('br', '', gameContainer);
+    this.createElement('span', '', gameContainer, '', 'Note: There is nothing else to get after cottage cheese. There is not much content in this game. Please stop asking.');
 
     this.UI.hmilk.onclick = () => this.clickmilk();
   }

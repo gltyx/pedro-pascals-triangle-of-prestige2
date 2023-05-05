@@ -44,6 +44,7 @@ body {
 #mainUI {
   background: cyan;
   z-index: 100;
+  padding: 0.5em;
 }
 
 .cell {
@@ -63,4 +64,9 @@ body {
 .progress {
   background: green;
   height: 4px;
+}
+
+#cellInfoGameContainer {
+  background: white;
+  padding: 0.5em;
 }

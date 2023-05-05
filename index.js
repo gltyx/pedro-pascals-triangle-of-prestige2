@@ -2,7 +2,6 @@
 
 /*
   need to create your own units to go fight the enemies and collect the resources
-  when disassembling equipment, it is made of a hierarchy of parts
   unit actions are always successful, they just take time
   may need to have smaller "worlds" instead of just 1 big grid for performance
   snails can be the antagonists
@@ -215,6 +214,9 @@ class App {
         this.state.tpoints += cellOutput.tpoints;
         this.state.cpoints += cellOutput.cpoints;
         this.cells[i].content = new CellObject();
+        if (this.selectedCellIndex === i) {
+          this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
+        }
       }
 
     });
