@@ -56,12 +56,15 @@ class App {
 
     this.fps = 60;
     setInterval(() => this.tick(), 1000/this.fps);
+    setInterval(() => this.saveToStorage(), 10000);
   }
 
   loadFromStorage() {
     const rawState = localStorage.getItem('gridGame');
 
     this.state = {
+      tpoints: 0,
+      cpoints: 0
     };
 
     if (rawState !== null) {
@@ -74,6 +77,7 @@ class App {
     if (this.state.cellSaves !== undefined) {
       this.state.cellSaves.forEach( (c, i) => {
         this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type];
+        this.cells[i].content.loadFromObj(c);
       });
     }
     this.saveToStorage();
@@ -81,6 +85,8 @@ class App {
 
   saveToStorage() {
     if (this.disableSaves) {return;}
+
+    console.log('SAVING NOW');
 
     this.state.cellSaves = this.cells.map( c => {
       return c.content.getSaveObj();
@@ -202,8 +208,15 @@ class App {
 
   tick() {
     const curTime = (new Date()).getTime() / 1000;
-    this.cells.forEach( cell => {
-      cell.content.update(curTime, cell.neighbors);
+    this.cells.forEach( (cell, i) => {
+      const cellOutput = cell.content.update(curTime, cell.neighbors);
+
+      if (cellOutput !== undefined) {
+        this.state.tpoints += cellOutput.tpoints;
+        this.state.cpoints += cellOutput.cpoints;
+        this.cells[i].content = new CellObject();
+      }
+
     });
 
     this.cells.forEach( cell => {
@@ -236,9 +249,9 @@ class App {
       const e = cell.ui;
       this.clearAllSelectedCells();
       e.classList.add('cellSelected');
+      cell.content.initGame(this.UI.cellInfoGameContainer);
       this.displayCellInfo(cell);
       this.selectedCellIndex = cellIndex;
-      cell.content.initGame(this.UI.cellInfoGameContainer);
     }
   }
 
@@ -276,8 +289,6 @@ class App {
 
   updateBGPos() {
     this.UI.gameGrid.style.transform = `translate(${Math.round(this.bgPosition.x)}px, ${Math.round(this.bgPosition.y)}px)`;
-    //this.game.style.left = `${this.bgPosition.x}px`;
-    //this.game.style.top = `${this.bgPosition.y}px`;
   }
 }
 
