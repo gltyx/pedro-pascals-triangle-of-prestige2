@@ -16,6 +16,7 @@
     - cheese game - idle
     - adventure capitalist
   merge using a merge terminal?
+  can't move spot/boss to places where they can not reach directly (obey walls)
 
   the game works from top left to bottom right
   can we have different paths that allow more/less idle?
@@ -195,7 +196,6 @@ class App {
   oncelldrop(evt, cellIndex) {
     evt.preventDefault(); //call this always 
     const srcIndex = this.dragSrcIndex;
-    //TODO: fix how dropping works so it's possible to merge
     [this.cells[srcIndex].content,this.cells[cellIndex].content] = [
       this.cells[cellIndex].content, this.cells[srcIndex].content];
     this.drawCell(this.cells[srcIndex]);

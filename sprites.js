@@ -5,7 +5,9 @@ const SPRITES = {
   enemy: [96, 0],
   boss: [128, 0],
   snail: [160, 0],
-  cheese: [192, 0]
+  cheese: [192, 0],
+  spot: [224, 0],
+  wall: [256, 0]
 }
 const SPRITE_URL = 'url("./sprites.png")';
 

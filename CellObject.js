@@ -27,7 +27,8 @@ class CellObject {
     if (cell.style.background !== this.bgStyle) {
       cell.style.background = this.bgStyle;
     }
-    const percentStr = `${Math.ceil(this.percent)}%`;
+    const effectivePercent = this.percent >= 100 ? 0 : this.percent;
+    const percentStr = `${Math.ceil(effectivePercent)}%`;
     if (progress.style.width !== percentStr) {
       progress.style.width = percentStr;
     }
@@ -125,6 +126,24 @@ class CellObjectEnemy extends CellObject {
   }
 }
 
+class CellObjectSpot extends CellObject {
+  constructor() {
+    super();
+    this.state.type = 'spot';
+    this.state.tickPower = 1;
+    this.state.clickPower = 1;
+    this.bgStyle = spriteNameToStyle('spot');
+  }
+
+  displayCellInfo(container) {
+    container.innerText = 'spot details - Power: ' + this.state.tickPower;
+  }
+
+  isDragable() {
+    return true;
+  }
+}
+
 class CellObjectBoss extends CellObject {
   constructor() {
     super();
@@ -141,6 +160,19 @@ class CellObjectBoss extends CellObject {
   isDragable() {
     return true;
   }
+}
+
+class CellObjectEnemyWall extends CellObjectEnemy {
+  constructor() {
+    super();
+    this.state.type = 'wall';
+    this.bgStyle = spriteNameToStyle('wall');
+  }
+
+  displayCellInfo(container) {
+    container.innerText = 'wall details - Power: ';
+  }
+
 }
 
 class CellObjectEnemyCheese extends CellObjectEnemy {
@@ -220,8 +252,10 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
 
 const TYPE_TO_CLASS_MAP = {
   'none': CellObject,
+  'spot': CellObjectSpot,
   'boss': CellObjectBoss,
   'enemy': CellObjectEnemy,
+  'wall': CellObjectEnemyWall,
   'enemyCheese': CellObjectEnemyCheese
 };
 
