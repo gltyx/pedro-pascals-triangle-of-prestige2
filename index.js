@@ -17,6 +17,8 @@
     - adventure capitalist
   merge using a merge terminal?
   can't move spot/boss to places where they can not reach directly (obey walls)
+    only move orthogonally
+  shadow cells that the player can't move to
 
   the game works from top left to bottom right
   can we have different paths that allow more/less idle?
@@ -85,8 +87,6 @@ class App {
 
   saveToStorage() {
     if (this.disableSaves) {return;}
-
-    console.log('SAVING NOW');
 
     this.state.cellSaves = this.cells.map( c => {
       return c.content.getSaveObj();

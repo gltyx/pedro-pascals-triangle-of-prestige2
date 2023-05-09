@@ -92,29 +92,45 @@ class CellObjectEnemy extends CellObject {
     this.state.type = 'enemy';
     this.bgStyle = spriteNameToStyle('snail');
     this.percent = 100;
+    this.state.enemyPower = 1;
     this.tPower = undefined;
     this.cPower = undefined;
+    this.dPower = undefined;
+    this.ePower = undefined;
   }
 
   update(curTime, neighbors) {
     const forceLast = this.tPower === undefined;
     this.lasttPower = this.tPower;
     this.lastcPower = this.cPower;
+    this.lastdPower = this.dPower;
+    this.lastePower = this.ePower;
     this.tPower = 0;
     this.cPower = 0;
+    this.dPower = 0;
+    this.ePower = 0;
+
     for (let i = 0; i < neighbors.length; i++) {
       this.tPower += neighbors[i].content.state.tickPower ?? 0;
       this.cPower += neighbors[i].content.state.clickPower ?? 0;
+      this.dPower += neighbors[i].content.state.disPower ?? 0;
+      this.ePower += neighbors[i].content.state.enemyPower ?? 0;
+    }
+
+    if (this.ePower > 0) {
+      this.dPower = 0;
     }
 
     if (forceLast) {
       this.lasttPower = this.tPower;
       this.lastcPower = this.cPower;
+      this.lastdPower = this.dPower;
+      this.lastePower = this.ePower;
     }
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - T Power: ${this.tPower} C Power: ${this.cPower} Remaining: ${Math.ceil(this.percent)}`;
+    container.innerText = `Object Details - T: ${this.tPower} C: ${this.cPower} D: ${this.dPower} E: ${this.ePower} Rem: ${Math.ceil(this.percent)}`;
   }
 
   isDropable(srcObject) {
@@ -132,6 +148,7 @@ class CellObjectSpot extends CellObject {
     this.state.type = 'spot';
     this.state.tickPower = 1;
     this.state.clickPower = 1;
+    this.state.disPower = 0;
     this.bgStyle = spriteNameToStyle('spot');
   }
 
@@ -148,8 +165,9 @@ class CellObjectBoss extends CellObject {
   constructor() {
     super();
     this.state.type = 'boss';
-    this.state.tickPower = 1;
-    this.state.clickPower = 1;
+    this.state.tickPower = 0;
+    this.state.clickPower = 0;
+    this.state.disPower = 1;
     this.bgStyle = spriteNameToStyle('boss');
   }
 
@@ -166,11 +184,66 @@ class CellObjectEnemyWall extends CellObjectEnemy {
   constructor() {
     super();
     this.state.type = 'wall';
+    this.baseStrength = 100;
+    this.state.enemyPower = 0;
+    this.state.start = Infinity;
+    this.state.strength = this.baseStrength;
     this.bgStyle = spriteNameToStyle('wall');
   }
 
+  update(curTime, neighbors) {
+    if (this.percent < 100) {
+      const a = 1;
+    }
+    super.update(curTime, neighbors);
+
+
+    if (this.dPower !== this.lastdPower && this.state.start < Infinity) {
+      if (this.lastdPower > 0) {
+        this.state.strength = this.state.strength - (curTime - this.state.start) * this.lastdPower;
+      }
+      if (this.state.start !== Infinity) {
+        this.state.start = curTime;
+      }
+    } else {
+      if (this.dPower > 0 && this.state.start === Infinity) {
+        this.state.start = curTime;
+      }
+    }
+
+    this.timeRem = (this.state.strength / this.dPower) - (curTime - this.state.start);
+    if (this.state.start < Infinity) {
+      this.percent = 100 * (this.state.strength - (curTime - this.state.start) * this.dPower) / this.baseStrength;
+    } else {
+      this.percent = 100;
+    }
+
+    if (this.timeRem <= 0) {
+      //game over, return spoils
+      return {
+        tpoints: 1,
+        cpoints: 1
+      };
+    }
+
+
+  }
+
   displayCellInfo(container) {
-    container.innerText = 'wall details - Power: ';
+    super.displayCellInfo(container);
+
+    if (this.state.start !== undefined) {
+      this.UI.timeRem.innerText = Math.ceil(this.timeRem);
+    } else {
+      this.UI.timeRem.innerText = 'never';
+    }
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+    this.createElement('span', '', gameContainer, '', 'Disassembling ');
+    this.createElement('span', 'timeRem', gameContainer, '', '');
+    this.createElement('span', '', gameContainer, '', ' more seconds');
   }
 
 }
