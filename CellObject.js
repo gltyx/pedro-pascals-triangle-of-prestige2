@@ -6,6 +6,7 @@ class CellObject {
     this.bgStyle = spriteNameToStyle('border1');
     this.percent = 0;
     this.UI = {};
+    this.blocking = false;
   }
 
   getSaveObj() {
@@ -89,6 +90,7 @@ class CellObject {
 class CellObjectEnemy extends CellObject {
   constructor() {
     super();
+    this.blocking = true;
     this.state.type = 'enemy';
     this.bgStyle = spriteNameToStyle('snail');
     this.percent = 100;
@@ -111,10 +113,11 @@ class CellObjectEnemy extends CellObject {
     this.ePower = 0;
 
     for (let i = 0; i < neighbors.length; i++) {
-      this.tPower += neighbors[i].content.state.tickPower ?? 0;
-      this.cPower += neighbors[i].content.state.clickPower ?? 0;
-      this.dPower += neighbors[i].content.state.disPower ?? 0;
-      this.ePower += neighbors[i].content.state.enemyPower ?? 0;
+      const ns = neighbors[i].content.state;
+      this.tPower += ns.tickPower ?? 0;
+      this.cPower += ns.clickPower ?? 0;
+      this.dPower += ns.disPower ?? 0;
+      this.ePower += ns.enemyPower ?? 0;
     }
 
     if (this.ePower > 0) {

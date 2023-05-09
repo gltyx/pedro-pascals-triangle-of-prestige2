@@ -19,6 +19,7 @@
   can't move spot/boss to places where they can not reach directly (obey walls)
     only move orthogonally
   shadow cells that the player can't move to
+  display user's points somewhere
 
   the game works from top left to bottom right
   can we have different paths that allow more/less idle?
@@ -29,9 +30,9 @@
   s  active
    \   ---
     \ /  |
-     /p  |
-  i / \z |
-  d |  \l|
+     /m  |
+  i / \i |
+  d |  \x|
   l |   \|
   e |----f
 
@@ -55,6 +56,7 @@ class App {
     this.selectedCellIndex = undefined;
 
     this.loadFromStorage();
+    this.reflowReachableCells();
 
     this.fps = 60;
     setInterval(() => this.tick(), 1000/this.fps);
@@ -165,12 +167,49 @@ class App {
         }
       }
     }
+
   }
 
   drawCell(cell) {
     const e = cell.ui;
     const content = cell.content;
     content.draw(e, cell.progress);
+  }
+
+  reflowReachableCells() {
+    //mark everything unreachable
+    this.cells.forEach( c => {
+      c.ui.classList.add('cellUnreachable');
+      c.reachable = false;
+    });
+
+    //start at 0,0 and mark everything reachable via flood fill
+    const edges = [this.cells[0]];
+    const seen = {};
+    this.cells[0].ui.classList.remove('cellUnreachable');
+    const deltas = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+
+    while (edges.length > 0) {
+      const cell = edges.pop();
+      seen[cell.index] = true;
+
+      //can't find neighbors via cell.neighbors because we only want to check
+      //orthogonal neighbors
+      deltas.forEach( d => {
+        const nx = cell.x + d[0];
+        const ny = cell.y + d[1];
+        if (nx < 0 || ny < 0 || nx >= this.gridWidth || ny >= this.gridHeight) {return;}
+        const ni = nx + ny * this.gridWidth;
+        if (seen[ni]) {return;}
+        const n = this.cells[ni];
+        n.ui.classList.remove('cellUnreachable');
+        if (!n.content.blocking) {
+          edges.push(n);
+          n.reachable = true;
+        }
+      });
+
+    }
   }
 
   oncelldrag(evt, cellIndex) {
@@ -187,7 +226,7 @@ class App {
   }
 
   oncelldragover(evt, cellIndex) {
-    if (this.cells[cellIndex].content.isDropable(this.cells[this.dragSrcIndex].content)) {
+    if (this.cells[cellIndex].reachable && this.cells[cellIndex].content.isDropable(this.cells[this.dragSrcIndex].content)) {
       evt.preventDefault(); //call this if drop on this cell is ok
       evt.dataTransfer.dropEffect = 'move'; //set the feedback to show item is movable
     }
@@ -207,6 +246,7 @@ class App {
 
   tick() {
     const curTime = (new Date()).getTime() / 1000;
+    let reflowNeeded = false;
     this.cells.forEach( (cell, i) => {
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
@@ -217,6 +257,7 @@ class App {
         if (this.selectedCellIndex === i) {
           this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
         }
+        reflowNeeded = true;
       }
 
     });
@@ -228,6 +269,10 @@ class App {
     if (this.selectedCellIndex !== undefined) {
       const selectedCell = this.cells[this.selectedCellIndex];
       selectedCell.content.displayCellInfo(this.UI.cellInfoDetails);
+    }
+
+    if (reflowNeeded) {
+      this.reflowReachableCells();
     }
 
   }
