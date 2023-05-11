@@ -1,7 +1,7 @@
 const WORLD = [
- '.b..e.......x.x.x..x.xxxxxx.....',
+ '.b..$.......x.x.x..x.xxxxxx.....',
  '...xxx...x..x.x.x.........x.x.x.',
- 's....xxxxx..x...x..x.xxxx.x.x.x.',
+ 's.c..xxxxx..x...x..x.xxxx.x.x.x.',
  '.x...x..xx....x.x..x......x.x.x.',
  'cx.......x....x..x.x.xxxx.x.x.x.',
  '.xxx.x..x.....x....x......x.x.x.',
@@ -33,11 +33,17 @@ const WORLD = [
  '.........x....x.............x..e',
 ];
 
+/*
+  approximately 213 empties down each of the 3 paths
+  359 blocks
+*/
+
 const CHAR_TO_CLASS_MAP = {
   '.': CellObject,
   'b': CellObjectBoss,
   's': CellObjectSpot,
   'e': CellObjectEnemy,
   'x': CellObjectEnemyWall,
-  'c': CellObjectEnemyCheese
+  'c': CellObjectEnemyCheese,
+  '$': CellObjectEnemyBusiness
 }

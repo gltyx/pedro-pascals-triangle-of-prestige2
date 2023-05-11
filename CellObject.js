@@ -25,14 +25,10 @@ class CellObject {
   update(curTime, neighbors) { }
 
   draw(cell, progress) {
-    if (cell.style.background !== this.bgStyle) {
-      cell.style.background = this.bgStyle;
-    }
+    this.updateStyle(cell.style, 'background', this.bgStyle);
     const effectivePercent = this.percent >= 100 ? 0 : this.percent;
     const percentStr = `${Math.ceil(effectivePercent)}%`;
-    if (progress.style.width !== percentStr) {
-      progress.style.width = percentStr;
-    }
+    this.updateStyle(progress.style, 'width', percentStr);
   }
 
   displayCellInfo(container) {
@@ -85,6 +81,25 @@ class CellObject {
 
     return e; 
   } 
+
+  updateStyle(styleObj, styleName, styleValue) {
+    if (styleObj[styleName] !== styleValue) {
+      styleObj[styleName] = styleValue;
+    }
+  }
+
+  roundToVal(value, roundType, roundVal) {
+    if (roundType === undefined) {roundType = 'round';}
+    return Math[roundType](value / roundVal) * roundVal;
+  }
+
+  formatCurrency(value, roundType) {
+    if (value < 1000) {
+      return `\$${this.roundToVal(value, roundType, 0.01).toFixed(2)}`;
+    } else {
+      return `\$${value.toExponential(3)}`;
+    }
+  }
 }
 
 class CellObjectEnemy extends CellObject {
@@ -326,12 +341,167 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
   }
 }
 
+class CellObjectEnemyBusiness extends CellObjectEnemy {
+
+  static levels = [
+    {type: 'limeade'},
+    {type: 'spam'},
+    {type: 'dogWash'},
+    {type: 'taco'},
+    {type: 'cupcake'}
+  ];
+
+  constructor() {
+    super();
+    this.state.type = 'enemyBusiness';
+    this.bgStyle = spriteNameToStyle('business');
+    this.baseStrength = 100;
+    this.state.start = Infinity;
+    this.state.strength = this.baseStrength;
+    this.state.cash = 1;
+
+    this.state.level = {};
+    this.levelPercent = {};
+    CellObjectEnemyBusiness.levels.forEach( level => {
+      const type = level.type;
+      const state = {}
+      state.count = 0;
+      state.start = Infinity;
+
+      this.state.level[type] = state;
+      this.levelPercent[type] = 0.5;
+    });
+  }
+
+  update(curTime, neighbors) {
+    super.update(curTime, neighbors);
+
+    CellObjectEnemyBusiness.levels.forEach( level => {
+      const type = level.type;
+      const state = this.state.level[type];
+      const levelDuration = 10;
+      const curDuration = Math.max(0, curTime - state.start);
+
+      if (curDuration >= levelDuration) {
+        state.start = Infinity;
+        //TODO: get correct cash value
+        this.state.cash += 1;
+        this.levelPercent[level.type] = '0%';
+      } else {
+        this.levelPercent[level.type] = `${Math.round(100 * curDuration / levelDuration)}%`;
+      }
+
+    });
+  }
+
+  displayCellInfo(container) {
+    super.displayCellInfo(container);
+
+    this.UI.cash.innerText = this.formatCurrency(this.state.cash, 'floor');
+
+    CellObjectEnemyBusiness.levels.forEach( level => {
+      const type = level.type;
+      const state = this.state.level[type];
+      this.updateStyle(this.UI[`levelProgress${type}`].style, 'width', this.levelPercent[type]);
+      this.UI[`levelCount${type}`].innerText = `${state.count}/10`;
+    });
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+    this.createElement('div', 'cash', gameContainer, '', '$100.00');
+
+    const wrapper = this.createElement('div', '', gameContainer);
+    wrapper.style.display = 'grid';
+    wrapper.style.gridTemplateColumns = '1fr';
+    wrapper.style.gridRowGap = '0.5em';
+    //TODO: allow buying multiples
+    //TODO: hitting a purchase milestone halves the production time
+
+    CellObjectEnemyBusiness.levels.forEach( level => {
+    /*
+      image                progressBar
+      curCount/nextCount   buyButton timer 
+
+      click image to start progress bar
+    */
+      const levelRow = this.createElement('div', '', wrapper);
+      levelRow.style.display = 'grid';
+      levelRow.style.gridTemplateColumns = '5em 1fr';
+      const leftSide = this.createElement('div', '', levelRow);
+      leftSide.style.display = 'grid';
+      leftSide.style.gridTemplateColumns = '1fr';
+      leftSide.style.justifyItems = 'center';
+      leftSide.onclick = () => this.startLevel(level.type);
+
+      const rightSide = this.createElement('div', '', levelRow);
+      rightSide.style.display = 'grid';
+      rightSide.style.gridTemplateColumns = '1fr';
+
+      const levelIcon = this.createElement('div', '', leftSide);
+      levelIcon.style.width = '32px';
+      levelIcon.style.height = '32px';
+      levelIcon.style.background = spriteNameToStyle(`business_${level.type}`);
+
+      const levelCount = this.createElement('div', `levelCount${level.type}`, leftSide, '', `${this.state.level[level.type].count}/10`);
+
+      const progressContainer = this.createElement('div', '', rightSide);
+      progressContainer.style.width = '100%';
+      progressContainer.style.backgroundColor = 'beige';
+      const progress = this.createElement('div', `levelProgress${level.type}`, progressContainer);
+      progress.style.height = '100%';
+      progress.style.backgroundColor = 'green';
+      progress.style.width = '50%';
+      progress.style.transition = 'width 0.2s';
+      const rightBottom = this.createElement('div', '', rightSide);
+      rightBottom.style.display = 'grid';
+      rightBottom.style.gridTemplateColumns = '1fr 5em';
+      const buyContainer = this.createElement('div', '', rightBottom);
+      buyContainer.style.display = 'grid';
+      buyContainer.style.gridTemplateColumns = '3em 1fr';
+      buyContainer.style.backgroundColor = 'orange';
+      buyContainer.style.alignItems = 'center';
+      buyContainer.onclick = () => this.buy(level.type);
+      this.createElement('span', '', buyContainer, '', 'Buy');
+      const cost = this.createElement('span', `levelCost${level.type}`, buyContainer, '', '25e5');
+      cost.style.textAlign = 'right';
+      const progressTimer = this.createElement('div', '', rightBottom, '', '00:00:00');
+      progressTimer.style.textAlign = 'center';
+      progressTimer.style.display = 'grid';
+      progressTimer.style.alignItems = 'center';
+
+    });
+    
+  }
+
+  startLevel(level) {
+    console.log('start', level);
+    if (this.state.level[level].count > 0) {
+      this.state.level[level].start = (new Date()).getTime() / 1000;
+    }
+  }
+
+  buy(level) {
+    console.log('buy', level);
+    const cost = 1;
+    const buyCount = 1;
+    //TODO: determine and apply buyCount (not just cost * buyCount)
+    if (this.state.cash >= cost) {
+      this.state.cash -= cost;
+      this.state.level[level].count += buyCount;
+    }
+  }
+}
+
+
+
 const TYPE_TO_CLASS_MAP = {
   'none': CellObject,
   'spot': CellObjectSpot,
   'boss': CellObjectBoss,
   'enemy': CellObjectEnemy,
   'wall': CellObjectEnemyWall,
-  'enemyCheese': CellObjectEnemyCheese
+  'enemyCheese': CellObjectEnemyCheese,
+  'enemyBusiness': CellObjectEnemyBusiness
 };
 
