@@ -15,9 +15,24 @@ class CellObject {
 
   loadFromObj(saveObject) {
     this.state = {...this.state, ...saveObject};
+    this.fixInfinities(this.state);
+    /*
     Object.keys(this.state).forEach( k => {
       if (this.state[k] === null) {
         this.state[k] = Infinity;
+      }
+    });
+    */
+  }
+
+  fixInfinities(o) {
+    Object.keys(o).forEach( k => {
+      if (typeof o[k] === 'object' && o[k] !== null) {
+        this.fixInfinities(o[k]);
+      } else {
+        if (o[k] === null) {
+          o[k] = Infinity;
+        }
       }
     });
   }
@@ -343,13 +358,17 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
 
 class CellObjectEnemyBusiness extends CellObjectEnemy {
 
-  static levels = [
-    {type: 'limeade'},
-    {type: 'spam'},
-    {type: 'dogWash'},
-    {type: 'taco'},
-    {type: 'cupcake'}
-  ];
+  static levelInfo = {
+    limeade: {priceBase: 4,      priceFactor: 1.07, revenue: 1,     duration: 0.6},
+    spam:    {priceBase: 60,     priceFactor: 1.15, revenue: 60,    duration: 3},
+    dogWash: {priceBase: 720,    priceFactor: 1.14, revenue: 540,   duration: 6},
+    taco:    {priceBase: 8640,   priceFactor: 1.13, revenue: 4320,  duration: 12},
+    cupcake: {priceBase: 103680, priceFactor: 1.12, revenue: 51840, duration: 24}
+  };
+
+  static levelOrder = ['limeade', 'spam', 'dogWash', 'taco', 'cupcake'];
+
+  static durationFactorMilestones = [25, 50, 100, 200, 300, 400];
 
   constructor() {
     super();
@@ -358,52 +377,76 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     this.baseStrength = 100;
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
-    this.state.cash = 1;
+    this.state.cash = 0;
 
     this.state.level = {};
     this.levelPercent = {};
-    CellObjectEnemyBusiness.levels.forEach( level => {
-      const type = level.type;
+    this.timeRemaining = {};
+    CellObjectEnemyBusiness.levelOrder.forEach( level => {
       const state = {}
       state.count = 0;
       state.start = Infinity;
 
-      this.state.level[type] = state;
-      this.levelPercent[type] = 0.5;
+      this.state.level[level] = state;
+      this.levelPercent[level] = '0%';
+      this.timeRemaining[level] = '';
     });
   }
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
-    CellObjectEnemyBusiness.levels.forEach( level => {
-      const type = level.type;
-      const state = this.state.level[type];
-      const levelDuration = 10;
-      const curDuration = Math.max(0, curTime - state.start);
+    CellObjectEnemyBusiness.levelOrder.forEach( level => {
+      const state = this.state.level[level];
+      const levelDuration = CellObjectEnemyBusiness.levelInfo[level].duration * this.getDurationFactor(level) / this.tPower;
+      const curDuration = Math.max(0, curTime - state.start) * this.tPower;
 
       if (curDuration >= levelDuration) {
         state.start = Infinity;
-        //TODO: get correct cash value
-        this.state.cash += 1;
-        this.levelPercent[level.type] = '0%';
+        this.state.cash += CellObjectEnemyBusiness.levelInfo[level].revenue * state.count;
+        this.levelPercent[level] = '0%';
+        this.timeRemaining[level] = levelDuration;
       } else {
-        this.levelPercent[level.type] = `${Math.round(100 * curDuration / levelDuration)}%`;
+        this.levelPercent[level] = `${Math.round(100 * Math.min(1, curDuration / (levelDuration)))}%`;
+        this.timeRemaining[level] = Math.max(0, (levelDuration) - curDuration);
       }
 
     });
+
+    this.percent = 100 * (1 - this.state.cash / this.baseStrength);
+
+    if (this.percent <= 0) {
+      //game over, return spoils
+      return {
+        tpoints: 1,
+        cpoints: 1
+      };
+    }
   }
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
+    const cash = this.state.cash;
 
-    this.UI.cash.innerText = this.formatCurrency(this.state.cash, 'floor');
+    this.UI.cash.innerText = this.formatCurrency(cash, 'floor');
 
-    CellObjectEnemyBusiness.levels.forEach( level => {
-      const type = level.type;
-      const state = this.state.level[type];
-      this.updateStyle(this.UI[`levelProgress${type}`].style, 'width', this.levelPercent[type]);
-      this.UI[`levelCount${type}`].innerText = `${state.count}/10`;
+    //TODO: set buy count properly
+    const buyCount = 1;
+    CellObjectEnemyBusiness.levelOrder.forEach( level => {
+      const state = this.state.level[level];
+      this.updateStyle(this.UI[`levelProgress${level}`].style, 'width', this.levelPercent[level]);
+      this.UI[`levelCount${level}`].innerText = `${state.count}/${this.getNextMilestone(level)}`;
+      if (cash >= this.getPrice(level, buyCount)) {
+        this.UI[`levelBuy${level}`].classList.remove('divButtonDisabled');
+      } else {
+        this.UI[`levelBuy${level}`].classList.add('divButtonDisabled');
+      }
+      if (state.count > 0 && state.start === Infinity && this.tPower > 0) {
+        this.UI[`leftSide${level}`].classList.remove('divButtonDisabled');
+      } else {
+        this.UI[`leftSide${level}`].classList.add('divButtonDisabled');
+      }
+      this.UI[`levelTimer${level}`].innerText = this.formatTimeRemaining(this.timeRemaining[level]);
     });
   }
 
@@ -416,23 +459,27 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     wrapper.style.gridTemplateColumns = '1fr';
     wrapper.style.gridRowGap = '0.5em';
     //TODO: allow buying multiples
-    //TODO: hitting a purchase milestone halves the production time
 
-    CellObjectEnemyBusiness.levels.forEach( level => {
+    const buyCount = 1;
+    CellObjectEnemyBusiness.levelOrder.forEach( level => {
     /*
       image                progressBar
       curCount/nextCount   buyButton timer 
 
       click image to start progress bar
     */
+      //TODO: get the styles into CSS
       const levelRow = this.createElement('div', '', wrapper);
       levelRow.style.display = 'grid';
       levelRow.style.gridTemplateColumns = '5em 1fr';
-      const leftSide = this.createElement('div', '', levelRow);
+      levelRow.style.columnGap = '0.5em';
+      const leftSide = this.createElement('div', `leftSide${level}`, levelRow);
       leftSide.style.display = 'grid';
       leftSide.style.gridTemplateColumns = '1fr';
       leftSide.style.justifyItems = 'center';
-      leftSide.onclick = () => this.startLevel(level.type);
+      leftSide.style.background = 'white';
+      leftSide.onclick = () => this.startLevel(level);
+      leftSide.classList.add('divButton');
 
       const rightSide = this.createElement('div', '', levelRow);
       rightSide.style.display = 'grid';
@@ -441,31 +488,38 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       const levelIcon = this.createElement('div', '', leftSide);
       levelIcon.style.width = '32px';
       levelIcon.style.height = '32px';
-      levelIcon.style.background = spriteNameToStyle(`business_${level.type}`);
+      levelIcon.style.background = spriteNameToStyle(`business_${level}`);
 
-      const levelCount = this.createElement('div', `levelCount${level.type}`, leftSide, '', `${this.state.level[level.type].count}/10`);
+      const levelCount = this.createElement('div', `levelCount${level}`, leftSide, '', `${this.state.level[level].count}/${this.getNextMilestone(level)}`);
 
       const progressContainer = this.createElement('div', '', rightSide);
       progressContainer.style.width = '100%';
       progressContainer.style.backgroundColor = 'beige';
-      const progress = this.createElement('div', `levelProgress${level.type}`, progressContainer);
+      progressContainer.style.position = 'relative';
+      const progress = this.createElement('div', `levelProgress${level}`, progressContainer);
       progress.style.height = '100%';
       progress.style.backgroundColor = 'green';
       progress.style.width = '50%';
       progress.style.transition = 'width 0.2s';
+      const revenue = this.createElement('div', `levelRevenue${level}`, progressContainer, '', `${this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count)}`);
+      revenue.style.position = 'absolute';
+      revenue.style.top = '0px';
+      revenue.style.textAlign = 'center';
+      revenue.style.width = '100%';
       const rightBottom = this.createElement('div', '', rightSide);
       rightBottom.style.display = 'grid';
       rightBottom.style.gridTemplateColumns = '1fr 5em';
-      const buyContainer = this.createElement('div', '', rightBottom);
+      const buyContainer = this.createElement('div', `levelBuy${level}`, rightBottom);
       buyContainer.style.display = 'grid';
       buyContainer.style.gridTemplateColumns = '3em 1fr';
       buyContainer.style.backgroundColor = 'orange';
       buyContainer.style.alignItems = 'center';
-      buyContainer.onclick = () => this.buy(level.type);
+      buyContainer.onclick = () => this.buy(level);
+      buyContainer.classList.add('divButton');
       this.createElement('span', '', buyContainer, '', 'Buy');
-      const cost = this.createElement('span', `levelCost${level.type}`, buyContainer, '', '25e5');
+      const cost = this.createElement('span', `levelCost${level}`, buyContainer, '', this.formatCurrency(this.getPrice(level, buyCount)));
       cost.style.textAlign = 'right';
-      const progressTimer = this.createElement('div', '', rightBottom, '', '00:00:00');
+      const progressTimer = this.createElement('div', `levelTimer${level}`, rightBottom, '', '00:00:00');
       progressTimer.style.textAlign = 'center';
       progressTimer.style.display = 'grid';
       progressTimer.style.alignItems = 'center';
@@ -476,19 +530,71 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
 
   startLevel(level) {
     console.log('start', level);
-    if (this.state.level[level].count > 0) {
-      this.state.level[level].start = (new Date()).getTime() / 1000;
+    const state = this.state.level[level];
+    if (state.count > 0 && state.start == Infinity && this.tPower > 0) {
+      state.start = (new Date()).getTime() / 1000;
     }
+  }
+
+  getPrice(level, count) {
+    const curNum = this.state.level[level].count;
+    if (level === 'limeade' && curNum === 0 && count === 1) {
+      return 0;
+    }
+    const base = CellObjectEnemyBusiness.levelInfo[level].priceBase;
+    const factor = CellObjectEnemyBusiness.levelInfo[level].priceFactor;
+    return this.roundToVal(base * (Math.pow(factor, curNum + count) - Math.pow(factor, curNum)) / (factor - 1), 'round', 0.01);
+  }
+
+  getDurationFactor(level) {
+    const curNum = this.state.level[level].count;
+    let i = 0;
+    for (;i < CellObjectEnemyBusiness.durationFactorMilestones.length; i++) {
+      if (curNum < CellObjectEnemyBusiness.durationFactorMilestones[i]) {
+        break;
+      }
+    }
+    return Math.pow(0.5, i);
+  }
+
+  getNextMilestone(level) {
+    const curNum = this.state.level[level].count;
+    const milestones = CellObjectEnemyBusiness.durationFactorMilestones;
+    let i = 0;
+    for (;i < milestones.length; i++) {
+      if (curNum < milestones[i]) {
+        break;
+      }
+    }
+    if (i < milestones.length) {
+      return milestones[i];
+    } else {
+      return '-';
+    }
+    
+  }
+
+  formatTimeRemaining(time) {
+    if (time === Infinity) { return 'Infinity'; }
+     
+    const h = Math.floor(time / 3600);
+    time = time % 3600;
+    const m = Math.floor(time / 60);
+    time = time % 60;
+    const s = Math.floor(time);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 
   buy(level) {
     console.log('buy', level);
-    const cost = 1;
     const buyCount = 1;
-    //TODO: determine and apply buyCount (not just cost * buyCount)
+    const cost = this.getPrice(level, buyCount);
+    //TODO: determine buyCount
     if (this.state.cash >= cost) {
       this.state.cash -= cost;
       this.state.level[level].count += buyCount;
+      this.UI[`levelCost${level}`].innerText = this.formatCurrency(this.getPrice(level, buyCount));
+      this.UI[`levelRevenue${level}`].innerText = this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count);
     }
   }
 }
