@@ -179,11 +179,18 @@ class CellObjectSpot extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = 'spot details - Power: ' + this.state.tickPower;
+    container.innerText = `spot details - T: ${this.state.tickPower} C: ${this.state.clickPower}`;
   }
 
   isDragable() {
     return true;
+  }
+
+  update(curTime, neighbors) {
+    if (this.merged) {
+      //merged, trigger removal
+      return {};
+    }
   }
 }
 
@@ -198,11 +205,18 @@ class CellObjectBoss extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = 'boss details - Power: ' + this.state.tickPower;
+    container.innerText = 'boss details - D: ' + this.state.disPower;
   }
 
   isDragable() {
     return true;
+  }
+
+  update(curTime, neighbors) {
+    if (this.merged) {
+      //merged, trigger removal
+      return {};
+    }
   }
 }
 
@@ -605,6 +619,114 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
   }
 }
 
+class CellObjectMerge extends CellObject {
+  constructor() {
+    super();
+    this.state.type = 'merge';
+    this.bgStyle = spriteNameToStyle('merge');
+  }
+
+  isDropable(srcObject) {
+    return false;
+  }
+
+  update(curTime, neighbors) {
+    const forceLast = this.tPower === undefined;
+    this.lasttPower = this.tPower;
+    this.lastcPower = this.cPower;
+    this.lastdPower = this.dPower;
+    this.lastePower = this.ePower;
+    this.tPower = 0;
+    this.cPower = 0;
+    this.dPower = 0;
+    this.ePower = 0;
+    this.neighbors = neighbors;
+
+    for (let i = 0; i < neighbors.length; i++) {
+      const ns = neighbors[i].content.state;
+      this.tPower += ns.tickPower ?? 0;
+      this.cPower += ns.clickPower ?? 0;
+      this.dPower += ns.disPower ?? 0;
+      this.ePower += ns.enemyPower ?? 0;
+    }
+
+    //TODO: re-enable this
+    /*
+    if (this.ePower > 0) {
+      this.tPower = 0;
+      this.cPower = 0;
+      this.dPower = 0;
+    }
+    */
+
+    if (forceLast) {
+      this.lasttPower = this.tPower;
+      this.lastcPower = this.cPower;
+      this.lastdPower = this.dPower;
+      this.lastePower = this.ePower;
+    }
+  }
+
+  displayCellInfo(container) {
+    container.innerText = `Object Details - T: ${this.tPower} C: ${this.cPower} D: ${this.dPower} E: ${this.ePower}`;
+
+    this.UI.mergeSpot.innerText = `Merge neighboring SPOT. Result - T: ${this.tPower} C: ${this.cPower}`;
+    this.UI.mergeBoss.innerText = `Merge neighboring BOSS. Result - D: ${this.dPower}`;
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+
+    //spot merge
+    const mergeSpot = this.createElement('div', 'mergeSpot', gameContainer, 'divButton', 'MERGE SPOT');
+    mergeSpot.style.background = 'grey';
+    mergeSpot.onclick = () => this.mergeSpot();
+
+    //boss merge
+    const mergeBoss = this.createElement('div', 'mergeBoss', gameContainer, 'divButton', 'MERGE BOSS');
+    mergeBoss.style.background = 'cyan';
+    mergeBoss.onclick = () => this.mergeBoss();
+  }
+
+  mergeSpot() {
+    const objectList = [];
+    for (let i = 0; i < this.neighbors.length; i++) {
+      const ns = this.neighbors[i].content.state;
+      if (ns.type === 'spot') {
+        objectList.push(this.neighbors[i]);
+      }
+    }
+
+    objectList.forEach( (n, i) => {
+      if (i === 0) {
+        n.content.state.tickPower = this.tPower;
+        n.content.state.clickPower = this.cPower;
+      } else {
+        n.content.merged = true;
+      }
+    });
+  }
+
+  mergeBoss() {
+    const objectList = [];
+    for (let i = 0; i < this.neighbors.length; i++) {
+      const ns = this.neighbors[i].content.state;
+      if (ns.type === 'boss') {
+        objectList.push(this.neighbors[i]);
+      }
+    }
+
+    objectList.forEach( (n, i) => {
+      if (i === 0) {
+        n.content.state.disPower = this.dPower;
+      } else {
+        n.content.merged = true;
+      }
+    });
+  }
+
+}
+
 
 
 const TYPE_TO_CLASS_MAP = {
@@ -614,6 +736,7 @@ const TYPE_TO_CLASS_MAP = {
   'enemy': CellObjectEnemy,
   'wall': CellObjectEnemyWall,
   'enemyCheese': CellObjectEnemyCheese,
-  'enemyBusiness': CellObjectEnemyBusiness
+  'enemyBusiness': CellObjectEnemyBusiness,
+  'merge': CellObjectMerge
 };
 

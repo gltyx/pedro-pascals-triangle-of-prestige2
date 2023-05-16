@@ -7,18 +7,15 @@
   snails can be the antagonists
   defeating enemies and disassembling resources shouldn't just be a time wait
     it should be simple/short versions of other basic incrementals
+    - cheese game - idle
+    - adventure capitalist
     - pedro - idle
     - prestige 
     - cookie clicker
     - crank - active
     - antimatter dimensions
     - lawnmower game
-    - cheese game - idle
-    - adventure capitalist
   merge using a merge terminal?
-  can't move spot/boss to places where they can not reach directly (obey walls)
-    only move orthogonally
-  shadow cells that the player can't move to
   display user's points somewhere
 
   the game works from top left to bottom right
@@ -187,6 +184,7 @@ class App {
     const edges = [this.cells[0]];
     const seen = {};
     this.cells[0].ui.classList.remove('cellUnreachable');
+    this.cells[0].reachable = true;
     const deltas = [[0, -1], [0, 1], [-1, 0], [1, 0]];
 
     while (edges.length > 0) {
@@ -251,8 +249,8 @@ class App {
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
       if (cellOutput !== undefined) {
-        this.state.tpoints += cellOutput.tpoints;
-        this.state.cpoints += cellOutput.cpoints;
+        this.state.tpoints += cellOutput.tpoints ?? 0;
+        this.state.cpoints += cellOutput.cpoints ?? 0;
         this.cells[i].content = new CellObject();
         if (this.selectedCellIndex === i) {
           this.cells[i].content.initGame(this.UI.cellInfoGameContainer);

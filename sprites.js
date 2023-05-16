@@ -13,7 +13,8 @@ const SPRITES = {
   business_spam: [11, 0],
   business_dogWash: [12, 0],
   business_taco: [13, 0],
-  business_cupcake: [14, 0]
+  business_cupcake: [14, 0],
+  merge: [15, 0]
 }
 const SPRITE_URL = 'url("./sprites.png")';
 
