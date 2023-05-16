@@ -16,13 +16,6 @@ class CellObject {
   loadFromObj(saveObject) {
     this.state = {...this.state, ...saveObject};
     this.fixInfinities(this.state);
-    /*
-    Object.keys(this.state).forEach( k => {
-      if (this.state[k] === null) {
-        this.state[k] = Infinity;
-      }
-    });
-    */
   }
 
   fixInfinities(o) {
@@ -225,20 +218,21 @@ class CellObjectEnemyWall extends CellObjectEnemy {
   }
 
   update(curTime, neighbors) {
-    if (this.percent < 100) {
-      const a = 1;
-    }
     super.update(curTime, neighbors);
 
 
+    //if disassembly power has changed and disassembly has already started
     if (this.dPower !== this.lastdPower && this.state.start < Infinity) {
+      //if was already disassembling, save the previous time
       if (this.lastdPower > 0) {
         this.state.strength = this.state.strength - (curTime - this.state.start) * this.lastdPower;
       }
+      //if already started, set the new base time to now
       if (this.state.start !== Infinity) {
         this.state.start = curTime;
       }
     } else {
+      //start disassembly automatically if not already started and dPower > 0
       if (this.dPower > 0 && this.state.start === Infinity) {
         this.state.start = curTime;
       }
@@ -374,7 +368,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     super();
     this.state.type = 'enemyBusiness';
     this.bgStyle = spriteNameToStyle('business');
-    this.baseStrength = 100;
+    this.baseStrength = 10000;
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
     this.state.cash = 0;
@@ -386,6 +380,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       const state = {}
       state.count = 0;
       state.start = Infinity;
+      state.previousProgress = 0;
 
       this.state.level[level] = state;
       this.levelPercent[level] = '0%';
@@ -399,10 +394,20 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     CellObjectEnemyBusiness.levelOrder.forEach( level => {
       const state = this.state.level[level];
       const levelDuration = CellObjectEnemyBusiness.levelInfo[level].duration * this.getDurationFactor(level) / this.tPower;
-      const curDuration = Math.max(0, curTime - state.start) * this.tPower;
+
+      //if tick power has changed and this level has already started
+      if (this.tPower !== this.lasttPower && state.start < Infinity) {
+        //save previous progress
+        state.previousProgress += (curTime - state.start) * this.lasttPower;
+        //change start to now
+        state.start = curTime;
+      }
+
+      const curDuration = Math.max(0, curTime - state.start) * this.tPower + state.previousProgress;
 
       if (curDuration >= levelDuration) {
         state.start = Infinity;
+        state.previousProgress = 0;
         this.state.cash += CellObjectEnemyBusiness.levelInfo[level].revenue * state.count;
         this.levelPercent[level] = '0%';
         this.timeRemaining[level] = levelDuration;
@@ -533,6 +538,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     const state = this.state.level[level];
     if (state.count > 0 && state.start == Infinity && this.tPower > 0) {
       state.start = (new Date()).getTime() / 1000;
+      state.previousProgress = 0;
     }
   }
 
