@@ -1,9 +1,6 @@
 "use strict";
 
 /*
-  need to create your own units to go fight the enemies and collect the resources
-  unit actions are always successful, they just take time
-  may need to have smaller "worlds" instead of just 1 big grid for performance
   snails can be the antagonists
   defeating enemies and disassembling resources shouldn't just be a time wait
     it should be simple/short versions of other basic incrementals
@@ -17,10 +14,11 @@
     - lawnmower game
 
   the game works from top left to bottom right
-  can we have different paths that allow more/less idle?
+  increase difficulty based on manhattan distance from 0,0
   different types of units near enemies give upgrades based on the unit type and level
     tick speed
     click power
+    disassembly power
 
   s  active
    \   ---
@@ -41,7 +39,7 @@ class App {
   constructor() {
     this.UI = {};
 
-    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoCPoints,gameInfoDPoints';
+    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoCPoints,gameInfoDPoints,toastRight';
     uiIDs.split`,`.forEach( id => {
       this.UI[id] = document.getElementById(id);
     });
@@ -66,6 +64,7 @@ class App {
     const rawState = localStorage.getItem('gridGame');
 
     this.state = {
+      log: [],
       tpoints: 0,
       cpoints: 0,
       dpoints: 0
@@ -75,12 +74,15 @@ class App {
       const loadedState = JSON.parse(rawState);
       this.state = {...this.state, ...loadedState};
     } else {
-      this.state.gameStart = (new Date()).getTime();
+      const startTime = new Date();
+      this.state.gameStart = startTime.getTime();
+      this.addToLog(`Game Start @ ${startTime.toString()}`);
     }
 
     if (this.state.cellSaves !== undefined) {
       this.state.cellSaves.forEach( (c, i) => {
-        this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type];
+        const dist = this.cells[i].x + this.cells[i].y;
+        this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type](dist);
         this.cells[i].content.loadFromObj(c);
       });
     }
@@ -134,7 +136,7 @@ class App {
           index: cellIndex,
           x,
           y,
-          content: new worldClass()
+          content: new worldClass(x + y)
         };
 
         this.cells[cellIndex] = newCell;
@@ -279,10 +281,12 @@ class App {
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
       if (cellOutput !== undefined) {
+        this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: ${JSON.stringify(cellOutput)}`);
         this.state.tpoints += cellOutput.tpoints ?? 0;
         this.state.cpoints += cellOutput.cpoints ?? 0;
         this.state.dpoints += cellOutput.dpoints ?? 0;
-        this.cells[i].content = new CellObject();
+        const dist = cell.x + cell.y;
+        this.cells[i].content = new CellObject(dist);
         if (this.selectedCellIndex === i) {
           this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
           this.displayCellInfo(this.cells[i]);
@@ -391,6 +395,33 @@ class App {
 
   updateBGPos() {
     this.UI.gameGrid.style.transform = `translate(${Math.round(this.bgPosition.x)}px, ${Math.round(this.bgPosition.y)}px)`;
+  }
+
+  addToLog(msg) {
+    this.state.log.push({date: (new Date()).getTime(), msg});
+    this.displayToast(msg);
+  }
+
+  displayToast(msg) {
+    const toast = document.createElement('div');
+    toast.classList.add('toastMsg');
+    toast.innerText = msg;
+    this.UI.toastRight.prepend(toast);
+
+    setTimeout(() => this.removeToast(toast), 5000);
+  }
+
+  removeToast(toast, step) {
+    switch (step) {
+      case 1: {
+        toast.remove();
+        break;
+      }
+      default: {
+        toast.style.filter = 'opacity(0)';
+        setTimeout(() => this.removeToast(toast, 1), 1000);
+      }
+    }
   }
 }
 

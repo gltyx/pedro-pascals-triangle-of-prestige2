@@ -1,12 +1,16 @@
 "use strict";
 
+const strengthDistFactor = 1.5;
+const rewardDistFactor = 1.2;
+
 class CellObject {
-  constructor() {
+  constructor(dist) {
     this.state = {type: 'none'};
     this.bgStyle = spriteNameToStyle('border1');
     this.percent = 0;
     this.UI = {};
     this.blocking = false;
+    this.dist = dist;
   }
 
   getSaveObj() {
@@ -111,8 +115,8 @@ class CellObject {
 }
 
 class CellObjectEnemy extends CellObject {
-  constructor() {
-    super();
+  constructor(dist) {
+    super(dist);
     this.blocking = true;
     this.state.type = 'enemy';
     this.bgStyle = spriteNameToStyle('snail');
@@ -156,7 +160,7 @@ class CellObjectEnemy extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - T: ${this.tPower} C: ${this.cPower} D: ${this.dPower} E: ${this.ePower} Rem: ${Math.ceil(this.percent)}`;
+    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.tPower} C: ${this.cPower} D: ${this.dPower} E: ${this.ePower} Rem: ${Math.ceil(this.percent)}`;
   }
 
   isDropable(srcObject) {
@@ -223,10 +227,10 @@ class CellObjectBoss extends CellObject {
 }
 
 class CellObjectEnemyWall extends CellObjectEnemy {
-  constructor() {
-    super();
+  constructor(dist) {
+    super(dist);
     this.state.type = 'wall';
-    this.baseStrength = 100;
+    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.enemyPower = 0;
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
@@ -264,8 +268,8 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     if (this.timeRem <= 0) {
       //game over, return spoils
       return {
-        tpoints: 1,
-        cpoints: 1
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
 
@@ -292,11 +296,11 @@ class CellObjectEnemyWall extends CellObjectEnemy {
 }
 
 class CellObjectEnemyCheese extends CellObjectEnemy {
-  constructor() {
-    super();
+  constructor(dist) {
+    super(dist);
     this.state.type = 'enemyCheese';
     this.bgStyle = spriteNameToStyle('cheese');
-    this.baseStrength = 100;
+    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
     this.state.milk = 0;
     this.state.strength = this.baseStrength;
@@ -324,8 +328,8 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
     if (this.ferment <= 0) {
       //game over, return spoils
       return {
-        tpoints: 1,
-        cpoints: 1
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
   }
@@ -380,11 +384,11 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
 
   static durationFactorMilestones = [25, 50, 100, 200, 300, 400];
 
-  constructor() {
-    super();
+  constructor(dist) {
+    super(dist);
     this.state.type = 'enemyBusiness';
     this.bgStyle = spriteNameToStyle('business');
-    this.baseStrength = 10000;
+    this.baseStrength = this.roundToVal(100 * Math.pow(strengthDistFactor, dist), 'round', 0.01);
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
     this.state.cash = 0;
@@ -439,8 +443,8 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     if (this.percent <= 0) {
       //game over, return spoils
       return {
-        tpoints: 1,
-        cpoints: 1
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
   }
@@ -449,7 +453,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     super.displayCellInfo(container);
     const cash = this.state.cash;
 
-    this.UI.cash.innerText = this.formatCurrency(cash, 'floor');
+    this.UI.cash.innerText = `${this.formatCurrency(cash, 'floor')} / ${this.formatCurrency(this.baseStrength)}` ;
 
     //TODO: set buy count properly
     const buyCount = 1;
@@ -793,6 +797,29 @@ class CellObjectBuild extends CellObject {
 
 }
 
+class CellObjectInfo extends CellObject {
+  constructor() {
+    super();
+    this.state.type = 'info';
+    this.bgStyle = spriteNameToStyle('info');
+  }
+
+  isDropable(srcObject) {
+    return false;
+  }
+
+  displayCellInfo(container) {
+
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+    gameContainer.innerHTML = `
+    PLACE GAME INFORMATION HERE
+    `;
+  }
+}
+
 
 
 const TYPE_TO_CLASS_MAP = {
@@ -804,6 +831,7 @@ const TYPE_TO_CLASS_MAP = {
   'enemyCheese': CellObjectEnemyCheese,
   'enemyBusiness': CellObjectEnemyBusiness,
   'merge': CellObjectMerge,
-  'build': CellObjectBuild
+  'build': CellObjectBuild,
+  'info': CellObjectInfo
 };
 

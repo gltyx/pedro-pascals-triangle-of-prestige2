@@ -91,3 +91,26 @@ body {
 .divButtonDisabled {
   filter: brightness(0.5) !important;
 }
+
+#toastContainer {
+  position: fixed;
+  z-index: 100;
+  padding: 0.5em;
+  box-sizing: border-box;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+}
+
+#toastRight {
+  display: grid;
+  grid-row-gap: 0.5em;
+}
+
+.toastMsg {
+  background: yellow;
+  padding: 0.5em;
+  box-shadow: 6px 6px 5px black;
+  border-radius: 6px;
+  transition: filter 1s;
+}
