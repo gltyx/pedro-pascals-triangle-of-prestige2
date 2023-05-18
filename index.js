@@ -15,8 +15,6 @@
     - crank - active
     - antimatter dimensions
     - lawnmower game
-  merge using a merge terminal?
-  display user's points somewhere
 
   the game works from top left to bottom right
   can we have different paths that allow more/less idle?
@@ -34,12 +32,16 @@
   e |----f
 
 */
+function reset() {
+  localStorage.removeItem('gridGame');
+  window.location.reload();
+}
 
 class App {
   constructor() {
     this.UI = {};
 
-    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer';
+    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoCPoints,gameInfoDPoints';
     uiIDs.split`,`.forEach( id => {
       this.UI[id] = document.getElementById(id);
     });
@@ -65,7 +67,8 @@ class App {
 
     this.state = {
       tpoints: 0,
-      cpoints: 0
+      cpoints: 0,
+      dpoints: 0
     };
 
     if (rawState !== null) {
@@ -104,6 +107,8 @@ class App {
   initGrid(container) {
     this.gridWidth = 32;
     this.gridHeight = 32;
+    this.totalEnemies = 0;
+    this.totalWalls = 0;
     this.cells = new Array(this.gridWidth * this.gridHeight);
     for (let y = 0; y < this.gridHeight; y++) {
       for (let x = 0; x < this.gridWidth; x++) {
@@ -122,8 +127,8 @@ class App {
         progress.style.width = '0%';
 
         const worldClass = CHAR_TO_CLASS_MAP[WORLD[y][x]];
-
-        this.cells[cellIndex] = {
+        
+        const newCell = {
           ui: cell,
           progress,
           index: cellIndex,
@@ -131,6 +136,18 @@ class App {
           y,
           content: new worldClass()
         };
+
+        this.cells[cellIndex] = newCell;
+
+        cell.onmousemove = (evt) => this.cellonmousemove(evt, newCell);
+
+        if (newCell.content.state.type === 'wall') {
+          this.totalWalls++;
+        }
+
+        if (newCell.content.state.type.substring(0, 5) === 'enemy') {
+          this.totalEnemies++;
+        }
 
 
         this.drawCell(this.cells[cellIndex]);
@@ -144,6 +161,9 @@ class App {
 
 
       }
+
+      this.UI.gameInfoTotalWalls.innerText = this.totalWalls;
+      this.UI.gameInfoTotalEnemies.innerText = this.totalEnemies;
     }
 
     for (let y = 0; y < this.gridHeight; y++) {
@@ -178,6 +198,7 @@ class App {
     this.cells.forEach( c => {
       c.ui.classList.add('cellUnreachable');
       c.reachable = false;
+      c.selectable = false;
     });
 
     //start at 0,0 and mark everything reachable via flood fill
@@ -185,6 +206,7 @@ class App {
     const seen = {};
     this.cells[0].ui.classList.remove('cellUnreachable');
     this.cells[0].reachable = true;
+    this.cells[0].selectable = true;
     const deltas = [[0, -1], [0, 1], [-1, 0], [1, 0]];
 
     while (edges.length > 0) {
@@ -201,6 +223,7 @@ class App {
         if (seen[ni]) {return;}
         const n = this.cells[ni];
         n.ui.classList.remove('cellUnreachable');
+        n.selectable = true;
         if (!n.content.blocking) {
           edges.push(n);
           n.reachable = true;
@@ -243,20 +266,39 @@ class App {
   }
 
   tick() {
+    this.update();
+    this.draw();
+  }
+
+  update() {
     const curTime = (new Date()).getTime() / 1000;
     let reflowNeeded = false;
+    this.curWalls = 0;
+    this.curEnemies = 0;
     this.cells.forEach( (cell, i) => {
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
       if (cellOutput !== undefined) {
         this.state.tpoints += cellOutput.tpoints ?? 0;
         this.state.cpoints += cellOutput.cpoints ?? 0;
+        this.state.dpoints += cellOutput.dpoints ?? 0;
         this.cells[i].content = new CellObject();
         if (this.selectedCellIndex === i) {
           this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
+          this.displayCellInfo(this.cells[i]);
         }
         reflowNeeded = true;
       }
+
+      const type = cell.content.state.type;
+      if (type === 'wall') {
+        this.curWalls++;
+      }
+
+      if (type.substring(0, 5) === 'enemy') {
+        this.curEnemies++;
+      }
+
 
     });
 
@@ -272,7 +314,14 @@ class App {
     if (reflowNeeded) {
       this.reflowReachableCells();
     }
+  }
 
+  draw() {
+    this.UI.gameInfoTPoints.innerText = this.state.tpoints;
+    this.UI.gameInfoCPoints.innerText = this.state.cpoints;
+    this.UI.gameInfoDPoints.innerText = this.state.dpoints;
+    this.UI.gameInfoCompletionEnemies.innerText = (this.totalEnemies - this.curEnemies);
+    this.UI.gameInfoCompletionWalls.innerText = (this.totalWalls - this.curWalls);
   }
 
   clearAllSelectedCells() {
@@ -289,7 +338,7 @@ class App {
   }
 
   clickCell(evt, cellIndex) {
-    if (!evt.ctrlKey && cellIndex !== this.selectedCellIndex) {
+    if (!evt.ctrlKey && cellIndex !== this.selectedCellIndex && this.cells[cellIndex].selectable) {
       const cell = this.cells[cellIndex];
       const e = cell.ui;
       this.clearAllSelectedCells();
@@ -316,6 +365,14 @@ class App {
     }
   }
 
+  cellonmousemove(evt, cell) {
+    if (cell.content.cursor === undefined || !cell.selectable) {
+      cell.ui.style.cursor = '';
+    } else {
+      cell.ui.style.cursor = cell.content.cursor;
+    }
+  }
+
   onkeydown(evt) {
     if (evt.ctrlKey) {
       this.UI.gameGrid.classList.add('gameGridMovable');
@@ -338,3 +395,4 @@ class App {
 }
 
 const app = new App();
+

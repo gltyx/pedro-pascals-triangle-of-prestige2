@@ -176,6 +176,7 @@ class CellObjectSpot extends CellObject {
     this.state.clickPower = 1;
     this.state.disPower = 0;
     this.bgStyle = spriteNameToStyle('spot');
+    this.cursor = 'grab';
   }
 
   displayCellInfo(container) {
@@ -202,6 +203,7 @@ class CellObjectBoss extends CellObject {
     this.state.clickPower = 0;
     this.state.disPower = 1;
     this.bgStyle = spriteNameToStyle('boss');
+    this.cursor = 'grab';
   }
 
   displayCellInfo(container) {
@@ -650,14 +652,11 @@ class CellObjectMerge extends CellObject {
       this.ePower += ns.enemyPower ?? 0;
     }
 
-    //TODO: re-enable this
-    /*
     if (this.ePower > 0) {
       this.tPower = 0;
       this.cPower = 0;
       this.dPower = 0;
     }
-    */
 
     if (forceLast) {
       this.lasttPower = this.tPower;
@@ -676,6 +675,7 @@ class CellObjectMerge extends CellObject {
 
   initGame(gameContainer) {
     super.initGame(gameContainer);
+    //TODO: disable buttons when unclickable
 
     //spot merge
     const mergeSpot = this.createElement('div', 'mergeSpot', gameContainer, 'divButton', 'MERGE SPOT');
@@ -727,6 +727,72 @@ class CellObjectMerge extends CellObject {
 
 }
 
+class CellObjectBuild extends CellObject {
+  constructor() {
+    super();
+    this.state.type = 'build';
+    this.bgStyle = spriteNameToStyle('build');
+  }
+
+  isDropable(srcObject) {
+    return false;
+  }
+
+  update(curTime, neighbors) {
+    this.neighbors = neighbors;
+  }
+
+  displayCellInfo(container) {
+
+    //TODO: set up button text properly
+    this.UI.buildSpot.innerText = `Build SPOT`;
+    this.UI.buildBoss.innerText = `Build BOSS`;
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+    //TODO: disable buttons when unclickable
+
+    //build spot
+    const buildSpot = this.createElement('div', 'buildSpot', gameContainer, 'divButton', 'BUILD SPOT');
+    buildSpot.style.background = 'grey';
+    buildSpot.onclick = () => this.buildSpot();
+
+
+    //build boss
+    const buildBoss = this.createElement('div', 'buildBoss', gameContainer, 'divButton', 'BUILD BOSS');
+    buildBoss.style.background = 'cyan';
+    buildBoss.onclick = () => this.buildBoss();
+  }
+
+  getOpenNeighbor() {
+    let neighbor;
+    for (let i = 0; i < this.neighbors.length; i++) {
+      if (this.neighbors[i].content.state.type === 'none') {
+        neighbor = this.neighbors[i];
+        break;
+      }
+    }
+    return neighbor;
+  }
+
+  buildSpot() {
+    const openNeighbor = this.getOpenNeighbor();
+    if (openNeighbor === undefined) {return;}
+
+    openNeighbor.content = new CellObjectSpot();
+    
+  }
+
+  buildBoss() {
+    const openNeighbor = this.getOpenNeighbor();
+    if (openNeighbor === undefined) {return;}
+
+    openNeighbor.content = new CellObjectBoss();
+  }
+
+}
+
 
 
 const TYPE_TO_CLASS_MAP = {
@@ -737,6 +803,7 @@ const TYPE_TO_CLASS_MAP = {
   'wall': CellObjectEnemyWall,
   'enemyCheese': CellObjectEnemyCheese,
   'enemyBusiness': CellObjectEnemyBusiness,
-  'merge': CellObjectMerge
+  'merge': CellObjectMerge,
+  'build': CellObjectBuild
 };
 

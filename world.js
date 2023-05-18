@@ -1,12 +1,12 @@
 const WORLD = [
- 'bb..$.......x.x.x..x.xxxxxx.....',
- 'sm$xxx...x..x.x.x.........x.x.x.',
- 's.c..xxxxx..x...x..x.xxxx.x.x.x.',
+ 'Bb..$.......x.x.x..x.xxxxxx.....',
+ 's.$xxx.m.x..x.x.x.........x.x.x.',
+ '..c..xxxxx..x...x..x.xxxx.x.x.x.',
  '.x...x..xx....x.x..x......x.x.x.',
  'cx.......x....x..x.x.xxxx.x.x.x.',
  '.xxx.x..x.....x....x......x.x.x.',
  '..x...x..xxxxxx...x.xxxxx.x.x.x.',
- '..x............x.x...x......x.x.',
+ '.mx............x.x...x......x.x.',
  '..xx.x...xxxx...x..x..xxxxxx....',
  '.xxxx.x.x....x...x...x........xx',
  '......x.x.xx.x....x.x........x..',
@@ -46,5 +46,6 @@ const CHAR_TO_CLASS_MAP = {
   'x': CellObjectEnemyWall,
   'c': CellObjectEnemyCheese,
   '$': CellObjectEnemyBusiness,
-  'm': CellObjectMerge
+  'm': CellObjectMerge,
+  'B': CellObjectBuild
 }
