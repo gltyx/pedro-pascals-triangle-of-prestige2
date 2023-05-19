@@ -20,6 +20,8 @@
     click power
     disassembly power
 
+  add some license info as necessary
+
   s  active
    \   ---
     \ /  |

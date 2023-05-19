@@ -816,6 +816,161 @@ class CellObjectInfo extends CellObject {
   }
 }
 
+class CellObjectEnemyPrestige extends CellObjectEnemy {
+
+  static tierInfo = [
+    {numeral: 'I', name: 'Nanoprestige'},
+    {numeral: 'II', name: 'Microprestige'},
+    {numeral: 'III', name: 'Miniprestige'},
+    {numeral: 'IV', name: 'Small Prestige'},
+    {numeral: 'V', name: 'Partial Prestige'},
+    {numeral: 'VI', name: 'Full Prestige'},
+    {numeral: 'VII', name: 'Multiprestige'},
+    {numeral: 'VIII', name: 'Hyperprestige'},
+    {numeral: 'IX', name: 'Ultraprestige'},
+    {numeral: 'X', name: 'Final Prestige'}
+  ];
+
+  constructor(cell, dist) {
+    super(cell, dist, 'prestige');
+    this.state.type = 'enemyPrestige'
+    this.baseStrength = Math.round(100 * Math.pow(strengthDistFactor, dist));
+    this.state.start = (new Date()).getTime() / 1000;
+    this.state.lastPrestigeTime = Infinity;
+    this.state.savedCoins = 0;
+    this.state.prestiges = (new Array(10)).fill(0);
+  }
+
+  update(curTime, neighbors) {
+    super.update(curTime, neighbors);
+
+    const gain = this.getGain();
+    const rate = this.tPower * gain;
+
+    //if tick power has changed and this level has already started
+    if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
+      //save previous progress
+      this.state.savedCoins = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedCoins;
+
+      //change start to now
+      this.state.start = curTime;
+    }
+    
+    if (rate > 0) {
+      this.coins = Math.floor((curTime - this.state.start)) * rate + this.state.savedCoins;
+    } else {
+      this.coins = this.state.savedCoins;
+    }
+
+    this.percent = 100 * (1 - this.coins / this.baseStrength);
+
+    if (this.percent <= 0) {
+      //game over
+      return {
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
+      };
+    }
+  }
+
+  displayCellInfo(container) {
+    super.displayCellInfo(container);
+
+    this.UI.coins.innerText = Math.floor(this.coins);
+    this.UI.gain.innerText = this.getGain() * this.tPower;
+
+    this.state.prestiges.forEach( (p, i) => {
+      this.UI[`tier${i}btn`].disabled = !this.canActivatePrestige(i);
+    });
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+
+    const headerDiv = this.createElement('div', '', gameContainer, 'prestigeCenter');
+    const header = this.createElement('h1', '', headerDiv);
+    this.createElement('span', 'coins', header, '', '4353454');
+    this.createElement('span', '', header, '', ' / ');
+    this.createElement('span', 'coinReq', header, '', this.baseStrength);
+    this.createElement('span', '', header, '', ' coins');
+
+    const rateHeader = this.createElement('h3', '', headerDiv);
+    this.createElement('span', 'gain', rateHeader, '', '123');
+    this.createElement('span', '', rateHeader, '', ' coins/second');
+
+    const table = this.createElement('table', '', gameContainer, 'prestigeCenter,prestigeTable');
+
+    const headerRow = this.createElement('tr', '', table);
+    'Tier,Name,Requirement,Amount,Effect'.split`,`.forEach( label => {
+      this.createElement('th', '', headerRow, '', label);
+    });
+    this.createElement('th', '', headerRow, '', '');
+
+    CellObjectEnemyPrestige.tierInfo.forEach( (t, i) => {
+      const tierRow = this.createElement('tr', '', table);
+      this.createElement('td', '', tierRow, '', t.numeral);
+      this.createElement('td', '', tierRow, '', t.name);
+      const reqWrap = this.createElement('td', '', tierRow, '', '');
+      this.createElement('span', `tier${i}cost`, reqWrap, '', '?');
+      if (i === 0) {
+        this.createElement('span', '', reqWrap, '', ' coins');
+      } else {
+        this.createElement('span', '', reqWrap, '', ` Tier ${CellObjectEnemyPrestige.tierInfo[i - 1].numeral}`);
+      }
+
+      this.createElement('td', `tier${i}a`, tierRow, '', 'AMT');
+      this.createElement('td', `tier${i}mul`, tierRow, '', 'effect');
+      const buttontd = this.createElement('td', '', tierRow);
+      const button = this.createElement('button', `tier${i}btn`, buttontd, '', 'Activate');
+      button.onclick = () => this.activatePrestige(i);
+    });
+
+    this.updateTable();
+  }
+
+  getGain() {
+    return this.state.prestiges.reduce( (acc, p) => {
+      return acc * (1 + p);
+    }, 1);
+  }
+  
+  getRequirement(id) {
+    if (id === 0) {
+      return Math.floor(Math.pow(1.5, this.state.prestiges[0]) * 10);
+    } else {
+      return Math.pow(id + 1, this.state.prestiges[id] + 1);
+    }
+  }
+
+  canActivatePrestige(id) {
+    if (id === 0) {
+      return this.coins >= this.getRequirement(0);
+    } else {
+      return this.state.prestiges[id - 1] >= this.getRequirement(id);
+    }
+  }
+
+  activatePrestige(id) {
+    if (this.canActivatePrestige(id)) {
+      this.state.savedCoins = 0;
+      this.state.start = (new Date()).getTime() / 1000;
+      for (let i = 0; i < id; i++) {
+        this.state.prestiges[i] = 0;
+      }
+      this.state.prestiges[id]++;
+      this.updateTable();
+    };
+  }
+
+  updateTable() {
+    this.state.prestiges.forEach( (p, i) => {
+      this.UI[`tier${i}cost`].innerText = this.getRequirement(i);
+      this.UI[`tier${i}a`].innerText = p;
+      this.UI[`tier${i}mul`].innerText = `x${p + 1}`;
+    });
+  }
+}
+
 
 
 const TYPE_TO_CLASS_MAP = {
@@ -828,6 +983,7 @@ const TYPE_TO_CLASS_MAP = {
   'enemyBusiness': CellObjectEnemyBusiness,
   'merge': CellObjectMerge,
   'build': CellObjectBuild,
-  'info': CellObjectInfo
+  'info': CellObjectInfo,
+  'enemyPrestige': CellObjectEnemyPrestige
 };
 

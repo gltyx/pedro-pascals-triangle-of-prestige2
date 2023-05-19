@@ -16,7 +16,8 @@ const SPRITES = {
   business_cupcake: [14, 0],
   merge: [15, 0],
   build: [16, 0],
-  info: [17, 0]
+  info: [17, 0],
+  prestige: [18, 0]
 }
 const SPRITE_PATH = './sprites.png';
 const SPRITE_URL = `url("${SPRITE_PATH}")`;

@@ -3,7 +3,7 @@ const WORLD = [
  'sB$xxx.m.x..x.x.x.........x.x.x.',
  '..c..xxxxx..x...x..x.xxxx.x.x.x.',
  '.x...x..xx....x.x..x......x.x.x.',
- 'cx.......x....x..x.x.xxxx.x.x.x.',
+ 'px.......x....x..x.x.xxxx.x.x.x.',
  '.xxx.x..x.....x....x......x.x.x.',
  '..x...x..xxxxxx...x.xxxxx.x.x.x.',
  '.mx............x.x...x......x.x.',
@@ -48,5 +48,6 @@ const CHAR_TO_CLASS_MAP = {
   '$': CellObjectEnemyBusiness,
   'm': CellObjectMerge,
   'B': CellObjectBuild,
-  '?': CellObjectInfo
+  '?': CellObjectInfo,
+  'p': CellObjectEnemyPrestige
 }
