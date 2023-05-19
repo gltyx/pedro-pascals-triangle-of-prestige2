@@ -798,6 +798,7 @@ class CellObjectInfo extends CellObject {
   constructor(cell, dist) {
     super(cell, dist, 'info');
     this.state.type = 'info';
+    this.lastHistoryLength = -1;
   }
 
   isDropable(srcObject) {
@@ -805,14 +806,35 @@ class CellObjectInfo extends CellObject {
   }
 
   displayCellInfo(container) {
-
+    this.updateHistory();
   }
 
   initGame(gameContainer) {
     super.initGame(gameContainer);
-    gameContainer.innerHTML = `
-    PLACE GAME INFORMATION HERE
-    `;
+
+    this.createElement('dl', 'historyContainer', gameContainer);
+
+    this.updateHistory(true)
+  }
+
+  draw(cell, progress) {
+  }
+
+  updateHistory(force) {
+    //TODO: is this the best reference to the log we have?
+    const logArray = app.state.log;
+
+    if (logArray.length !== this.lastHistoryLength || force) {
+      this.lastHistoryLength = logArray.length;
+
+      this.UI.historyContainer.innerHTML = '';
+
+      for (let i = logArray.length - 1; i >= 0; i--) {
+        const log = logArray[i];
+        this.createElement('dt', '', this.UI.historyContainer, 'logDate', (new Date(log.date)));
+        this.createElement('dd', '', this.UI.historyContainer, '', log.msg);
+      }
+    }
   }
 }
 
@@ -889,13 +911,13 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
 
     const headerDiv = this.createElement('div', '', gameContainer, 'prestigeCenter');
     const header = this.createElement('h1', '', headerDiv);
-    this.createElement('span', 'coins', header, '', '4353454');
+    this.createElement('span', 'coins', header);
     this.createElement('span', '', header, '', ' / ');
     this.createElement('span', 'coinReq', header, '', this.baseStrength);
     this.createElement('span', '', header, '', ' coins');
 
     const rateHeader = this.createElement('h3', '', headerDiv);
-    this.createElement('span', 'gain', rateHeader, '', '123');
+    this.createElement('span', 'gain', rateHeader);
     this.createElement('span', '', rateHeader, '', ' coins/second');
 
     const table = this.createElement('table', '', gameContainer, 'prestigeCenter,prestigeTable');
@@ -904,14 +926,14 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
     'Tier,Name,Requirement,Amount,Effect'.split`,`.forEach( label => {
       this.createElement('th', '', headerRow, '', label);
     });
-    this.createElement('th', '', headerRow, '', '');
+    this.createElement('th', '', headerRow);
 
     CellObjectEnemyPrestige.tierInfo.forEach( (t, i) => {
       const tierRow = this.createElement('tr', '', table);
       this.createElement('td', '', tierRow, '', t.numeral);
       this.createElement('td', '', tierRow, '', t.name);
-      const reqWrap = this.createElement('td', '', tierRow, '', '');
-      this.createElement('span', `tier${i}cost`, reqWrap, '', '?');
+      const reqWrap = this.createElement('td', '', tierRow);
+      this.createElement('span', `tier${i}cost`, reqWrap);
       if (i === 0) {
         this.createElement('span', '', reqWrap, '', ' coins');
       } else {

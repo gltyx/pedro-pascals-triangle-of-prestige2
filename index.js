@@ -14,11 +14,11 @@
     - lawnmower game
 
   the game works from top left to bottom right
-  increase difficulty based on manhattan distance from 0,0
   different types of units near enemies give upgrades based on the unit type and level
     tick speed
     click power
     disassembly power
+  get drag/drop working on mobile
 
   add some license info as necessary
 
