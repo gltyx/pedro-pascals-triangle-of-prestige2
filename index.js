@@ -82,7 +82,7 @@ class App {
     if (this.state.cellSaves !== undefined) {
       this.state.cellSaves.forEach( (c, i) => {
         const dist = this.cells[i].x + this.cells[i].y;
-        this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type](dist);
+        this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type](this.cells[i].ui, dist);
         this.cells[i].content.loadFromObj(c);
       });
     }
@@ -136,7 +136,7 @@ class App {
           index: cellIndex,
           x,
           y,
-          content: new worldClass(x + y)
+          content: new worldClass(cell, x + y)
         };
 
         this.cells[cellIndex] = newCell;
@@ -193,6 +193,7 @@ class App {
     const e = cell.ui;
     const content = cell.content;
     content.draw(e, cell.progress);
+    content.updateBackground(e);
   }
 
   reflowReachableCells() {
@@ -278,6 +279,8 @@ class App {
     this.curWalls = 0;
     this.curEnemies = 0;
     this.cells.forEach( (cell, i) => {
+      if (!cell.selectable) {return;}
+
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
       if (cellOutput !== undefined) {
@@ -286,7 +289,7 @@ class App {
         this.state.cpoints += cellOutput.cpoints ?? 0;
         this.state.dpoints += cellOutput.dpoints ?? 0;
         const dist = cell.x + cell.y;
-        this.cells[i].content = new CellObject(dist);
+        cell.content = new CellObject(cell.ui, dist);
         if (this.selectedCellIndex === i) {
           this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
           this.displayCellInfo(this.cells[i]);

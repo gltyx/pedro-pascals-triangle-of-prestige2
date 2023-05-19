@@ -4,9 +4,10 @@ const strengthDistFactor = 1.5;
 const rewardDistFactor = 1.2;
 
 class CellObject {
-  constructor(dist) {
+  constructor(cell, dist, bgSpriteName) {
     this.state = {type: 'none'};
-    this.bgStyle = spriteNameToStyle('border1');
+    this.bgSpriteName = bgSpriteName ?? 'border1';
+    this.updateBackground(cell);
     this.percent = 0;
     this.UI = {};
     this.blocking = false;
@@ -37,10 +38,13 @@ class CellObject {
   update(curTime, neighbors) { }
 
   draw(cell, progress) {
-    this.updateStyle(cell.style, 'background', this.bgStyle);
     const effectivePercent = this.percent >= 100 ? 0 : this.percent;
     const percentStr = `${Math.ceil(effectivePercent)}%`;
     this.updateStyle(progress.style, 'width', percentStr);
+  }
+
+  updateBackground(cell) {
+    applySprite(cell, this.bgSpriteName);
   }
 
   displayCellInfo(container) {
@@ -115,11 +119,10 @@ class CellObject {
 }
 
 class CellObjectEnemy extends CellObject {
-  constructor(dist) {
-    super(dist);
+  constructor(cell, dist, bgSpriteName) {
+    super(cell, dist, bgSpriteName ?? 'snail');
     this.blocking = true;
     this.state.type = 'enemy';
-    this.bgStyle = spriteNameToStyle('snail');
     this.percent = 100;
     this.state.enemyPower = 1;
     this.tPower = undefined;
@@ -173,13 +176,12 @@ class CellObjectEnemy extends CellObject {
 }
 
 class CellObjectSpot extends CellObject {
-  constructor() {
-    super();
+  constructor(cell, dist) {
+    super(cell, dist, 'spot');
     this.state.type = 'spot';
     this.state.tickPower = 1;
     this.state.clickPower = 1;
     this.state.disPower = 0;
-    this.bgStyle = spriteNameToStyle('spot');
     this.cursor = 'grab';
   }
 
@@ -200,13 +202,12 @@ class CellObjectSpot extends CellObject {
 }
 
 class CellObjectBoss extends CellObject {
-  constructor() {
-    super();
+  constructor(cell, dist) {
+    super(cell, dist, 'boss');
     this.state.type = 'boss';
     this.state.tickPower = 0;
     this.state.clickPower = 0;
     this.state.disPower = 1;
-    this.bgStyle = spriteNameToStyle('boss');
     this.cursor = 'grab';
   }
 
@@ -227,14 +228,13 @@ class CellObjectBoss extends CellObject {
 }
 
 class CellObjectEnemyWall extends CellObjectEnemy {
-  constructor(dist) {
-    super(dist);
+  constructor(cell, dist) {
+    super(cell, dist, 'wall');
     this.state.type = 'wall';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.enemyPower = 0;
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
-    this.bgStyle = spriteNameToStyle('wall');
   }
 
   update(curTime, neighbors) {
@@ -296,10 +296,9 @@ class CellObjectEnemyWall extends CellObjectEnemy {
 }
 
 class CellObjectEnemyCheese extends CellObjectEnemy {
-  constructor(dist) {
-    super(dist);
+  constructor(cell, dist) {
+    super(cell, dist, 'cheese');
     this.state.type = 'enemyCheese';
-    this.bgStyle = spriteNameToStyle('cheese');
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
     this.state.milk = 0;
@@ -384,10 +383,9 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
 
   static durationFactorMilestones = [25, 50, 100, 200, 300, 400];
 
-  constructor(dist) {
-    super(dist);
+  constructor(cell, dist) {
+    super(cell, dist, 'business');
     this.state.type = 'enemyBusiness';
-    this.bgStyle = spriteNameToStyle('business');
     this.baseStrength = this.roundToVal(100 * Math.pow(strengthDistFactor, dist), 'round', 0.01);
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
@@ -513,7 +511,8 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       const levelIcon = this.createElement('div', '', leftSide);
       levelIcon.style.width = '32px';
       levelIcon.style.height = '32px';
-      levelIcon.style.background = spriteNameToStyle(`business_${level}`);
+      //levelIcon.style.background = spriteNameToStyle(`business_${level}`);
+      applySprite(levelIcon, `business_${level}`);
 
       const levelCount = this.createElement('div', `levelCount${level}`, leftSide, '', `${this.state.level[level].count}/${this.getNextMilestone(level)}`);
 
@@ -626,10 +625,9 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
 }
 
 class CellObjectMerge extends CellObject {
-  constructor() {
-    super();
+  constructor(cell, dist) {
+    super(cell, dist, 'merge');
     this.state.type = 'merge';
-    this.bgStyle = spriteNameToStyle('merge');
   }
 
   isDropable(srcObject) {
@@ -732,10 +730,9 @@ class CellObjectMerge extends CellObject {
 }
 
 class CellObjectBuild extends CellObject {
-  constructor() {
-    super();
+  constructor(cell, dist) {
+    super(cell, dist, 'build');
     this.state.type = 'build';
-    this.bgStyle = spriteNameToStyle('build');
   }
 
   isDropable(srcObject) {
@@ -798,10 +795,9 @@ class CellObjectBuild extends CellObject {
 }
 
 class CellObjectInfo extends CellObject {
-  constructor() {
-    super();
+  constructor(cell, dist) {
+    super(cell, dist, 'info');
     this.state.type = 'info';
-    this.bgStyle = spriteNameToStyle('info');
   }
 
   isDropable(srcObject) {

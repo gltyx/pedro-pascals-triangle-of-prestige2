@@ -18,10 +18,26 @@ const SPRITES = {
   build: [16, 0],
   info: [17, 0]
 }
-const SPRITE_URL = 'url("./sprites.png")';
+const SPRITE_PATH = './sprites.png';
+const SPRITE_URL = `url("${SPRITE_PATH}")`;
 
 function spriteNameToStyle(name) {
   const spriteInfo = SPRITES[name];
-  if (spriteInfo === undefined) {return '';}
-  return `${SPRITE_URL} ${-spriteInfo[0] * 32}px ${-spriteInfo[1] * 32}px, white`;
+  if (spriteInfo === undefined) {return [];}
+  return [
+    {property: 'backgroundImage', value: SPRITE_URL},
+    {property: 'backgroundColor', value: 'white'},
+    {property: 'backgroundPositionX', value: `${-spriteInfo[0] * 32}px`},
+    {property: 'backgroundPositionY', value: `${-spriteInfo[1] * 32}px`}
+  ];
+}
+
+function applySprite(element, spriteName) {
+  const spriteInfo = SPRITES[spriteName];
+  if (spriteInfo === undefined) { throw `UNKNOWN SPRITE NAME ${spriteName} USED`; }
+
+  element.style.backgroundImage = SPRITE_URL;
+  element.style.backgroundColor = 'white';
+  element.style.backgroundPositionX = `${-spriteInfo[0] * 32}px`;
+  element.style.backgroundPositionY = `${-spriteInfo[1] * 32}px`;
 }

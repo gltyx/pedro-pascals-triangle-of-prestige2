@@ -25,6 +25,12 @@ body {
   display: none;
 }
 
+#gameInfoContainer {
+  background: white;
+  box-shadow: inset 1px 1px 3px black;
+  padding: 0.5em;
+}
+
 #gameContainer {
   background: tan;
 }
@@ -45,12 +51,14 @@ body {
   background: cyan;
   z-index: 100;
   padding: 0.5em;
+  box-shadow: inset -2px -2px 3px black;
 }
 
 .cell {
   width: 32px;
   height: 32px;
   display: grid;
+  box-shadow: -1px -1px 3px black;
 }
 
 .cellUnreachable {
@@ -58,8 +66,9 @@ body {
 }
 
 .cellSelected {
-  outline: 1px solid black;
-  z-index: 10;
+  transform: translate(-1px, -1px);
+  box-shadow: inset -1px -1px 3px black;
+  background-color: yellow !important;
 }
 
 .progressContainer {
@@ -71,9 +80,16 @@ body {
   height: 4px;
 }
 
+#cellInfoInfo {
+  background: white;
+  padding: 0.5em;
+  box-shadow: inset 1px 1px 3px black;
+}
+
 #cellInfoGameContainer {
   background: white;
   padding: 0.5em;
+  box-shadow: inset 1px 1px 3px black;
 }
 
 .divButton {
@@ -100,6 +116,7 @@ body {
   width: 100vw;
   display: grid;
   grid-template-columns: 1fr 300px;
+  pointer-events: none;
 }
 
 #toastRight {
