@@ -781,7 +781,7 @@ class CellObjectBuild extends CellObject {
     const openNeighbor = this.getOpenNeighbor();
     if (openNeighbor === undefined) {return;}
 
-    openNeighbor.content = new CellObjectSpot();
+    openNeighbor.content = new CellObjectSpot(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
     
   }
 
@@ -789,7 +789,7 @@ class CellObjectBuild extends CellObject {
     const openNeighbor = this.getOpenNeighbor();
     if (openNeighbor === undefined) {return;}
 
-    openNeighbor.content = new CellObjectBoss();
+    openNeighbor.content = new CellObjectBoss(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
   }
 
 }

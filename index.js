@@ -19,6 +19,7 @@
     click power
     disassembly power
   get drag/drop working on mobile
+  can we have parts of a story be revealed as the game progresses?
 
   add some license info as necessary
 
