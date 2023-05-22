@@ -42,7 +42,7 @@ const CHAR_TO_CLASS_MAP = {
   '.': CellObject,
   'b': CellObjectBoss,
   's': CellObjectSpot,
-  'e': CellObjectEnemy,
+  'e': CellObjectEnemy, //TODO: should not be able to instantiate this
   'x': CellObjectEnemyWall,
   'c': CellObjectEnemyCheese,
   '$': CellObjectEnemyBusiness,
@@ -51,3 +51,22 @@ const CHAR_TO_CLASS_MAP = {
   '?': CellObjectInfo,
   'p': CellObjectEnemyPrestige
 }
+
+//map enemy cell index into a lore index that it unlocks when defeated
+const LORE_UNLOCK_MAP = {
+  [`${0 + 0 * 32}`]: 0,
+  [`${1 + 0 * 32}`]: 1,
+  [`${0 + 1 * 32}`]: 2,
+  [`${2 + 1 * 32}`]: 4
+};
+
+const LORE = [];
+//prefix is one of Adv,Cul,Ass,Unk for adventurer, cultist, assistant
+LORE[0] = `Unk:Hello. The three of you have been summoned for an important quest.`;
+LORE[1] = `Adv:I'll head into the jungle to search for clues.`;
+LORE[2] = `Ass:One friend heads into the jungle, one friend heads into the city, and one friend stays behind at the lab.
+This lore item is getting longer and longer and that's ok. I don't mind if it gets quite long.`;
+LORE[3] = `Unk:lore 3`;
+LORE[4] = `Adv:hello lore 4`;
+LORE[5] = `Cul:hello lore 5`;
+

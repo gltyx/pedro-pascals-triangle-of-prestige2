@@ -17,7 +17,11 @@ const SPRITES = {
   merge: [15, 0],
   build: [16, 0],
   info: [17, 0],
-  prestige: [18, 0]
+  prestige: [18, 0],
+  iconAdv: [19, 0],
+  iconCul: [0, 1],
+  iconAss: [1, 1],
+  iconUnk: [2, 1]
 }
 const SPRITE_PATH = './sprites.png';
 const SPRITE_URL = `url("${SPRITE_PATH}")`;

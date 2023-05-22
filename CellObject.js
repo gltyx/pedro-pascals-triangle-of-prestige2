@@ -795,10 +795,19 @@ class CellObjectBuild extends CellObject {
 }
 
 class CellObjectInfo extends CellObject {
+
+  static tutorialHTML = `
+  <h1>Tutorial</h1>
+  add tutorial text here
+  `;
+
   constructor(cell, dist) {
     super(cell, dist, 'info');
     this.state.type = 'info';
+    this.state.lastTab = 'Tutorial';
+    this.state.viewedLore = [];
     this.lastHistoryLength = -1;
+    this.lastLoreUnlockArrayLength = -1;
   }
 
   isDropable(srcObject) {
@@ -807,34 +816,127 @@ class CellObjectInfo extends CellObject {
 
   displayCellInfo(container) {
     this.updateHistory();
+    this.updateLore();
   }
 
   initGame(gameContainer) {
     super.initGame(gameContainer);
+    const tabContainer = this.createElement('div', 'tabContainer', gameContainer);
+    const tabTutorial = this.createElement('div', 'tabTutorial', tabContainer, 'infoTab', 'Tutorial');
+    const tabLog = this.createElement('div', 'tabLog', tabContainer, 'infoTab' ,'Log');
+    const tabLore = this.createElement('div', 'tabLore', tabContainer, 'infoTab', 'Lore');
 
-    this.createElement('dl', 'historyContainer', gameContainer);
+    tabTutorial.onclick = () => this.selectTab('Tutorial');
+    tabLog.onclick = () => this.selectTab('Log');
+    tabLore.onclick = () => this.selectTab('Lore');
+
+    const tabBodyTutorial = this.createElement('div', 'infoContainerTutorial', gameContainer, 'infoTabBody');
+    const tabBodyLog = this.createElement('dl', 'infoContainerLog', gameContainer, 'infoTabBody');
+    const tabBodyLore = this.createElement('div', 'infoContainerLore', gameContainer, 'infoTabBody');
+
+    tabBodyTutorial.innerHTML = CellObjectInfo.tutorialHTML;
 
     this.updateHistory(true)
+    this.updateLore(true);
+    this.selectTab(this.state.lastTab);
+  }
+
+  selectTab(name) {
+    const selectedTabs = document.getElementsByClassName('infoTabSelected')
+    for (let i = 0; i < selectedTabs.length; i++) {
+      selectedTabs.item(i).classList.remove('infoTabSelected');
+    }
+    const selectedTabBodies = document.getElementsByClassName('infoTabBodySelected')
+    for (let i = 0; i < selectedTabBodies.length; i++) {
+      selectedTabBodies.item(i).classList.remove('infoTabBodySelected');
+    }
+
+    this.UI[`tab${name}`].classList.add('infoTabSelected');
+    this.UI[`infoContainer${name}`].classList.add('infoTabBodySelected');
+    this.state.lastTab = name;
   }
 
   draw(cell, progress) {
   }
 
   updateHistory(force) {
-    //TODO: is this the best reference to the log we have?
     const logArray = app.state.log;
 
     if (logArray.length !== this.lastHistoryLength || force) {
       this.lastHistoryLength = logArray.length;
 
-      this.UI.historyContainer.innerHTML = '';
+      this.UI.infoContainerLog.innerHTML = '';
 
       for (let i = logArray.length - 1; i >= 0; i--) {
         const log = logArray[i];
-        this.createElement('dt', '', this.UI.historyContainer, 'logDate', (new Date(log.date)));
-        this.createElement('dd', '', this.UI.historyContainer, '', log.msg);
+        this.createElement('dt', '', this.UI.infoContainerLog, 'logDate', (new Date(log.date)));
+        this.createElement('dd', '', this.UI.infoContainerLog, '', log.msg);
       }
     }
+  }
+
+  updateLore(force) {
+    //faces via https://boredhumans.com/faces.php
+    const loreUnlockArray = app.state.loreUnlocks;
+
+    if (loreUnlockArray.length !==  this.lastLoreUnlockArrayLength || force) {
+      this.lastLoreUnlockArrayLength = loreUnlockArray.length;
+
+      this.UI.infoContainerLore.innerHTML = '';
+
+      for (let dist = 0; dist <= 62; dist++) {
+        const msgDiv = this.createElement('div', `infoLoreItem${dist}`, this.UI.infoContainerLore, 'infoLoreMsg');
+        const msgIcon = this.createElement('div', '', msgDiv, 'infoLoreIcon');
+        const loreRawText = LORE[dist] ?? 'Unk:HELLO LORE this is even longer than you could have imagined';
+        const loreAuthor = loreRawText.substr(0, 3);
+        const loreText = loreRawText.substr(4);
+        const rowText = loreUnlockArray[dist] ? loreText : this.gibberfy(loreText);
+        const loreName = {
+          Adv: "Isabel Ram&iacute;rez",
+          Cul: "Diego Camazotz",
+          Ass: "Ellen Ochoa",
+          Unk: "Unknown"
+        }
+        const name = this.createElement('div', '', msgDiv, 'infoLoreName', loreName[loreAuthor]);
+        name.innerHTML = loreName[loreAuthor];
+        if (loreUnlockArray[dist]) {
+          applySprite(msgIcon, `icon${loreAuthor}`);
+          msgDiv.onclick = () => this.setLoreViewed(dist);
+          if (!this.state.viewedLore[dist]) {
+            msgDiv.classList.add('infoLoreNew');
+          }
+          this.createElement('div', '', msgDiv, `infoLoreText,infoLoreText${loreAuthor}`, rowText);
+        } else {
+          applySprite(msgIcon, `iconUnk`);
+          msgDiv.classList.add('infoLoreLocked');
+          this.createElement('div', '', msgDiv, `infoLoreText,infoLoreTextUnk`, rowText);
+        }
+      }
+
+    }
+  }
+
+  setLoreViewed(loreIndex) {
+    this.state.viewedLore[loreIndex] = true;
+    this.UI[`infoLoreItem${loreIndex}`].classList.remove('infoLoreNew');
+  }
+
+  gibberfy(text) {
+    const letters = 'phngluimglwnafhcthulhurlyehwgah\'naglfhtagn-';
+    const result = text.split``.map(c => {
+      if (c.match(/[a-z]/i)) {
+        const newLetter = letters[Math.floor(Math.random() * letters.length)];
+        if (c.toUpperCase() === c) {
+          return newLetter.toUpperCase();
+        }
+        return newLetter;
+      } else if (c.match(/[0-9]/)) {
+        return (Math.floor(Math.random() * 10)).toString();
+      } else {
+        return c;
+      }
+    }).join``;
+    return result;
   }
 }
 

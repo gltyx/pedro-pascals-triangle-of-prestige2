@@ -3,6 +3,13 @@
   #id
 */
 
+:root {
+  --loreAssBg: hsl(208, 100%, 70%);
+  --loreCulBg: hsl(268, 100%, 70%);
+  --loreAdvBg: hsl(148, 100%, 70%);
+  --loreUnkBg: hsl(0, 0%, 70%);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -141,6 +148,7 @@ body {
   padding: 0.5em;
   box-shadow: 6px 6px 5px black;
   border-radius: 6px;
+  overflow-wrap: anywhere;
   transition: filter 1s;
 }
 
@@ -152,6 +160,143 @@ body {
   width: 100%;
 }
 
+#tabContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.infoTab {
+  background-color: #a0a0a0;
+}
+
+.infoTab:hover {
+  background-color: #707070;
+}
+
+.infoTab:active {
+  background-color: #d0d0d0;
+}
+
+.infoTabSelected {
+  background-color: #c0c0c0;
+}
+
+.infoTabBody {
+  display: none;
+}
+
+.infoTabBodySelected {
+  display: block;
+}
+
 .logDate {
   background-color: lightcyan;
+}
+
+#infoContainerLore {
+  padding-top: 0.5em;
+}
+
+.infoLoreNew {
+  font-weight: 800;
+  text-shadow: 1px 1px white;
+}
+
+.infoLoreMsg {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  grid-template-rows: 18px 1fr;
+  grid-template-areas: "empty name" "icon msg";
+  grid-column-gap: 18px;
+  padding-bottom: 0.5em;
+  align-items: start;
+  position: relative;
+}
+
+.infoLoreIcon {
+  grid-area: icon;
+  width: 32px;
+  height: 32px;
+  border-radius: 32px;
+}
+
+.infoLoreText {
+  grid-area: msg;
+  border-radius: 8px;
+  padding: 0.5em;
+}
+
+.infoLoreName {
+  grid-area: name;
+  font-size: 14px;
+  color: #707070;
+  padding-left: 8px;
+}
+
+.infoLoreLocked {
+  filter: blur(5px);
+}
+
+.infoLoreTextAdv {
+  background-color: var(--loreAdvBg);
+}
+
+.infoLoreTextAdv:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreAdvBg);
+  border-bottom: 10px solid var(--loreAdvBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.infoLoreTextCul {
+  background-color: var(--loreCulBg);
+}
+
+.infoLoreTextCul:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreCulBg);
+  border-bottom: 10px solid var(--loreCulBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.infoLoreTextAss {
+  background-color: var(--loreAssBg);
+}
+
+.infoLoreTextAss:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreAssBg);
+  border-bottom: 10px solid var(--loreAssBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.infoLoreTextUnk {
+  background-color: var(--loreUnkBg);
+}
+
+.infoLoreTextUnk:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreUnkBg);
+  border-bottom: 10px solid var(--loreUnkBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
 }

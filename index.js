@@ -20,6 +20,8 @@
     disassembly power
   get drag/drop working on mobile
   can we have parts of a story be revealed as the game progresses?
+  maybe the cult is trying to complete PPToP because it believes something good will
+   happen when it's finished but in fact it unleashes the snail
 
   add some license info as necessary
 
@@ -68,6 +70,7 @@ class App {
 
     this.state = {
       log: [],
+      loreUnlocks: [true, true, true],
       tpoints: 0,
       cpoints: 0,
       dpoints: 0
@@ -287,10 +290,15 @@ class App {
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
       if (cellOutput !== undefined) {
-        this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: ${JSON.stringify(cellOutput)}`);
+        this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: ${JSON.stringify(cellOutput, null, 1)}`);
         this.state.tpoints += cellOutput.tpoints ?? 0;
         this.state.cpoints += cellOutput.cpoints ?? 0;
         this.state.dpoints += cellOutput.dpoints ?? 0;
+        const loreUnlock = LORE_UNLOCK_MAP[this.selectedCellIndex];
+        if (loreUnlock) {
+          this.state.loreUnlocks[loreUnlock] = true;
+          this.addToLog(`Lore ${loreUnlock} unlocked!`);
+        }
         const dist = cell.x + cell.y;
         cell.content = new CellObject(cell.ui, dist);
         if (this.selectedCellIndex === i) {
