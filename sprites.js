@@ -21,7 +21,9 @@ const SPRITES = {
   iconAdv: [19, 0],
   iconCul: [0, 1],
   iconAss: [1, 1],
-  iconUnk: [2, 1]
+  iconUnk: [2, 1],
+  lore: [3, 1],
+  crank: [4, 1]
 }
 const SPRITE_PATH = './sprites.png';
 const SPRITE_URL = `url("${SPRITE_PATH}")`;
@@ -37,12 +39,14 @@ function spriteNameToStyle(name) {
   ];
 }
 
-function applySprite(element, spriteName) {
+function applySprite(element, spriteName, transparent) {
   const spriteInfo = SPRITES[spriteName];
   if (spriteInfo === undefined) { throw `UNKNOWN SPRITE NAME ${spriteName} USED`; }
 
   element.style.backgroundImage = SPRITE_URL;
-  element.style.backgroundColor = 'white';
+  if (!transparent) {
+    element.style.backgroundColor = 'white';
+  }
   element.style.backgroundPositionX = `${-spriteInfo[0] * 32}px`;
   element.style.backgroundPositionY = `${-spriteInfo[1] * 32}px`;
 }

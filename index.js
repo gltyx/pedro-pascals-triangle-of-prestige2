@@ -6,22 +6,22 @@
     it should be simple/short versions of other basic incrementals
     - cheese game - idle
     - adventure capitalist
-    - pedro - idle
-    - prestige 
+    - pedro - but modified for the last game
+    - prestige - idle
     - cookie clicker
     - crank - active
     - antimatter dimensions
     - lawnmower game
 
-  the game works from top left to bottom right
   different types of units near enemies give upgrades based on the unit type and level
     tick speed
     click power
     disassembly power
   get drag/drop working on mobile
-  can we have parts of a story be revealed as the game progresses?
   maybe the cult is trying to complete PPToP because it believes something good will
    happen when it's finished but in fact it unleashes the snail
+  display icon on cells that will unlock story when completed
+  need better favicon
 
   add some license info as necessary
 
@@ -70,7 +70,7 @@ class App {
 
     this.state = {
       log: [],
-      loreUnlocks: [true, true, true],
+      loreUnlocks: [true],
       tpoints: 0,
       cpoints: 0,
       dpoints: 0
@@ -92,6 +92,14 @@ class App {
         this.cells[i].content.loadFromObj(c);
       });
     }
+
+    for (let i = 0; i < this.gridWidth * this.gridHeight; i++) {
+      const loreUnlock = LORE_UNLOCK_MAP[i];
+      if (this.state.loreUnlocks[loreUnlock]) {
+        document.getElementById(`loreIcon${i}`).style.display = 'none';
+      }
+    }
+
     this.saveToStorage();
   }
 
@@ -133,6 +141,14 @@ class App {
         cell.appendChild(progressContainer);
 
         progress.style.width = '0%';
+
+        if (LORE_UNLOCK_MAP[cellIndex] !== undefined) {
+          const lore = document.createElement('div');
+          lore.id = `loreIcon${cellIndex}`;
+          lore.classList.add('loreIcon');
+          applySprite(lore, 'lore', true);
+          cell.appendChild(lore);
+        }
 
         const worldClass = CHAR_TO_CLASS_MAP[WORLD[y][x]];
         
@@ -294,10 +310,11 @@ class App {
         this.state.tpoints += cellOutput.tpoints ?? 0;
         this.state.cpoints += cellOutput.cpoints ?? 0;
         this.state.dpoints += cellOutput.dpoints ?? 0;
-        const loreUnlock = LORE_UNLOCK_MAP[this.selectedCellIndex];
+        const loreUnlock = LORE_UNLOCK_MAP[i];
         if (loreUnlock) {
           this.state.loreUnlocks[loreUnlock] = true;
           this.addToLog(`Lore ${loreUnlock} unlocked!`);
+          document.getElementById(`loreIcon${i}`).style.display = 'none';
         }
         const dist = cell.x + cell.y;
         cell.content = new CellObject(cell.ui, dist);

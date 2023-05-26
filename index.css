@@ -91,6 +91,12 @@ body {
   height: 4px;
 }
 
+.loreIcon {
+  width: 32px;
+  height: 32px;
+  position: absolute;
+}
+
 #cellInfoContainer {
   display: grid;
   grid-template-rows: 50px 1fr;
@@ -198,8 +204,10 @@ body {
 }
 
 .infoLoreNew {
+  /*
   font-weight: 800;
   text-shadow: 1px 1px white;
+  */
 }
 
 .infoLoreMsg {
@@ -299,4 +307,107 @@ body {
   border-top: 10px solid transparent;
   border-left: 10px solid transparent;
   left: 35px;
+}
+
+.crankColumns {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas: "tl tr" "bl br";
+}
+
+#crankSection {
+}
+
+.crankContainer {
+  position: relative;
+  grid-area: 1 / 1 / 3 / 1;
+}
+
+.crankBase {
+  width: 70px;
+  height: 70px;
+  border-radius: 70px;
+  background-color: gray;
+}
+
+.crankBar {
+  background-color: #b7b7b7;
+  width: 35px;
+  height: 6px;
+  border-radius: 3px;
+  position: absolute;
+  top: 32px;
+  transform-origin: center right;
+  transform: rotate(3.141rad);
+}
+
+.crankBall {
+  width: 10px;
+  height: 10px;
+  background-color: #e5e5e5;
+  border-radius: 5px;
+  outline: 1px solid gray;
+  position: absolute;
+  top: 30px;
+  left: -5px;
+  transform-origin: 40px 5px;
+  transform: rotate(3.141rad);
+}
+
+.crankProgressContainer {
+  width: 100%;
+  height: 22px;
+  background-color: #565656;
+}
+
+#crankLevelProgress {
+  width: 0%;
+  height: 100%;
+  background-color: yellow;
+}
+
+.crankButton {
+  background-color: gray;
+  border: 1px solid black;
+}
+
+.crankButton:hover {
+  filter: brightness(0.9);
+}
+
+.crankButton:active {
+  filter: brightness(1.1);
+}
+
+#metalMainSection {
+}
+
+#metalProgress {
+  width: 50%;
+  height: 100%;
+  background-color: gray;
+}
+
+.crankSlider {
+  appearance: none;
+  height: 22px;
+  width: 100%;
+  background-color: #565656;
+}
+
+.crankSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 30px;
+  height: 22px;
+  background: gray;
+}
+
+.crankSlider::-moz-range-thumb {
+  appearance: none;
+  width: 30px;
+  height: 22px;
+  background: gray;
+  border-radius: 0px;
+  border: none;
 }

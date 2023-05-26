@@ -86,7 +86,7 @@ class CellObject {
     }
 
     if (text !== undefined && text !== '') {
-      e.innerText = text; 
+      e.innerText = text.toString().replaceAll(/\n/g, ''); 
     }
 
     if (classes !== undefined && classes.length > 0) {
@@ -877,6 +877,7 @@ class CellObjectInfo extends CellObject {
 
   updateLore(force) {
     //faces via https://boredhumans.com/faces.php
+    const FORCE_UNLOCK = false;
     const loreUnlockArray = app.state.loreUnlocks;
 
     if (loreUnlockArray.length !==  this.lastLoreUnlockArrayLength || force) {
@@ -884,13 +885,12 @@ class CellObjectInfo extends CellObject {
 
       this.UI.infoContainerLore.innerHTML = '';
 
-      for (let dist = 0; dist <= 62; dist++) {
+      for (let dist = 0; dist < LORE.length; dist++) {
         const msgDiv = this.createElement('div', `infoLoreItem${dist}`, this.UI.infoContainerLore, 'infoLoreMsg');
         const msgIcon = this.createElement('div', '', msgDiv, 'infoLoreIcon');
         const loreRawText = LORE[dist] ?? 'Unk:HELLO LORE this is even longer than you could have imagined';
         const loreAuthor = loreRawText.substr(0, 3);
         const loreText = loreRawText.substr(4);
-        const rowText = loreUnlockArray[dist] ? loreText : this.gibberfy(loreText);
         const loreName = {
           Adv: "Isabel Ram&iacute;rez",
           Cul: "Diego Camazotz",
@@ -899,17 +899,17 @@ class CellObjectInfo extends CellObject {
         }
         const name = this.createElement('div', '', msgDiv, 'infoLoreName', loreName[loreAuthor]);
         name.innerHTML = loreName[loreAuthor];
-        if (loreUnlockArray[dist]) {
+        if (loreUnlockArray[dist] || FORCE_UNLOCK) {
           applySprite(msgIcon, `icon${loreAuthor}`);
           msgDiv.onclick = () => this.setLoreViewed(dist);
           if (!this.state.viewedLore[dist]) {
             msgDiv.classList.add('infoLoreNew');
           }
-          this.createElement('div', '', msgDiv, `infoLoreText,infoLoreText${loreAuthor}`, rowText);
+          this.createElement('div', '', msgDiv, `infoLoreText,infoLoreText${loreAuthor}`, loreText);
         } else {
           applySprite(msgIcon, `iconUnk`);
           msgDiv.classList.add('infoLoreLocked');
-          this.createElement('div', '', msgDiv, `infoLoreText,infoLoreTextUnk`, rowText);
+          this.createElement('div', '', msgDiv, `infoLoreText,infoLoreTextUnk`, this.gibberfy(loreText));
         }
       }
 
@@ -1095,6 +1095,152 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
   }
 }
 
+class CellObjectEnemyCrank extends CellObjectEnemy {
+  constructor(cell, dist) {
+    super(cell, dist, 'crank');
+    this.state.type = 'enemyCrank';
+    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.totalPower = 0;
+    this.crankAngle = 0;
+  }
+
+  /*
+    crank with power meter
+      crank has inertia
+      crank turns while mouse is held down
+      while cranking, power production is increased
+        about 3/second at max
+      max power 100
+      power production slowly deminishes to zero when
+        not cranking
+    scrap metal generator
+      instantly takes 5 power to start
+      clicking costs 1 power but increases completion by about 1/4
+    repair cpu
+      requires 10 scrap metal
+      unlocks automation
+      select crank, scrap metal, system
+      can send power / second to perform upgrade
+        0 through 3
+      crank increases crank maximum speed (about 6/second)
+        then decreases crank decay
+      scrap metal allows setting a queue of scrap metal to craft
+        up to 5
+        then enables batteries
+        building batteries cost 10 scrap and 10 power, clicking again costs 1 scrap and increases completion by 1/4
+        batteries increase max power by 10
+        also unlocks comp upgrade battery
+      system adds an info box
+      cpu can be upgraded by spending 15 scrap metal and then 5 more each time
+        increases power/sec max by 1
+
+
+  */
+
+  update(curTime, neighbors) {
+    super.update(curTime, neighbors);
+    this.crankAngle = curTime;
+    this.genLevel = 100 * (curTime % 5) / 5;
+  }
+
+  displayCellInfo(container) {
+    super.displayCellInfo(container);
+
+    this.UI.crankBar.style.transform = `rotate(${this.crankAngle}rad)`;
+    this.UI.crankBall.style.transform = `rotate(${this.crankAngle}rad)`;
+
+    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${this.genLevel.toFixed(1)}%`);
+    this.UI.crankLevelValue.innerText = `${this.genLevel.toFixed(1)} / 100`;
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+
+    //[game value] / [game target]
+    const topSection = this.createElement('div', '', gameContainer);
+    this.createElement('span', '', topSection, '', 'Total power: ');
+    this.createElement('span', 'totalPower', topSection, '', '?');
+    this.createElement('span', '', topSection, '', ' / ');
+    this.createElement('span', '', topSection, '', this.baseStrength);
+
+    //[crank] [power gen level]
+    const crankSection = this.createElement('div', 'crankSection', gameContainer, 'crankColumns');
+    const crankContainer = this.createElement('div', '', crankSection, 'crankContainer');
+    this.createElement('div', '', crankContainer, 'crankBase');
+    this.createElement('div', 'crankBar', crankContainer, 'crankBar');
+    this.createElement('div', 'crankBall', crankContainer, 'crankBall');
+
+    const crankLevelContainer = this.createElement('div', 'crankLevelContainer', crankSection, 'crankProgressContainer');
+    const crankLevelProgress = this.createElement('div', 'crankLevelProgress', crankLevelContainer);
+    const crankLevelValue = this.createElement('div', 'crankLevelValue', crankLevelContainer, '', '85.2 / 100');
+
+    //[metal button] [metal progress]
+    //Scrap Metal: [metal count]
+    const metalMainSection = this.createElement('div', 'metalMainSection', gameContainer, 'crankColumns');
+    const metalButton = this.createElement('div', 'metalButton', metalMainSection, 'crankButton', 'Scrap Metal');
+    const metalProgressContainer = this.createElement('div', '', metalMainSection, 'crankProgressContainer');
+    const metalProgress = this.createElement('div', 'metalProgress', metalProgressContainer);
+    const metalProgressValue = this.createElement('div', 'metalProgressValue', metalMainSection, '', '23');
+
+    //[metal queue #] [metal queue slider]
+    const metalQueueSection = this.createElement('div', 'metalQueueSection', gameContainer, 'crankColumns');
+    const metalQueueCount = this.createElement('div', 'metalQueueCount', metalQueueSection, '', '23');
+    const metalQueueSlider = this.createElement('input', 'metalQueueSlider', metalQueueSection, 'crankSlider');
+    metalQueueSlider.type = 'range';
+    metalQueueSlider.min = 1;
+    metalQueueSlider.max = 5;
+    metalQueueSlider.value = 2;
+
+    //[battery button] [battery progress]
+    //Battery: [battery count]
+    const batteryMainSection = this.createElement('div', 'batteryMainSection', gameContainer, 'crankColumns');
+    const batteryButton = this.createElement('div', 'batteryButton', batteryMainSection, 'crankButton', 'Battery');
+    const batteryProgressContainer = this.createElement('div', '', batteryMainSection, 'crankProgressContainer');
+    const batteryProgress = this.createElement('div', 'batteryProgress', batteryProgressContainer);
+    const batteryProgressValue = this.createElement('div', 'batteryProgressValue', batteryMainSection, '', '23');
+
+    //[battery queue #] [battery queue slider]
+    const batteryQueueSection = this.createElement('div', 'batteryQueueSection', gameContainer, 'crankColumns');
+    const batteryQueueCount = this.createElement('div', 'batteryQueueCount', batteryQueueSection, '', '23');
+    const batteryQueueSlider = this.createElement('input', 'batteryQueueSlider', batteryQueueSection, 'crankSlider');
+    batteryQueueSlider.type = 'range';
+    batteryQueueSlider.min = 1;
+    batteryQueueSlider.max = 5;
+    batteryQueueSlider.value = 2;
+
+    //[comp target selection]
+    const compTargetSection = this.createElement('div', 'compTargetSection', gameContainer, 'crankColumns');
+    const compTargetLabel = this.createElement('div', '', compTargetSection, '', 'CPU Target');
+    const compTargetRadioContainer = this.createElement('div', '', compTargetSection, '', '');
+    const compTargetRadioCrank = this.createElement('input', 'radioCrank', compTargetRadioContainer, '');
+    compTargetRadioCrank.type = 'radio';
+    compTargetRadioCrank.name = 'target';
+    compTargetRadioCrank.checked = 'true';
+    this.createElement('label', '', compTargetRadioContainer, '', 'Crank');
+    const compTargetRadioScrap = this.createElement('input', 'radioScrap', compTargetRadioContainer, '');
+    compTargetRadioScrap.type = 'radio';
+    compTargetRadioScrap.name = 'target';
+    this.createElement('label', '', compTargetRadioContainer, '', 'Scrap');
+    const compTargetRadioBattery = this.createElement('input', 'radioBattery', compTargetRadioContainer, '');
+    compTargetRadioBattery.type = 'radio';
+    compTargetRadioBattery.name = 'target';
+    this.createElement('label', '', compTargetRadioContainer, '', 'Battery');
+
+    //[comp power #] [comp power slider]
+    const compPowerSection = this.createElement('div', 'compPowerSection', gameContainer, 'crankColumns');
+    const compPowerCount = this.createElement('div', 'compPowerCount', compPowerSection, '', '23 power / sec');
+    const compPowerSlider = this.createElement('input', 'compPowerSlider', compPowerSection, 'crankSlider');
+    compPowerSlider.type = 'range';
+    compPowerSlider.min = 1;
+    compPowerSlider.max = 5;
+    compPowerSlider.value = 2;
+
+    //[comp progress]
+    const compProgressSecton = this.createElement('div', 'compProgressSection', gameContainer);
+    const compProgressContainer = this.createElement('div', '', compProgressSection, 'crankProgressContainer');
+    const compProgress = this.createElement('div', 'compProgress', compProgressContainer);
+  }
+}
 
 
 const TYPE_TO_CLASS_MAP = {
@@ -1108,6 +1254,7 @@ const TYPE_TO_CLASS_MAP = {
   'merge': CellObjectMerge,
   'build': CellObjectBuild,
   'info': CellObjectInfo,
-  'enemyPrestige': CellObjectEnemyPrestige
+  'enemyPrestige': CellObjectEnemyPrestige,
+  'enemyCrank': CellObjectEnemyCrank
 };
 

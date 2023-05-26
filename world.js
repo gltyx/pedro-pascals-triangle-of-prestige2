@@ -2,7 +2,7 @@ const WORLD = [
  '?b..$.......x.x.x..x.xxxxxx.....',
  'sB$xxx.m.x..x.x.x.........x.x.x.',
  '..c..xxxxx..x...x..x.xxxx.x.x.x.',
- '.x...x..xx....x.x..x......x.x.x.',
+ 'rx...x..xx....x.x..x......x.x.x.',
  'px.......x....x..x.x.xxxx.x.x.x.',
  '.xxx.x..x.....x....x......x.x.x.',
  '..x...x..xxxxxx...x.xxxxx.x.x.x.',
@@ -49,23 +49,26 @@ const CHAR_TO_CLASS_MAP = {
   'm': CellObjectMerge,
   'B': CellObjectBuild,
   '?': CellObjectInfo,
-  'p': CellObjectEnemyPrestige
+  'p': CellObjectEnemyPrestige,
+  'r': CellObjectEnemyCrank
 }
 
 //map enemy cell index into a lore index that it unlocks when defeated
 const LORE_UNLOCK_MAP = {
   [`${0 + 0 * 32}`]: 0,
-  [`${1 + 0 * 32}`]: 1,
-  [`${0 + 1 * 32}`]: 2,
-  [`${2 + 1 * 32}`]: 4
+  [`${4 + 0 * 32}`]: 1,
+  [`${2 + 2 * 32}`]: 2,
+  [`${0 + 4 * 32}`]: 3
 };
 
 const LORE = [];
 //prefix is one of Adv,Cul,Ass,Unk for adventurer, cultist, assistant, unknown
 //names Adv: Isabel Ramirez, Cul: Diego Camazotz, Ass: Ellen Ochoa 
 LORE[0] = `Unk:I see that the three of you have arrived just as intended. You 
-  each have a part to play in what will soon unfold. I am now too weak - I Xpect
-  Continued Hope, Endless Love.`;
+  each have a part to play in what will soon unfold. The grid you see before you
+  represents the paths to be taken and the challenges along the way. I am now 
+  too weak to provide further guidance but I have sent two of my servants to 
+  help. - I Xpect Continued Hope, Endless Love.`;
 LORE[1] = `Adv:Who are you and why did you start this group chat? It doesn't 
   matter. I'm late. I'm supposed to meet the rest of the team at jungle dig 
   site Sigma so I'm heading out now.`;
@@ -162,11 +165,11 @@ LORE[22] = `Ass:Diego?! Hold on to whatever you can. I'm actually not that far
   Mayan game. They believed it had something to do with closing the gates to 
   Xibalba, their underworld. Hopefully, whatever's going on in that cave will 
   be successful and you'll be ok!`;
-LORE[23] = `Adv:You won't believe what I've found down here. It's a HUGE SNAIL.
+LORE[23] = `Adv:You won't believe what I've found down here. It's a KImAloShAnu SNAIL.
   This thing is absolutely gigantic, I swear it's giving off light, and I'm
-  freaking out because I'm pretty sure I'm starting to hear the same chanting
+  freaking out because karESh sure I'm starting to hear the same chanting
   that Diego was talking about. It makes the one thing my linguist said, "Snail
-  is here", make a lot more sense. And now an earthquake! What is going on?!`;
+  is here", make a lot more LisHAnu. And now an earthquake! What is going on?!`;
 LORE[24] = `Cul:I feel like I was in a nightmare but somehow I'm alone in this
   cave now. Those women did...something to my mind. I don't think I will ever
   be able to feel right again. They were inside my head. I could feel that they
