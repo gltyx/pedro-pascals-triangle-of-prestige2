@@ -886,6 +886,7 @@ class CellObjectInfo extends CellObject {
       this.UI.infoContainerLore.innerHTML = '';
 
       for (let dist = 0; dist < LORE.length; dist++) {
+        delete this.UI[`infoLoreItem${dist}`]
         const msgDiv = this.createElement('div', `infoLoreItem${dist}`, this.UI.infoContainerLore, 'infoLoreMsg');
         const msgIcon = this.createElement('div', '', msgDiv, 'infoLoreIcon');
         const loreRawText = LORE[dist] ?? 'Unk:HELLO LORE this is even longer than you could have imagined';
@@ -1100,8 +1101,44 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     super(cell, dist, 'crank');
     this.state.type = 'enemyCrank';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.state.metalStart = Infinity;
+    this.state.metalStrength = 100;
+    this.state.previousMetalProgress = 0;
+    this.state.metalCount = 0;
+    this.state.previousBatteryProgress = 0;
+    this.state.batteryCount = 0;
+    this.state.batteryStart = Infinity;
+    this.state.batteryStrength = 100;
+    this.state.metalQueue = 0;
+    this.state.batteryQueue = 0;
+    this.state.metalQueueMax = 3;
+    this.state.batteryQueueMax = 3;
+    this.state.compPowerMax = 0;
+    this.state.compPower = 0;
+    this.state.compStart = Infinity
+    this.state.previousCompProgress = 0;
+    this.state.compStart = (new Date()).getTime() / 1000;
+    this.state.lastUpdate = Infinity;
+    this.state.powerLevel = 0;
+    this.state.crankLevels = 0;
+    this.state.scrapLevels = 0;
+    this.state.batteryLevels = 0;
+
+    this.metalCost = 5;
+    this.metalBoostCost = 1;
+    this.batteryMetalCost = 10;
+    this.batteryPowerCost = 10;
+    this.batteryBoostMetalCost = 1;
     this.totalPower = 0;
     this.crankAngle = 0;
+    this.crankVelocity = 0;
+    this.crankForce = 0;
+    this.metalProgress = 0;
+    this.batteryProgress = 0;
+    this.compProgress = 0;
+    this.powerMax = 100;
+    this.lastCompPower = this.state.compPower;
+    this.compTarget = 0;
   }
 
   /*
@@ -1139,8 +1176,128 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
-    this.crankAngle = curTime;
-    this.genLevel = 100 * (curTime % 5) / 5;
+    const vmax = 0.1 + 0.1 * this.state.crankLevels;
+    const cranka = 0.001 + 0.0001 * this.state.crankLevels;
+    const crankm = 1000;
+    const crankFriction = 0.0005;
+    const crankPower = 0.1;
+    const metalRate = 10;
+    const batteryRate = 10;
+    const compRate = 1;
+    const deltaTime = Math.max(0, curTime - this.state.lastUpdate);
+
+    const state = this.state;
+
+    this.powerMax = 100 + state.batteryCount * 10;
+
+    if (this.tPower !== this.lasttPower && state.metalStart < Infinity) {
+      state.previousMetalProgress += (curTime - state.metalStart) * this.lasttPower * metalRate;
+      state.metalStart = curTime;
+    }
+    if (this.tPower !== this.lasttPower && state.batteryStart < Infinity) {
+      state.previousBatteryProgress += (curTime - state.batteryStart) * this.lasttPower * batteryRate;
+      state.batteryStart = curTime;
+    }
+    if ((this.tPower !== this.lasttPower || this.state.compPower !== this.lastCompPower) && state.compStart < Infinity) {
+      state.previousCompProgress += (curTime - state.compStart) * this.lasttPower * compRate * this.lastCompPower;
+      state.compStart = curTime;
+    }
+    this.lastCompPower = this.state.compPower;
+    if (state.compStart === Infinity && this.state.compPower > 0) {
+      state.compStart = curTime;
+    }
+
+    const powerLeak = Math.max(0, 1 * deltaTime - 0.05 * this.state.crankLevels);
+    const compLeak = this.state.compPower * deltaTime;
+    const compCost = this.getCompTargetCost();
+    
+
+    this.crankVelocity = Math.max(0, Math.min(vmax, this.crankVelocity + this.crankForce / crankm - crankFriction));
+    this.crankAngle += this.crankVelocity;
+    this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.crankVelocity * crankPower / 0.1) - powerLeak));
+    let compPercent;
+    if (this.state.powerLevel >= compLeak) {
+      this.state.powerLevel -= compLeak;
+      //compPercent = Math.max(0, curTime - state.compStart) * this.tPower * compRate * this.state.compPower + state.previousCompProgress;
+      this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 100 / compCost;
+    }
+
+    const metalPercent = Math.max(0, curTime - state.metalStart) * this.tPower * metalRate + state.previousMetalProgress;
+    const batteryPercent = Math.max(0, curTime - state.batteryStart) * this.tPower * batteryRate + state.previousBatteryProgress;
+
+    if (metalPercent >= 100) {
+      if (state.metalQueue > 0) {
+        state.metalQueue--;
+        state.metalStart = curTime;
+        this.UI.metalQueueSlider.value = state.metalQueue;
+      } else {
+        state.metalStart = Infinity;
+      }
+      state.previousMetalProgress = 0;
+      state.metalCount += 1;
+      this.metalProgress = 0;
+    } else {
+      this.metalProgress = metalPercent;
+    }
+
+    if (batteryPercent >= 100) {
+      if (state.batteryQueue > 0) {
+        state.batteryQueue--;
+        state.batteryStart = curTime;
+        this.UI.batteryQueueSlider.value = state.batteryQueue;
+      } else {
+        state.batteryStart = Infinity;
+      }
+      state.previousBatteryProgress = 0;
+      state.batteryCount += 1;
+      this.batteryProgress = 0;
+    } else {
+      this.batteryProgress = batteryPercent;
+    }
+
+    if (this.compProgress >= 100) {
+      switch (this.compTarget) {
+        case 0: 
+          this.state.crankLevels++; 
+          break;
+        case 1: 
+          this.state.scrapLevels++;
+          this.state.metalQueueMax++;
+          break;
+        case 2: 
+          this.state.batteryLevels++;
+          this.state.batteryQueueMax++;
+          break;
+      }
+
+
+      if (state.compPower > 0) {
+        state.compStart = curTime;
+      } else {
+        state.compStart = Infinity;
+      }
+      state.previousCompProgress = 0;
+      //TODO: APPLY CORRECT COMP COMPLETION REWARD
+      this.compProgress = 0;
+    }
+
+
+    if (state.metalStart === Infinity && this.state.powerLevel >= this.metalCost && state.metalQueue > 0) {
+      this.state.powerLevel -= this.metalCost;
+      state.metalStart = (new Date()).getTime() / 1000;
+      state.metalQueue -= 1;
+      this.UI.metalQueueSlider.value = state.metalQueue;
+    }
+
+    if (state.batteryStart === Infinity && this.state.powerLevel >= this.batteryPowerCost && state.metalCount >= this.batteryMetalCost && state.batteryQueue > 0) {
+      this.state.powerLevel -= this.batteryPowerCost;
+      state.metalCount -= this.batteryMetalCost;
+      state.batteryStart = (new Date()).getTime() / 1000;
+    }
+
+    //TODO: end game if total power generated is >= this.baseStrength
+
+    this.state.lastUpdate = curTime;
   }
 
   displayCellInfo(container) {
@@ -1149,8 +1306,22 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.UI.crankBar.style.transform = `rotate(${this.crankAngle}rad)`;
     this.UI.crankBall.style.transform = `rotate(${this.crankAngle}rad)`;
 
-    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${this.genLevel.toFixed(1)}%`);
-    this.UI.crankLevelValue.innerText = `${this.genLevel.toFixed(1)} / 100`;
+    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${this.state.powerLevel.toFixed(1)}%`);
+    this.UI.crankLevelValue.innerText = `${this.state.powerLevel.toFixed(1)} / ${this.powerMax}`;
+
+    this.updateStyle(this.UI.metalProgress.style, 'width', `${this.metalProgress.toFixed(1)}%`);
+    this.updateStyle(this.UI.batteryProgress.style, 'width', `${this.batteryProgress.toFixed(1)}%`);
+    this.updateStyle(this.UI.compProgress.style, 'width', `${this.compProgress.toFixed(1)}%`);
+
+    this.UI.metalProgressValue.innerText = this.state.metalCount;
+    this.UI.batteryProgressValue.innerText = this.state.batteryCount;
+
+    this.UI.metalQueueCount.innerText = this.state.metalQueue;
+    this.UI.batteryQueueCount.innerText = this.state.batteryQueue;
+    this.UI.compPowerCount.innerText = `${this.state.compPower} pwr/s`;
+    this.UI.metalQueueSlider.max = this.state.metalQueueMax;
+    this.UI.batteryQueueSlider.max = this.state.batteryQueueMax;
+    this.UI.compPowerSlider.max = this.state.compPowerMax;
   }
 
   initGame(gameContainer) {
@@ -1170,6 +1341,11 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.createElement('div', 'crankBar', crankContainer, 'crankBar');
     this.createElement('div', 'crankBall', crankContainer, 'crankBall');
 
+    crankContainer.onmousedown = evt => this.crankMouseDown(evt);
+    crankContainer.onmouseup = evt => this.crankMouseUp(evt);
+    crankContainer.onmouseleave = evt => this.crankMouseLeave(evt);
+
+
     const crankLevelContainer = this.createElement('div', 'crankLevelContainer', crankSection, 'crankProgressContainer');
     const crankLevelProgress = this.createElement('div', 'crankLevelProgress', crankLevelContainer);
     const crankLevelValue = this.createElement('div', 'crankLevelValue', crankLevelContainer, '', '85.2 / 100');
@@ -1179,66 +1355,149 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const metalMainSection = this.createElement('div', 'metalMainSection', gameContainer, 'crankColumns');
     const metalButton = this.createElement('div', 'metalButton', metalMainSection, 'crankButton', 'Scrap Metal');
     const metalProgressContainer = this.createElement('div', '', metalMainSection, 'crankProgressContainer');
-    const metalProgress = this.createElement('div', 'metalProgress', metalProgressContainer);
-    const metalProgressValue = this.createElement('div', 'metalProgressValue', metalMainSection, '', '23');
+    const metalProgress = this.createElement('div', 'metalProgress', metalProgressContainer, 'crankProgress');
+    const metalProgressValue = this.createElement('div', 'metalProgressValue', metalMainSection);
+    metalButton.onclick = () => this.metalClick();
 
     //[metal queue #] [metal queue slider]
     const metalQueueSection = this.createElement('div', 'metalQueueSection', gameContainer, 'crankColumns');
-    const metalQueueCount = this.createElement('div', 'metalQueueCount', metalQueueSection, '', '23');
+    const metalQueueCount = this.createElement('div', 'metalQueueCount', metalQueueSection);
     const metalQueueSlider = this.createElement('input', 'metalQueueSlider', metalQueueSection, 'crankSlider');
     metalQueueSlider.type = 'range';
-    metalQueueSlider.min = 1;
-    metalQueueSlider.max = 5;
-    metalQueueSlider.value = 2;
+    metalQueueSlider.min = 0;
+    metalQueueSlider.max = this.state.metalQueueMax;
+    metalQueueSlider.value = this.state.metalQueue;
+    metalQueueSlider.onchange = () => this.state.metalQueue = metalQueueSlider.value;
 
     //[battery button] [battery progress]
     //Battery: [battery count]
     const batteryMainSection = this.createElement('div', 'batteryMainSection', gameContainer, 'crankColumns');
     const batteryButton = this.createElement('div', 'batteryButton', batteryMainSection, 'crankButton', 'Battery');
     const batteryProgressContainer = this.createElement('div', '', batteryMainSection, 'crankProgressContainer');
-    const batteryProgress = this.createElement('div', 'batteryProgress', batteryProgressContainer);
-    const batteryProgressValue = this.createElement('div', 'batteryProgressValue', batteryMainSection, '', '23');
+    const batteryProgress = this.createElement('div', 'batteryProgress', batteryProgressContainer, 'crankProgress');
+    const batteryProgressValue = this.createElement('div', 'batteryProgressValue', batteryMainSection);
+    batteryButton.onclick = () => this.batteryClick();
 
     //[battery queue #] [battery queue slider]
     const batteryQueueSection = this.createElement('div', 'batteryQueueSection', gameContainer, 'crankColumns');
-    const batteryQueueCount = this.createElement('div', 'batteryQueueCount', batteryQueueSection, '', '23');
+    const batteryQueueCount = this.createElement('div', 'batteryQueueCount', batteryQueueSection);
     const batteryQueueSlider = this.createElement('input', 'batteryQueueSlider', batteryQueueSection, 'crankSlider');
     batteryQueueSlider.type = 'range';
-    batteryQueueSlider.min = 1;
-    batteryQueueSlider.max = 5;
-    batteryQueueSlider.value = 2;
+    batteryQueueSlider.min = 0;
+    batteryQueueSlider.max = this.state.batteryQueueMax;
+    batteryQueueSlider.value = this.state.batteryQueue;
+    batteryQueueSlider.onchange = () => this.state.batteryQueue = batteryQueueSlider.value;
 
-    //[comp target selection]
+    //[comp upgrade button] [comp target selection]
     const compTargetSection = this.createElement('div', 'compTargetSection', gameContainer, 'crankColumns');
+    const compUpgradeButton = this.createElement('div', 'compButton', compTargetSection, 'crankButton', `CPU (${15 + 5 * this.state.compPowerMax})`);
+    compUpgradeButton.onclick = () => this.compUpgradeClick();
+    const compProgressContainer = this.createElement('div', '', compTargetSection, 'crankProgressContainer');
+    const compProgress = this.createElement('div', 'compProgress', compProgressContainer, 'crankProgress');
     const compTargetLabel = this.createElement('div', '', compTargetSection, '', 'CPU Target');
     const compTargetRadioContainer = this.createElement('div', '', compTargetSection, '', '');
     const compTargetRadioCrank = this.createElement('input', 'radioCrank', compTargetRadioContainer, '');
     compTargetRadioCrank.type = 'radio';
     compTargetRadioCrank.name = 'target';
     compTargetRadioCrank.checked = 'true';
+    compTargetRadioCrank.onchange = () => this.radioChange(0);
     this.createElement('label', '', compTargetRadioContainer, '', 'Crank');
     const compTargetRadioScrap = this.createElement('input', 'radioScrap', compTargetRadioContainer, '');
     compTargetRadioScrap.type = 'radio';
     compTargetRadioScrap.name = 'target';
+    compTargetRadioScrap.onchange = () => this.radioChange(1);
     this.createElement('label', '', compTargetRadioContainer, '', 'Scrap');
     const compTargetRadioBattery = this.createElement('input', 'radioBattery', compTargetRadioContainer, '');
     compTargetRadioBattery.type = 'radio';
     compTargetRadioBattery.name = 'target';
+    compTargetRadioBattery.onchange = () => this.radioChange(2);
     this.createElement('label', '', compTargetRadioContainer, '', 'Battery');
 
     //[comp power #] [comp power slider]
     const compPowerSection = this.createElement('div', 'compPowerSection', gameContainer, 'crankColumns');
-    const compPowerCount = this.createElement('div', 'compPowerCount', compPowerSection, '', '23 power / sec');
+    const compPowerCount = this.createElement('div', 'compPowerCount', compPowerSection, '', '0 power / sec');
     const compPowerSlider = this.createElement('input', 'compPowerSlider', compPowerSection, 'crankSlider');
     compPowerSlider.type = 'range';
-    compPowerSlider.min = 1;
-    compPowerSlider.max = 5;
-    compPowerSlider.value = 2;
+    compPowerSlider.min = 0;
+    compPowerSlider.max = this.state.compPowerMax;
+    //TODO: get the value from state
+    compPowerSlider.value = this.state.compPower;
+    compPowerSlider.onchange = () => this.state.compPower = compPowerSlider.value;
 
     //[comp progress]
     const compProgressSecton = this.createElement('div', 'compProgressSection', gameContainer);
-    const compProgressContainer = this.createElement('div', '', compProgressSection, 'crankProgressContainer');
-    const compProgress = this.createElement('div', 'compProgress', compProgressContainer);
+  }
+
+  crankMouseDown(evt) {
+    if (evt.button === 0) {
+      this.crankForce = 1;
+    }
+  }
+  crankMouseUp(evt) {
+    if (evt.button === 0) {
+      this.crankForce = 0;
+    }
+  }
+  crankMouseLeave(evt) {
+    this.crankForce = 0;
+  }
+
+  metalClick() {
+    if (this.state.metalStart === Infinity && this.state.powerLevel >= this.metalCost) {
+      this.state.powerLevel -= this.metalCost;
+      this.state.metalStart = (new Date()).getTime() / 1000;
+    } else {
+      if (this.state.metalStart < Infinity && this.state.powerLevel >= this.metalBoostCost) {
+        this.state.powerLevel -= this.metalBoostCost;
+        this.state.previousMetalProgress += 25;
+      }
+    }
+  }
+
+  batteryClick() {
+    if (this.state.batteryStart === Infinity && this.state.powerLevel >= this.batteryPowerCost && this.state.metalCount >= this.batteryMetalCost) {
+      this.state.powerLevel -= this.batteryPowerCost;
+      this.state.metalCount -= this.batteryMetalCost;
+      this.state.batteryStart = (new Date()).getTime() / 1000;
+    } else {
+      if (this.state.batteryStart < Infinity && this.state.metalCount >= this.batteryBoostMetalCost) {
+        this.state.metalCount -= this.batteryBoostMetalCost;
+        this.state.previousBatteryProgress += 25;
+      }
+    }
+  }
+
+  compUpgradeClick() {
+    const upgradeCost = 15 + 5 * this.state.compPowerMax;
+    if (this.state.metalCount >= upgradeCost) {
+      this.state.metalCount -= upgradeCost;
+      this.state.compPowerMax++;
+      this.UI.compPowerSlider.max = this.state.compPowerMax;
+      this.UI.compButton.innerText = `CPU (${15 + 5 * this.state.compPowerMax})`;
+    }
+  }
+
+  radioChange(target) {
+    this.state.previousCompProgress = 0;
+    this.state.compStart = Infinity;
+    this.compProgress = 0;
+    this.lastCompPower = 0;
+    this.compTarget = target;
+    console.log(target);
+  }
+
+  getCompTargetCost() {
+    switch (this.compTarget) {
+      case 0: {
+        return 100 + 50 * this.state.crankLevels;
+      }
+      case 1: {
+        return 100 + 50 * this.state.scrapLevels;
+      }
+      case 2: {
+        return 100 + 50 * this.state.batteryLevels;
+      }
+    }
   }
 }
 

@@ -333,12 +333,12 @@ body {
 
 .crankBar {
   background-color: #b7b7b7;
-  width: 35px;
+  width: 38px;
   height: 6px;
   border-radius: 3px;
   position: absolute;
   top: 32px;
-  transform-origin: center right;
+  transform-origin: 35px 3px;
   transform: rotate(3.141rad);
 }
 
@@ -359,6 +359,11 @@ body {
   width: 100%;
   height: 22px;
   background-color: #565656;
+}
+
+.crankProgress {
+  height: 100%;
+  background-color: gray;
 }
 
 #crankLevelProgress {
@@ -383,11 +388,13 @@ body {
 #metalMainSection {
 }
 
+/*
 #metalProgress {
   width: 50%;
   height: 100%;
   background-color: gray;
 }
+*/
 
 .crankSlider {
   appearance: none;

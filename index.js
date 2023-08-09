@@ -22,6 +22,7 @@
    happen when it's finished but in fact it unleashes the snail
   display icon on cells that will unlock story when completed
   need better favicon
+  hidden lore needs a default icon that is not the unknown icon
 
   add some license info as necessary
 
@@ -150,7 +151,14 @@ class App {
           cell.appendChild(lore);
         }
 
-        const worldClass = CHAR_TO_CLASS_MAP[WORLD[y][x]];
+        //const worldChar = WORLD[y][x];
+        let worldChar = WORLD[y][x];
+        if (worldChar === '.') {
+          const enemyList = 'c$pr';
+          worldChar = enemyList[Math.floor(Math.random() * 4)];
+        }
+
+        const worldClass = CHAR_TO_CLASS_MAP[worldChar];
         
         const newCell = {
           ui: cell,

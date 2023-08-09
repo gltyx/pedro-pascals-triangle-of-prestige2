@@ -64,31 +64,31 @@ const LORE_UNLOCK_MAP = {
 const LORE = [];
 //prefix is one of Adv,Cul,Ass,Unk for adventurer, cultist, assistant, unknown
 //names Adv: Isabel Ramirez, Cul: Diego Camazotz, Ass: Ellen Ochoa 
-LORE[0] = `Unk:I see that the three of you have arrived just as intended. You 
-  each have a part to play in what will soon unfold. The grid you see before you
-  represents the paths to be taken and the challenges along the way. I am now 
-  too weak to provide further guidance but I have sent two of my servants to 
-  help. - I Xpect Continued Hope, Endless Love.`;
+LORE[0] = `Unk:I perceive the arrival of you three, as intended. Each of you
+  holds a pivotal role in the unfolding events. Behold the intricate grid before
+  you, a tapestry of paths and perilous trials. Alas, though my strength wanes, 
+  and futher guidance eludes me, I have found just enough strength to dispatch
+  to you two of my servants to aid you. - I Xpect Continued Hope, Endless Love.`;
 LORE[1] = `Adv:Who are you and why did you start this group chat? It doesn't 
-  matter. I'm late. I'm supposed to meet the rest of the team at jungle dig 
+  matter. I'm late. I'm supposed to meet the rest of my team at jungle dig 
   site Sigma so I'm heading out now.`;
-LORE[2] = `Cul:How did you even get this number? I don't know why you think I'm 
-  here because of you. I came to observe some authentic Mayan rituals which
+LORE[2] = `Cul:How did you even get this number? I'm absolutely not 
+  here because of you. I came to observe some authentic Mayan rituals which only
   happen on July 26th, today! I'm told they take place on the outskirts of the 
   city and traffic is killer right now so I don't have time for this!`;
 LORE[3] = `Ass:I have no idea how you got into my phone either but you've made 
   a hacker very angry. I hope you know what you're doing because I'm heading to 
   the lab where I can put the facility's entire bank of supercomputers to work 
   finding you.`;
-LORE[4] = `Adv:Hey Diego, I thought all the "Mayan rituals" happened in the capitol.
-  How did you get into that stuff anyway? As an anthropologist, I find it 
-  fascinating.`;
+LORE[4] = `Adv:Hey Diego, I thought all the so-called "Mayan rituals" happened 
+  in the capitol. How did you get into that stuff anyway? As an anthropologist, 
+  I find it fascinating.`;
 LORE[5] = `Cul:I just watched a lot of online videos. You know how it is. I started
   with a pop song and 6 hours later I'm watching something called Xibalba
-  with like 20 views and no likes. Anyway, I'm really into the music
+  with like 20 views. Anyway, I'm really into the music
   and dancing. But, right now I'm lost. Ellen, can you use some of those computers
   to help me get to 1384 San Ignacio St?`;
-LORE[6] = `Ass:Sure Diego. I'm spinning up these babies right now but we don't
+LORE[6] = `Ass:Sure Diego. I'm spinning these babies up right now but we don't
   need them. A simple search on Tree3 maps should get you there.`;
 LORE[7] = `Adv:Wait, isn't that the address to the visitor center for the crystal
   maiden of the actun tunichil muknal cave? There's some really creepy history 
@@ -103,11 +103,11 @@ LORE[9] = `Cul:I don't know what those words mean either. Isabel, look like
   Mayan to you? Anyway, they will probably make sense when I get there.`;
 LORE[10] = `Adv:Doesn't look like any Mayan I've read before but I mostly
   focus on pottery and scupltures. I'll send it over to our linguist and see if
-  he has any ideas. He's 94 and half blind but he is a genius with languages.`;
+  he has any ideas. He's 94 and half blind but he's a genius with languages.`;
 LORE[11] = `Ass:How's he with python? Because our supercomputer cluster is acting
   very weird today and I might need some help. What kind of error message is
   "Welcome to Uayeb. There is no goodness."?`;
-LORE[12] = `Cul:Hey, Uayeb had something to do with the Mayan rituals I'm tring
+LORE[12] = `Cul:Hey, Uayeb has something to do with the Mayan rituals I'm tring
   to find! Weird that it's also a computer word. I guess I'll find out soon because
   I just got to this place. There's a sign that says "Peace Among Us All, Honor
   To All Neophites." which sounds kind of ritualish so I'm probably in the right
@@ -126,7 +126,7 @@ LORE[14] = `Ass:I'll jump right on it if I can get this system to cooperate.
 LORE[15] = `Cul:Ok. Just a weird coincidence then I guess. I'm still trying
   to find where this singing is coming from but I think I'm close. There are
   shiny streaks all over the walls in here that seem to be pointing me in the
-  right direction. Anyway, let you know if I learn anything about "Uayeb" that 
+  right direction. Anyway, I'll let you know if I learn anything about "Uayeb" that 
   might help you with your probtalinu shemurin.`;
 LORE[16] = `Ass:Isabel, my search finished without finding any recent match for
   the tokens you described. I tried widening the search and came up with a hit
@@ -175,15 +175,16 @@ LORE[24] = `Cul:I feel like I was in a nightmare but somehow I'm alone in this
   be able to feel right again. They were inside my head. I could feel that they
   were trying to open something down here and they finally succeeded. There is one final
   step before their master becomes free. They need to complete the triangle
-  thing they were working on. I can't seem to move my legs but somehow you two
+  thing they were working on. I can't seem to move my legs yet so but somehow we
   have got to stop them! Do not let them complete PEDRO PASCAL'S TRIANGLE OF PRESTIGE!!!`;
-LORE[25] = `Ass:I'm here and I can't believe it but I'm coming inside. I'll 
+LORE[25] = `Ass:I'm here and I can't believe it but I'm going inside. I'll 
   find both of you soon and we will find a way to stop this!`;
-LORE[26] = `Unk:My children, you have done a great deed today. You have defeated
-  the cult of Pauahtan and caused their malevolent king to remain sealed in his 
-  shell for another 5126 years. I, the goddess Ix Chel, will watch over you for
-  the rest of your many natural days and see that you each have a place 
-  in the heavens amongs the stars for your service and sacrifice.`;
+LORE[26] = `Unk:My children, you have emboldened the divine order this day.
+  Your triumph over the cult of Pauahtan has consigned their malevolent sovereign
+  to his shell, confined for another cycle of 5126 years. I, the goddess Ix Chel,
+  bear witness to your courage and tenacity in the face of unfathomable darkness.
+  I will watch over you for the rest of your many natural days and see that you 
+  each have a place in the heavens amongs the stars for your service and sacrifice.`;
 
 
 /*
