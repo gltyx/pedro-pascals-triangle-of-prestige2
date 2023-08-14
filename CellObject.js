@@ -1123,13 +1123,13 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.state.crankLevels = 0;
     this.state.scrapLevels = 0;
     this.state.batteryLevels = 0;
+    this.state.totalPower = 0;
 
     this.metalCost = 5;
     this.metalBoostCost = 1;
     this.batteryMetalCost = 10;
     this.batteryPowerCost = 10;
     this.batteryBoostMetalCost = 1;
-    this.totalPower = 0;
     this.crankAngle = 0;
     this.crankVelocity = 0;
     this.crankForce = 0;
@@ -1212,9 +1212,12 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const compCost = this.getCompTargetCost();
     
 
-    this.crankVelocity = Math.max(0, Math.min(vmax, this.crankVelocity + this.crankForce / crankm - crankFriction));
+    this.crankVelocity = Math.max(0, Math.min(vmax, this.crankVelocity + this.tPower * this.crankForce / crankm - crankFriction));
     this.crankAngle += this.crankVelocity;
-    this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.crankVelocity * crankPower / 0.1) - powerLeak));
+    const origPowerLevel = this.state.powerLevel;
+    this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
+    const deltaPowerLevel = Math.max(0, this.state.powerLevel - origPowerLevel);
+    this.state.totalPower += deltaPowerLevel;
     let compPercent;
     if (this.state.powerLevel >= compLeak) {
       this.state.powerLevel -= compLeak;
@@ -1277,7 +1280,6 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
         state.compStart = Infinity;
       }
       state.previousCompProgress = 0;
-      //TODO: APPLY CORRECT COMP COMPLETION REWARD
       this.compProgress = 0;
     }
 
@@ -1295,7 +1297,12 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       state.batteryStart = (new Date()).getTime() / 1000;
     }
 
-    //TODO: end game if total power generated is >= this.baseStrength
+    if (this.state.totalPower > this.baseStrength) {
+      return {
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
+      }
+    }
 
     this.state.lastUpdate = curTime;
   }
@@ -1322,6 +1329,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.UI.metalQueueSlider.max = this.state.metalQueueMax;
     this.UI.batteryQueueSlider.max = this.state.batteryQueueMax;
     this.UI.compPowerSlider.max = this.state.compPowerMax;
+
+    this.UI.totalPower.innerText = `${this.state.totalPower.toFixed(1)}`;
   }
 
   initGame(gameContainer) {
@@ -1420,7 +1429,6 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     compPowerSlider.type = 'range';
     compPowerSlider.min = 0;
     compPowerSlider.max = this.state.compPowerMax;
-    //TODO: get the value from state
     compPowerSlider.value = this.state.compPower;
     compPowerSlider.onchange = () => this.state.compPower = compPowerSlider.value;
 
