@@ -889,14 +889,15 @@ class CellObjectInfo extends CellObject {
         delete this.UI[`infoLoreItem${dist}`]
         const msgDiv = this.createElement('div', `infoLoreItem${dist}`, this.UI.infoContainerLore, 'infoLoreMsg');
         const msgIcon = this.createElement('div', '', msgDiv, 'infoLoreIcon');
-        const loreRawText = LORE[dist] ?? 'Unk:HELLO LORE this is even longer than you could have imagined';
+        const loreRawText = LORE[dist] ?? 'Hid:HELLO LORE this is even longer than you could have imagined';
         const loreAuthor = loreRawText.substr(0, 3);
         const loreText = loreRawText.substr(4);
         const loreName = {
           Adv: "Isabel Ram&iacute;rez",
           Cul: "Diego Camazotz",
           Ass: "Ellen Ochoa",
-          Unk: "Unknown"
+          Unk: "Unknown",
+          Hid: "Hidden"
         }
         const name = this.createElement('div', '', msgDiv, 'infoLoreName', loreName[loreAuthor]);
         name.innerHTML = loreName[loreAuthor];
@@ -908,7 +909,7 @@ class CellObjectInfo extends CellObject {
           }
           this.createElement('div', '', msgDiv, `infoLoreText,infoLoreText${loreAuthor}`, loreText);
         } else {
-          applySprite(msgIcon, `iconUnk`);
+          applySprite(msgIcon, `iconHidden`);
           msgDiv.classList.add('infoLoreLocked');
           this.createElement('div', '', msgDiv, `infoLoreText,infoLoreTextUnk`, this.gibberfy(loreText));
         }
