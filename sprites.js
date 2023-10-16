@@ -1,3 +1,5 @@
+'use strict';
+
 const SPRITES = {
   border1: [0, 0],
   border2: [1, 0],
@@ -27,7 +29,8 @@ const SPRITES = {
   iconHidden: [5, 1],
   lawn: [6, 1],
   anti: [7, 1]
-}
+};
+
 const SPRITE_PATH = './sprites.png';
 const SPRITE_URL = `url("${SPRITE_PATH}")`;
 

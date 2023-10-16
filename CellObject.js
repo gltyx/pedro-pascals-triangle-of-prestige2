@@ -395,7 +395,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     this.levelPercent = {};
     this.timeRemaining = {};
     CellObjectEnemyBusiness.levelOrder.forEach( level => {
-      const state = {}
+      const state = {};
       state.count = 0;
       state.start = Infinity;
       state.previousProgress = 0;
@@ -836,17 +836,17 @@ class CellObjectInfo extends CellObject {
 
     tabBodyTutorial.innerHTML = CellObjectInfo.tutorialHTML;
 
-    this.updateHistory(true)
+    this.updateHistory(true);
     this.updateLore(true);
     this.selectTab(this.state.lastTab);
   }
 
   selectTab(name) {
-    const selectedTabs = document.getElementsByClassName('infoTabSelected')
+    const selectedTabs = document.getElementsByClassName('infoTabSelected');
     for (let i = 0; i < selectedTabs.length; i++) {
       selectedTabs.item(i).classList.remove('infoTabSelected');
     }
-    const selectedTabBodies = document.getElementsByClassName('infoTabBodySelected')
+    const selectedTabBodies = document.getElementsByClassName('infoTabBodySelected');
     for (let i = 0; i < selectedTabBodies.length; i++) {
       selectedTabBodies.item(i).classList.remove('infoTabBodySelected');
     }
@@ -886,7 +886,7 @@ class CellObjectInfo extends CellObject {
       this.UI.infoContainerLore.innerHTML = '';
 
       for (let dist = 0; dist < LORE.length; dist++) {
-        delete this.UI[`infoLoreItem${dist}`]
+        delete this.UI[`infoLoreItem${dist}`];
         const msgDiv = this.createElement('div', `infoLoreItem${dist}`, this.UI.infoContainerLore, 'infoLoreMsg');
         const msgIcon = this.createElement('div', '', msgDiv, 'infoLoreIcon');
         const loreRawText = LORE[dist] ?? 'Hid:HELLO LORE this is even longer than you could have imagined';
@@ -898,7 +898,7 @@ class CellObjectInfo extends CellObject {
           Ass: "Ellen Ochoa",
           Unk: "Unknown",
           Hid: "Hidden"
-        }
+        };
         const name = this.createElement('div', '', msgDiv, 'infoLoreName', loreName[loreAuthor]);
         name.innerHTML = loreName[loreAuthor];
         if (loreUnlockArray[dist] || FORCE_UNLOCK) {
@@ -959,7 +959,7 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
 
   constructor(cell, dist) {
     super(cell, dist, 'prestige');
-    this.state.type = 'enemyPrestige'
+    this.state.type = 'enemyPrestige';
     this.baseStrength = Math.round(100 * Math.pow(strengthDistFactor, dist));
     this.state.start = (new Date()).getTime() / 1000;
     this.state.lastPrestigeTime = Infinity;
@@ -1085,7 +1085,7 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
       }
       this.state.prestiges[id]++;
       this.updateTable();
-    };
+    }
   }
 
   updateTable() {
@@ -1116,7 +1116,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.state.batteryQueueMax = 3;
     this.state.compPowerMax = 0;
     this.state.compPower = 0;
-    this.state.compStart = Infinity
+    this.state.compStart = Infinity;
     this.state.previousCompProgress = 0;
     this.state.compStart = (new Date()).getTime() / 1000;
     this.state.lastUpdate = Infinity;
@@ -1303,7 +1303,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
         cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
-      }
+      };
     }
 
     this.state.lastUpdate = curTime;

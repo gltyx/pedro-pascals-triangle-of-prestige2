@@ -1,3 +1,5 @@
+'use strict';
+
 const WORLD = [
  '?b..$.......x.x.x..x.xxxxxx.....',
  'sB$xxx.m.x..x.x.x.........x.x.x.',
@@ -53,7 +55,7 @@ const CHAR_TO_CLASS_MAP = {
   'r': CellObjectEnemyCrank,
   'l': CellObjectEnemyLawn,
   'a': CellObjectEnemyAnti
-}
+};
 
 //map enemy cell index into a lore index that it unlocks when defeated
 const LORE_UNLOCK_MAP = {
