@@ -17,14 +17,27 @@
     tick speed
     click power
     disassembly power
-  get drag/drop working on mobile
   maybe the cult is trying to complete PPToP because it believes something good will
    happen when it's finished but in fact it unleashes the snail
-  display icon on cells that will unlock story when completed
-  need better favicon
-  hidden lore needs a default icon that is not the unknown icon
 
   add some license info as necessary
+
+  TODO:
+    get drag/drop working on mobile
+    display icon on cells that will unlock story when completed
+    need better favicon
+    add antimatter dimensions 
+    add lawnmower game
+    add game end
+      confrontation with snail and cult
+      player has to play a game based on bell triangle to win
+    add reset with confirmation
+    get building new units to cost points
+    get point display looking nice
+    why does crank always show Rem: 100 in object details?
+
+
+
 
   s  active
    \   ---
