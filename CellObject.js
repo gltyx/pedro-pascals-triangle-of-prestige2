@@ -1298,6 +1298,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       state.batteryStart = (new Date()).getTime() / 1000;
     }
 
+    this.percent = 100 * (1 - this.state.totalPower / this.baseStrength);
     if (this.state.totalPower > this.baseStrength) {
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
@@ -1314,7 +1315,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.UI.crankBar.style.transform = `rotate(${this.crankAngle}rad)`;
     this.UI.crankBall.style.transform = `rotate(${this.crankAngle}rad)`;
 
-    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${this.state.powerLevel.toFixed(1)}%`);
+    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${this.state.powerLevel.toFixed(1) * 100 / this.powerMax}%`);
     this.UI.crankLevelValue.innerText = `${this.state.powerLevel.toFixed(1)} / ${this.powerMax}`;
 
     this.updateStyle(this.UI.metalProgress.style, 'width', `${this.metalProgress.toFixed(1)}%`);
