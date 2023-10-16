@@ -24,7 +24,6 @@
 
   TODO:
     get drag/drop working on mobile
-    display icon on cells that will unlock story when completed
     need better favicon
     add antimatter dimensions 
     add lawnmower game
@@ -167,8 +166,8 @@ class App {
         //const worldChar = WORLD[y][x];
         let worldChar = WORLD[y][x];
         if (worldChar === '.') {
-          const enemyList = 'c$pr';
-          worldChar = enemyList[Math.floor(Math.random() * 4)];
+          const enemyList = 'c$prla';
+          worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
         }
 
         const worldClass = CHAR_TO_CLASS_MAP[worldChar];

@@ -24,7 +24,9 @@ const SPRITES = {
   iconUnk: [2, 1],
   lore: [3, 1],
   crank: [4, 1],
-  iconHidden: [5, 1]
+  iconHidden: [5, 1],
+  lawn: [6, 1],
+  anti: [7, 1]
 }
 const SPRITE_PATH = './sprites.png';
 const SPRITE_URL = `url("${SPRITE_PATH}")`;

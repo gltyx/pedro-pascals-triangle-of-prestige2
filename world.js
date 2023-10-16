@@ -50,7 +50,9 @@ const CHAR_TO_CLASS_MAP = {
   'B': CellObjectBuild,
   '?': CellObjectInfo,
   'p': CellObjectEnemyPrestige,
-  'r': CellObjectEnemyCrank
+  'r': CellObjectEnemyCrank,
+  'l': CellObjectEnemyLawn,
+  'a': CellObjectEnemyAnti
 }
 
 //map enemy cell index into a lore index that it unlocks when defeated

@@ -1511,6 +1511,27 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
   }
 }
 
+class CellObjectEnemyLawn extends CellObjectEnemy {
+  constructor(cell, dist) {
+    super(cell, dist, 'lawn');
+    this.state.type = 'enemyLawn';
+    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.state.start = Infinity;
+    this.state.cash = 0;
+    this.state.strength = this.baseStrength;
+  }
+}
+
+class CellObjectEnemyAnti extends CellObjectEnemy {
+  constructor(cell, dist) {
+    super(cell, dist, 'anti');
+    this.state.type = 'enemyAnti';
+    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.state.start = Infinity;
+    this.state.anti = 0;
+    this.state.strength = this.baseStrength;
+  }
+}
 
 const TYPE_TO_CLASS_MAP = {
   'none': CellObject,
@@ -1524,6 +1545,8 @@ const TYPE_TO_CLASS_MAP = {
   'build': CellObjectBuild,
   'info': CellObjectInfo,
   'enemyPrestige': CellObjectEnemyPrestige,
-  'enemyCrank': CellObjectEnemyCrank
+  'enemyCrank': CellObjectEnemyCrank,
+  'enemyLawn': CellObjectEnemyLawn,
+  'enemyAnti': CellObjectEnemyAnti
 };
 
