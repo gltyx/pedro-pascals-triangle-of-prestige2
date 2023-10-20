@@ -1511,6 +1511,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
   }
 }
 
+//permission granted by firefliesalco, the creator of lawnmower game, on discord 10/20/2023
+//  to "Feel free to use the code for the game however you wish"
 class CellObjectEnemyLawn extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'lawn');
@@ -1519,6 +1521,67 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.state.start = Infinity;
     this.state.cash = 0;
     this.state.strength = this.baseStrength;
+  }
+
+  /*
+    TODO:
+    cash
+    graphic
+    total grass mowed
+    upgrade tick rate
+      growth rate
+      lawnmower speed
+      lawnmower size
+      tile size
+      unlock
+      mulch
+      prestige for mulch
+      value bonus
+      growth bonus
+  */
+
+  update(curTime, neighbors) {
+    super.update(curTime, neighbors);
+  }
+
+  displayCellInfo(container) {
+    super.displayCellInfo(container);
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+    
+    const containerDiv = this.createElement('div', '', gameContainer, 'lawnContainer');
+    const leftDiv = this.createElement('div', '', containerDiv);
+    const rightDiv = this.createElement('div', '', containerDiv);
+
+    const cashDiv = this.createElement('div', '', leftDiv, '', '$');
+    const cashSpan = this.createElement('span', 'cash', cashDiv, '', '100');
+    const totalDiv = this.createElement('div', '', leftDiv, '', 'Total Grass Mowed: ');
+    const totalSpan = this.createElement('span', 'totalGrass', totalDiv, '', '2423');
+
+    const upgrades = 'tr,gr,ls,lz,ts'.split`,`;
+    upgrades.forEach( u => {
+      const upgradeDiv = this.createElement('div', '', leftDiv);
+      const button = this.createElement('button', `button${u}`, upgradeDiv, '', u);
+      const desc = this.createElement('span', `desc${u}`, upgradeDiv, '', 'desc');
+    });
+
+    const unlockDiv = this.createElement('div', '', leftDiv);
+    const prevB = this.createElement('button', 'prev', unlockDiv, '', '<');
+    const unlockB = this.createElement('button', 'unlock', unlockDiv, '', 'Unlock');
+    const nextB = this.createElement('button', 'next', unlockDiv, '', '>');
+
+    const mulchDiv = this.createElement('div', '', leftDiv, '', 'Mulch: ');
+    const mulchSpan = this.createElement('span', 'mulch', mulchDiv, '', '0');
+
+    const valueDiv = this.createElement('div', '', leftDiv, '', 'Value Bonus: ');
+    const valueSpan = this.createElement('span', 'value', valueDiv, '', '0%');
+
+    const growthDiv = this.createElement('div', '', leftDiv, '', 'Growth Bonus: ');
+    const growthSpan = this.createElement('span', 'growth', growthDiv, '', '1x');
+
+    const canvas = this.createElement('canvas', 'canvas', rightDiv, 'lawnCanvas');
   }
 }
 

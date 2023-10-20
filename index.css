@@ -418,3 +418,15 @@ body {
   border-radius: 0px;
   border: none;
 }
+
+.lawnContainer {
+  display: grid;
+  grid-template-columns: 1fr 256px;
+}
+
+.lawnCanvas {
+  width: 256px;
+  height: 256px;
+  background: green;
+  outline: 2px solid black;
+}
