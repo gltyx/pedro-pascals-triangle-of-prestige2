@@ -1519,8 +1519,15 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.state.type = 'enemyLawn';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
-    this.state.cash = 0;
+    this.state.totalGrass = 0;
     this.state.strength = this.baseStrength;
+    this.state.savedMoney = 0;
+    this.money = 0;
+    this.state.totalMoney = 0;
+    this.state.mulch = 0;
+    this.upgradeTypes = 'tr,gr,ls,lz,ts'.split`,`;
+    this.state.start = (new Date()).getTime() / 1000;
+    this.state.fields = [];
   }
 
   /*
@@ -1542,10 +1549,60 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
+
+    const gain = 1 + this.state.mulch / 100;
+    const rate = this.tPower * gain;
+
+    if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
+      this.state.savedMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedMoney;
+
+      this.state.start = curTime;
+    }
+
+    if (rate > 0) {
+      this.money = Math.floor((curTime - this.state.start)) * rate + this.state.savedMoney;
+    } else {
+      this.money = this.state.savedMoney;
+    }
+
+    this.percent = 100 * (1 - this.money / this.baseStrength);
+
+    /* TODO: Uncomment to enable win condition
+    if (this.percent <= 0) {
+      //game over
+      return {
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
+      };
+    }
+    */
+
   }
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
+
+    this.UI.cash.innerText = this.money;
+    this.UI.totalGrass.innerText = this.state.totalGrass;
+    this.upgradeTypes.forEach( u => {
+      const ub = this.UI[`button${u}`];
+      const ud = this.UI[`desc${u}`];
+      ub.innerText = 'HELLO';
+      ud.innerText = 'WORLD';
+    });
+
+    this.UI.unlock.innerText = 'UNLOCK';
+    this.UI.prev.disabled = true;
+    this.UI.next.disabled = true;
+    this.UI.mulch.innerText = this.state.mulch;
+    this.UI.value.innerText = 'VALUE';
+    this.UI.growth.innerText = 'GROWTH';
+
+    this.updateCanvas();
+  }
+
+  updateCanvas() {
+  
   }
 
   initGame(gameContainer) {
@@ -1560,8 +1617,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const totalDiv = this.createElement('div', '', leftDiv, '', 'Total Grass Mowed: ');
     const totalSpan = this.createElement('span', 'totalGrass', totalDiv, '', '2423');
 
-    const upgrades = 'tr,gr,ls,lz,ts'.split`,`;
-    upgrades.forEach( u => {
+    this.upgradeTypes.forEach( u => {
       const upgradeDiv = this.createElement('div', '', leftDiv);
       const button = this.createElement('button', `button${u}`, upgradeDiv, '', u);
       const desc = this.createElement('span', `desc${u}`, upgradeDiv, '', 'desc');
