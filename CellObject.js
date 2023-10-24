@@ -1518,6 +1518,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     super(cell, dist, 'lawn');
     this.state.type = 'enemyLawn';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.csize = 240;
+    this.tsize = [24, 12, 10, 5, 3, 2, 1, 0.5];
     this.state.start = Infinity;
     this.state.totalGrass = 0;
     this.state.strength = this.baseStrength;
@@ -1527,7 +1529,9 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.state.mulch = 0;
     this.upgradeTypes = 'tr,gr,ls,lz,ts'.split`,`;
     this.state.start = (new Date()).getTime() / 1000;
+    this.machinei = 0;
     this.state.fields = [];
+    this.resetGrid();
   }
 
   /*
@@ -1547,6 +1551,19 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       growth bonus
   */
 
+  resetGrid() {
+    const s = this.tsize[0];
+    const w = this.csize / s;
+    const h = this.csize / s;
+    this.grid = new Array(w);
+    for (let x = 0; x < w; x++) {
+      this.grid[x] = new Array(h);
+      for (let y = 0; y < h; y++) {
+        this.grid[x][y] = Math.floor(Math.random() * 15);
+      }
+    }
+  }
+
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
@@ -1561,6 +1578,17 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     if (rate > 0) {
       this.money = Math.floor((curTime - this.state.start)) * rate + this.state.savedMoney;
+
+      this.growRndTile();
+      
+      if (this.tickCount === undefined) {
+        this.tickCount = 0;
+      }
+      this.tickCount = (this.tickCount + 1) % 20;
+      if (this.tickCount === 0) {
+        this.stepMachine();
+      }
+
     } else {
       this.money = this.state.savedMoney;
     }
@@ -1598,11 +1626,77 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.UI.value.innerText = 'VALUE';
     this.UI.growth.innerText = 'GROWTH';
 
-    this.updateCanvas();
+    this.displayMachine();
+
   }
 
   updateCanvas() {
-  
+    const s = this.tsize[0];
+    const w = this.csize / s;
+    const h = this.csize / s;
+    const ctx = this.UI.canvas.ctx;
+
+    ctx.save();
+
+    for (let x = 0; x < w; x++) {
+      const col = this.grid[x];
+      const xpos = x * s;
+      for (let y = 0; y < h; y++) {
+        const cell = col[y];
+        ctx.fillStyle = `hsl(100, 50%, ${50 * (15 - cell) / 15 + 20}%)`;
+        ctx.fillRect(xpos, y * s, s, s);
+      }
+    }
+
+    ctx.restore();
+  }
+
+  growRndTile() {
+    const s = this.tsize[0];
+    const w = this.csize / s;
+    const h = this.csize / s;
+    const gx = Math.floor(Math.random() * w);
+    const gy = Math.floor(Math.random() * h);
+    const cell = Math.min(15, this.grid[gx][gy] + 1);
+    this.grid[gx][gy] = cell;
+    if (this.UI.canvas) {
+      const ctx = this.UI.canvas.ctx;
+      
+      ctx.fillStyle = `hsl(100, 50%, ${50 * (15 - cell) / 15 + 20}%)`;
+      ctx.fillRect(gx * s, gy * s, s, s);
+    }
+  }
+
+  stepMachine() {
+    const mw = 2;
+    const mh = 2;
+    const maxi = Math.ceil(this.csize / (mw * this.tsize[0])) * Math.ceil(this.csize / (mh * this.tsize[0]));
+    this.machinei = (this.machinei + 1) % maxi;
+    console.log(this.machinei);
+  }
+
+  displayMachine() {
+    this.updateCanvas();
+    //TODO: redraw last machine position only instead of updating entire canvas
+    const s = this.tsize[0];
+    const mw = 2;
+    const mh = 2;
+    const cw = Math.floor(this.csize / (this.tsize[0] * mw));
+    const ch = Math.floor(this.csize / (this.tsize[0] * mh));
+    const mx = Math.floor(this.machinei / ch);
+    const my = mx % 2 ? ((ch-1) - this.machinei % ch) : this.machinei % ch;
+    const ctx = this.UI.canvas.ctx;
+    ctx.fillStyle = 'red';
+    ctx.fillRect(mx * s * mw, my * s * mh, mw * s, mh * s);
+    for (let x = 0; x < mw; x++) {
+      for (let y = 0; y < mh; y++) {
+        const gx = mx * mw + x;
+        const gy = my * mh + y;
+        if (gx >= this.csize / this.tsize[0]) {continue;}
+        if (gy >= this.csize / this.tsize[0]) {continue;}
+        this.grid[mx * mw + x][my * mh + y] = 0;
+      }
+    }
   }
 
   initGame(gameContainer) {
@@ -1638,6 +1732,11 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const growthSpan = this.createElement('span', 'growth', growthDiv, '', '1x');
 
     const canvas = this.createElement('canvas', 'canvas', rightDiv, 'lawnCanvas');
+    canvas.width = this.csize;
+    canvas.height = this.csize;
+    canvas.ctx = canvas.getContext('2d');
+
+    this.updateCanvas();
   }
 }
 
