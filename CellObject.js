@@ -132,6 +132,7 @@ class CellObjectEnemy extends CellObject {
   }
 
   update(curTime, neighbors) {
+    this.curTime = curTime;
     const forceLast = this.tPower === undefined;
     this.lasttPower = this.tPower;
     this.lastcPower = this.cPower;
@@ -1545,7 +1546,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.initFields();
     this.initUpgrades();
     this.nextTick = 0;
-    this.resetGrid();
+    //this.resetGrid();
   }
 
   /*
@@ -1597,6 +1598,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       multiplier: 3.5,
       onBuy: () => {
         this.state.fields[this.state.displayField].tileSize = Math.min(this.state.fields[this.state.displayField].tileSize + 1, this.tsize.length - 1);
+        this.resetGrid();
         this.updateCanvas();
       },
       dispVal: () => {const width = this.csize / this.tsize[this.state.fields[this.state.displayField].tileSize]; return `${width}x${width}`;},
@@ -1616,7 +1618,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       multiplier: 1.2,
       onBuy: () => this.state.fields[this.state.displayField].tickRate = Math.max(1, Math.floor(this.state.fields[this.state.displayField].tickRate*0.9)),
       dispVal: () => `${this.state.fields[this.state.displayField].tickRate} ms`,
-      canBuy: () => this.state.fields[this.state.displayField].tickRage > 4
+      canBuy: () => this.state.fields[this.state.displayField].tickRate > 4
     };
   }
 
@@ -1654,13 +1656,13 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   getUpgradePrice(name) {
     const upgrade = this.upgradeConsts[name];
-    const initialBuff = this.state.fieldConsts[this.state.displayField].initialBuff;
-    const multiplierBuff = this.state.fieldConsts[this.state.displayField].multiplierBuff;
+    const initialBuff = this.fieldConsts[this.state.displayField].initialBuff;
+    const multiplierBuff = this.fieldConsts[this.state.displayField].multiplierBuff;
     return Math.floor(upgrade.price * initialBuff * Math.pow(upgrade.multiplier + multiplierBuff, this.state.fields[this.state.displayField].upgrades[name]));
   }
 
   resetGrid() {
-    const s = this.tsize[0];
+    const s = this.tsize[this.state.fields[this.state.displayField].tileSize];
     const w = this.csize / s;
     const h = this.csize / s;
     this.grid = new Array(w);
@@ -1681,6 +1683,10 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
+
+    if (this.grid === undefined) {
+      this.resetGrid();
+    }
 
     const gain = 1 + this.state.mulch / 100;
     const rate = this.tPower <= 0 ? 0 : (this.tPower * this.state.fields.reduce( (acc, f) => acc + this.getFieldRate(f), 0) );
@@ -1726,6 +1732,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
+    //TODO: display game over cash value
 
     this.UI.cash.innerText = this.money;
     this.UI.message.innerText = this.fieldConsts[this.state.displayField].message;
@@ -1733,8 +1740,10 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.upgradeTypes.forEach( u => {
       const ub = this.UI[`button${u}`];
       const ud = this.UI[`desc${u}`];
-      ub.innerText = this.upgradeConsts[u].name();
+      const cost = this.getUpgradePrice(u);
+      ub.innerText = `${this.upgradeConsts[u].name()} - \$${cost}`;
       ud.innerText = this.upgradeConsts[u].dispVal();
+      ub.disabled = !(this.upgradeConsts[u].canBuy() && (cost <= this.money));
     });
 
     this.UI.unlock.innerText = 'UNLOCK';
@@ -1787,9 +1796,10 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   }
 
   stepMachine() {
+    const s = this.tsize[this.state.fields[this.state.displayField].tileSize];
     const mw = this.state.fields[this.state.displayField].machineWidth;
     const mh = this.state.fields[this.state.displayField].machineHeight;
-    const maxi = Math.ceil(this.csize / (mw * this.tsize[0])) * Math.ceil(this.csize / (mh * this.tsize[0]));
+    const maxi = Math.ceil(this.csize / (mw * s)) * Math.ceil(this.csize / (mh * s));
     this.lastMachinei = this.machinei;
     this.machinei = (this.machinei + 1) % maxi;
   }
@@ -1798,19 +1808,20 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const s = this.tsize[this.state.fields[this.state.displayField].tileSize];
     const mw = this.state.fields[this.state.displayField].machineWidth;
     const mh = this.state.fields[this.state.displayField].machineHeight;
-    const cw = Math.floor(this.csize / (this.tsize[0] * mw));
-    const ch = Math.floor(this.csize / (this.tsize[0] * mh));
+    const cw = Math.ceil(this.csize / (s * mw));
+    const ch = Math.ceil(this.csize / (s * mh));
     const mx = Math.floor(i / ch);
     const my = mx % 2 ? ((ch-1) - i % ch) : i % ch;
     const ctx = this.UI.canvas.ctx;
+    const bound = this.csize / s;
     
     if (erase) {
       for (let x = 0; x < mw; x++) {
         for (let y = 0; y < mh; y++) {
           const gx = mx * mw + x;
           const gy = my * mh + y;
-          if (gx >= this.csize / this.tsize[0]) {continue;}
-          if (gy >= this.csize / this.tsize[0]) {continue;}
+          if (gx >= bound) {continue;}
+          if (gy >= bound) {continue;}
           const cell = this.grid[gx][gy];
           ctx.fillStyle = this.getTileColor(cell);
           ctx.fillRect(gx * s, gy * s, s, s);
@@ -1823,8 +1834,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
         for (let y = 0; y < mh; y++) {
           const gx = mx * mw + x;
           const gy = my * mh + y;
-          if (gx >= this.csize / this.tsize[0]) {continue;}
-          if (gy >= this.csize / this.tsize[0]) {continue;}
+          if (gx >= bound) {continue;}
+          if (gy >= bound) {continue;}
           this.grid[gx][gy] = 0;
         }
       }
@@ -1848,6 +1859,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       const upgradeDiv = this.createElement('div', '', leftDiv);
       const button = this.createElement('button', `button${u}`, upgradeDiv, 'lawnUpgradeButton', u);
       const desc = this.createElement('div', `desc${u}`, upgradeDiv, '', 'desc');
+      button.onclick = () => this.buyUpgrade(u);
     });
 
     const unlockDiv = this.createElement('div', '', leftDiv);
@@ -1882,6 +1894,16 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const b = baseColor[2] + (ratio * (grownColor[2] - baseColor[2]));
 
     return `rgb(${r},${g},${b})`;
+  }
+
+  buyUpgrade(upgradeName) {
+    const cost = this.getUpgradePrice(upgradeName);
+    if (this.money >= cost) {
+      this.state.savedMoney = this.money - cost;
+      this.state.start = this.curTime;
+      this.upgradeConsts[upgradeName].onBuy();
+      this.state.fields[this.state.displayField].upgrades[upgradeName]++;
+    }
   }
 }
 
