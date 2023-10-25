@@ -1547,19 +1547,10 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.initFields();
     this.initUpgrades();
     this.nextTick = 0;
-    //this.resetGrid();
   }
 
   /*
     TODO:
-    cash
-    graphic
-    total grass mowed
-    upgrade tick rate
-      growth rate
-      lawnmower speed
-      lawnmower size
-      tile size
       unlock
       mulch
       prestige for mulch
@@ -1757,9 +1748,12 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       ub.disabled = !(canBuy && (cost <= this.money));
     });
 
-    this.UI.unlock.innerText = 'UNLOCK';
-    this.UI.prev.disabled = true;
-    this.UI.next.disabled = true;
+    //TODO: implment next 2 lines
+    const nextFieldName = 'NEXT';
+    const nextFieldCost = 'COST';
+    this.UI.unlock.innerText = `Unlock ${nextFieldName} for \$${nextFieldCost}`;
+    this.UI.prev.disabled = this.state.displayField <= 0;
+    this.UI.next.disabled = (this.state.displayField + 1 >= this.state.fields.length) || (!this.state.fields[this.state.displayField + 1].unlocked);
     this.UI.mulch.innerText = this.state.mulch;
     this.UI.value.innerText = 'VALUE';
     this.UI.growth.innerText = 'GROWTH';
@@ -1871,10 +1865,14 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       button.onclick = () => this.buyUpgrade(u);
     });
 
+    //TODO: put prev and next buttons on new line than unlock
     const unlockDiv = this.createElement('div', '', leftDiv);
     const prevB = this.createElement('button', 'prev', unlockDiv, '', '<');
     const unlockB = this.createElement('button', 'unlock', unlockDiv, '', 'Unlock');
     const nextB = this.createElement('button', 'next', unlockDiv, '', '>');
+    prevB.onclick = () => this.prevField();
+    unlockB.onclick = () => this.unlockField();
+    nextB.onclick = () => this.nextField();
 
     const mulchDiv = this.createElement('div', '', leftDiv, '', 'Mulch: ');
     const mulchSpan = this.createElement('span', 'mulch', mulchDiv, '', '0');
@@ -1914,6 +1912,12 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       this.state.fields[this.state.displayField].upgrades[upgradeName]++;
     }
   }
+
+  prevField() {
+    this.state.displayField = Math.max(0, this.state.displayField - 1);
+  }
+  nextField() { }
+  unlockField() { }
 }
 
 class CellObjectEnemyAnti extends CellObjectEnemy {
