@@ -1531,11 +1531,12 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       ts: () => 'Tile Size'
     };
     this.state.start = Infinity;
-    this.state.totalGrass = 0;
     this.state.strength = this.baseStrength;
     this.state.savedMoney = 0;
     this.money = 0;
     this.state.totalMoney = 0;
+    this.state.savedTotalMoney = 0;
+
     this.state.mulch = 0;
     this.state.start = (new Date()).getTime() / 1000;
     this.state.displayField = 0;
@@ -1587,6 +1588,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
         } else {
           state.machineHeight++;
         }
+        this.lastMachinei = 0;
         this.machinei = 0;
       },
       dispVal: () => `${this.state.fields[this.state.displayField].machineWidth}x${this.state.fields[this.state.displayField].machineHeight}`,
@@ -1624,17 +1626,17 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   initFields() {
     this.fieldConsts = [];
-    this.fieldConsts.push({"name":"Grass","multiplierBuff":0,"initialBuff":1,"baseColor":[0,210,0],"grownColor":[0,130,0],"machineColor":"rgb(255,0,0)","unlockPrice":0,"message":"Grass Mowed: ","value":1,"machineName":"Lawnmower"});
-    this.fieldConsts.push({"name":"Dirt","multiplierBuff":0.15,"initialBuff":10,"baseColor":[175,175,175],"grownColor":[122,96,0],"machineColor":"rgb(68, 130, 206)","unlockPrice":100000,"message":"Dirt Vacuumed: ","value":5,"machineName":"Vacuum"});
-    this.fieldConsts.push({"name":"Weed","multiplierBuff":0.25,"initialBuff":50,"baseColor":[239,233,112],"grownColor":[145,233,124],"machineColor":"rgb(255,127,0)","unlockPrice":1000000,"message":"Weeds Whacked: ","value":20,"machineName":"Weed Whacker"});
-    this.fieldConsts.push({"name":"Pumpkin","multiplierBuff":0.35,"initialBuff":100,"baseColor":[181,155,105],"grownColor":[255,188,61],"machineColor":"rgb(119, 119, 119)","unlockPrice":10000000,"message":"Pumpkins Thwacked: ","value":50,"machineName":"Harvester"});
-    this.fieldConsts.push({"name":"Tree","multiplierBuff":0.45,"initialBuff":500,"baseColor":[122,81,0],"grownColor":[54,109,0],"machineColor":"rgb(97, 175, 191)","unlockPrice":100000000,"message":"Trees Chopped: ","value":100,"machineName":"Chainsaw"});
-    this.fieldConsts.push({"name":"Fire","multiplierBuff":0.55,"initialBuff":1000,"baseColor":[255,0,0],"grownColor":[255,255,0],"machineColor":"rgb(0,0,255)","unlockPrice":1000000000,"message":"Fires Extinguished: ","value":200,"machineName":"Wave"});
-    this.fieldConsts.push({"name":"Stone","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,255,255],"grownColor":[124,124,124],"machineColor":"rgb(122, 73, 33)","unlockPrice":10000000000,"message":"Stone Mined: ","value":500,"machineName":"Wooden Pickaxe"});
-    this.fieldConsts.push({"name":"Iron","multiplierBuff":0.75,"initialBuff":10000,"baseColor":[124,124,124],"grownColor":[221,206,193],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000,"message":"Iron Mined: ","value":1000,"machineName":"Stone Pickaxe"});
-    this.fieldConsts.push({"name":"Diamond","multiplierBuff":0.85,"initialBuff":50000,"baseColor":[124,124,124],"grownColor":[124,239,228],"machineColor":"rgb(221, 206, 193)","unlockPrice":1000000000000,"message":"Diamonds Mined: ","value":2000,"machineName":"Iron Pickaxe"});
-    this.fieldConsts.push({"name":"Gold","multiplierBuff":0.95,"initialBuff":100000,"baseColor":[138,202,216],"grownColor":[211,176,0],"machineColor":"rgb(143, 158, 139)","unlockPrice":10000000000000,"message":"Gold Panned: ","value":5000,"machineName":"Pan"});
-    this.fieldConsts.push({"name":"People","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,67,50],"grownColor":[255,211,168],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000000,"message":"People Killed: ","value":10000,"machineName":"Terminator"});
+    this.fieldConsts.push({"name":"Grass","multiplierBuff":0,"initialBuff":1,"baseColor":[0,210,0],"grownColor":[0,130,0],"machineColor":"rgb(255,0,0)","unlockPrice":0,"value":1,"machineName":"Lawnmower"});
+    this.fieldConsts.push({"name":"Dirt","multiplierBuff":0.15,"initialBuff":10,"baseColor":[175,175,175],"grownColor":[122,96,0],"machineColor":"rgb(68, 130, 206)","unlockPrice":100000,"value":5,"machineName":"Vacuum"});
+    this.fieldConsts.push({"name":"Weed","multiplierBuff":0.25,"initialBuff":50,"baseColor":[239,233,112],"grownColor":[145,233,124],"machineColor":"rgb(255,127,0)","unlockPrice":1000000,"value":20,"machineName":"Weed Whacker"});
+    this.fieldConsts.push({"name":"Pumpkin","multiplierBuff":0.35,"initialBuff":100,"baseColor":[181,155,105],"grownColor":[255,188,61],"machineColor":"rgb(119, 119, 119)","unlockPrice":10000000,"value":50,"machineName":"Harvester"});
+    this.fieldConsts.push({"name":"Tree","multiplierBuff":0.45,"initialBuff":500,"baseColor":[122,81,0],"grownColor":[54,109,0],"machineColor":"rgb(97, 175, 191)","unlockPrice":100000000,"value":100,"machineName":"Chainsaw"});
+    this.fieldConsts.push({"name":"Fire","multiplierBuff":0.55,"initialBuff":1000,"baseColor":[255,0,0],"grownColor":[255,255,0],"machineColor":"rgb(0,0,255)","unlockPrice":1000000000,"value":200,"machineName":"Wave"});
+    this.fieldConsts.push({"name":"Stone","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,255,255],"grownColor":[124,124,124],"machineColor":"rgb(122, 73, 33)","unlockPrice":10000000000,"value":500,"machineName":"Wooden Pickaxe"});
+    this.fieldConsts.push({"name":"Iron","multiplierBuff":0.75,"initialBuff":10000,"baseColor":[124,124,124],"grownColor":[221,206,193],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000,"value":1000,"machineName":"Stone Pickaxe"});
+    this.fieldConsts.push({"name":"Diamond","multiplierBuff":0.85,"initialBuff":50000,"baseColor":[124,124,124],"grownColor":[124,239,228],"machineColor":"rgb(221, 206, 193)","unlockPrice":1000000000000,"value":2000,"machineName":"Iron Pickaxe"});
+    this.fieldConsts.push({"name":"Gold","multiplierBuff":0.95,"initialBuff":100000,"baseColor":[138,202,216],"grownColor":[211,176,0],"machineColor":"rgb(143, 158, 139)","unlockPrice":10000000000000,"value":5000,"machineName":"Pan"});
+    this.fieldConsts.push({"name":"People","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,67,50],"grownColor":[255,211,168],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000000,"value":10000,"machineName":"Terminator"});
 
     this.fieldConsts.forEach( (f, i) => {
       const fstate = {};
@@ -1677,7 +1679,13 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   getFieldRate(state) {
     //return grass per second
     if (!state.unlocked) { return 0; }
-    const rate = state.machineWidth * state.machineHeight * state.machineSpeed * Math.round(state.growthAmount * 0.25)
+    //growthFactor scales from 0.35 to 1.0 as growthAmount changes. Not linearlly
+    const b = 0.035;
+    const a = 2;
+    const x = state.growthAmount;
+    const term = (b * x * x + a);
+    const growthFactor = x >= 58 ? 1.0 : 2 + term / (-term + 1);
+    const rate = (1000 / state.tickRate) * state.machineWidth * state.machineHeight * state.machineSpeed * growthFactor;
     return rate;
   }
 
@@ -1688,17 +1696,22 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       this.resetGrid();
     }
 
-    const gain = 1 + this.state.mulch / 100;
-    const rate = this.tPower <= 0 ? 0 : (this.tPower * this.state.fields.reduce( (acc, f) => acc + this.getFieldRate(f), 0) );
+    const gain = this.state.fields.reduce( (acc, f) => acc + this.getFieldRate(f), 0);
+    const rate = this.tPower * gain;
+
+    //TODO: remove this debug value
+    this.rate = rate;
 
     if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
       this.state.savedMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedMoney;
+      this.state.totalMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedTotalMoney;
 
       this.state.start = curTime;
     }
 
     if (rate > 0) {
-      this.money = Math.floor((curTime - this.state.start)) * rate + this.state.savedMoney;
+      this.money = Math.floor((curTime - this.state.start)) * rate * this.fieldConsts[this.state.displayField].value + this.state.savedMoney;
+      this.totalMoney = Math.floor((curTime - this.state.start)) * rate * this.fieldConsts[this.state.displayField].value + this.state.savedTotalMoney;
 
 
       if (curTime >= this.nextTick) {
@@ -1714,6 +1727,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     } else {
       this.money = this.state.savedMoney;
+      this.totalMoney = this.state.savedTotalMoney;
     }
 
     this.percent = 100 * (1 - this.money / this.baseStrength);
@@ -1732,18 +1746,15 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
-    //TODO: display game over cash value
-
-    this.UI.cash.innerText = this.money;
-    this.UI.message.innerText = this.fieldConsts[this.state.displayField].message;
-    this.UI.totalGrass.innerText = this.state.totalGrass;
+    this.UI.cash.innerText = `${this.money} / ${this.baseStrength} (${this.rate})`;
     this.upgradeTypes.forEach( u => {
       const ub = this.UI[`button${u}`];
       const ud = this.UI[`desc${u}`];
       const cost = this.getUpgradePrice(u);
-      ub.innerText = `${this.upgradeConsts[u].name()} - \$${cost}`;
+      const canBuy = this.upgradeConsts[u].canBuy();
+      ub.innerText = `${this.upgradeConsts[u].name()} - ${canBuy ? '$' + cost : 'MAXED'}`;
       ud.innerText = this.upgradeConsts[u].dispVal();
-      ub.disabled = !(this.upgradeConsts[u].canBuy() && (cost <= this.money));
+      ub.disabled = !(canBuy && (cost <= this.money));
     });
 
     this.UI.unlock.innerText = 'UNLOCK';
@@ -1852,8 +1863,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const cashDiv = this.createElement('div', '', leftDiv, '', '$');
     const cashSpan = this.createElement('span', 'cash', cashDiv, '', '100');
     const totalDiv = this.createElement('div', '', leftDiv);
-    const msgSpan = this.createElement('span', 'message', totalDiv);
-    const totalSpan = this.createElement('span', 'totalGrass', totalDiv, '', '2423');
 
     this.upgradeTypes.forEach( u => {
       const upgradeDiv = this.createElement('div', '', leftDiv);
