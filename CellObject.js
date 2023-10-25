@@ -1642,12 +1642,14 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       fstate.machineHeight = 1;
       fstate.growthAmount = 4;
       fstate.tickRate = 1000;
+      fstate.unlocked = false;
       fstate.upgrades = {};
       this.upgradeTypes.forEach( u => {
         fstate.upgrades[u] = 0;
       });
       this.state.fields[i] = fstate;
     });
+    this.state.fields[0].unlocked = true;
   }
 
   getUpgradePrice(name) {
@@ -1670,11 +1672,18 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     }
   }
 
+  getFieldRate(state) {
+    //return grass per second
+    if (!state.unlocked) { return 0; }
+    const rate = state.machineWidth * state.machineHeight * state.machineSpeed * Math.round(state.growthAmount * 0.25)
+    return rate;
+  }
+
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
     const gain = 1 + this.state.mulch / 100;
-    const rate = this.tPower * gain;
+    const rate = this.tPower <= 0 ? 0 : (this.tPower * this.state.fields.reduce( (acc, f) => acc + this.getFieldRate(f), 0) );
 
     if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
       this.state.savedMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedMoney;
@@ -1687,7 +1696,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
 
       if (curTime >= this.nextTick) {
-        const tickRate = 0.5;
+        const tickRate = this.state.fields[this.state.displayField].tickRate / 1000;
         this.nextTick = curTime + tickRate;
 
         for (let i = 0; i < this.state.fields[this.state.displayField].growthAmount; i++) {
@@ -1778,8 +1787,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   }
 
   stepMachine() {
-    const mw = 2;
-    const mh = 2;
+    const mw = this.state.fields[this.state.displayField].machineWidth;
+    const mh = this.state.fields[this.state.displayField].machineHeight;
     const maxi = Math.ceil(this.csize / (mw * this.tsize[0])) * Math.ceil(this.csize / (mh * this.tsize[0]));
     this.lastMachinei = this.machinei;
     this.machinei = (this.machinei + 1) % maxi;
