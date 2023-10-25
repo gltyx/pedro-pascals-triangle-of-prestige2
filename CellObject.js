@@ -1513,6 +1513,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
 
 //permission granted by firefliesalco, the creator of lawnmower game, on discord 10/20/2023
 //  to "Feel free to use the code for the game however you wish"
+//  Some constants, code, etc. taken or adapted from https://www.firefliesalco.com/lawnmower-game/
 class CellObjectEnemyLawn extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'lawn');
@@ -1520,6 +1521,14 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.csize = 240;
     this.tsize = [24, 12, 10, 5, 3, 2, 1, 0.5];
+    this.upgradeTypes = 'tr,gr,ls,lz,ts'.split`,`;
+    this.upgradeName = {
+      tr: () => 'Tick Rate',
+      gr: () => 'Growth Rate',
+      ls: () => `${this.fieldConsts[this.state.displayField].machineName} Speed`,
+      lz: () => `${this.fieldConsts[this.state.displayField].machineName} Size`,
+      ts: () => 'Tile Size'
+    };
     this.state.start = Infinity;
     this.state.totalGrass = 0;
     this.state.strength = this.baseStrength;
@@ -1527,10 +1536,14 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.money = 0;
     this.state.totalMoney = 0;
     this.state.mulch = 0;
-    this.upgradeTypes = 'tr,gr,ls,lz,ts'.split`,`;
     this.state.start = (new Date()).getTime() / 1000;
+    this.state.displayField = 0;
     this.machinei = 0;
+    this.lastMachinei = 0;
+    this.maxGrowth = 15;
     this.state.fields = [];
+    this.initFields();
+    this.nextTick = 0;
     this.resetGrid();
   }
 
@@ -1551,6 +1564,21 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       growth bonus
   */
 
+  initFields() {
+    this.fieldConsts = [];
+    this.fieldConsts.push({"name":"Grass","multiplierBuff":0,"initialBuff":1,"baseColor":[0,210,0],"grownColor":[0,130,0],"machineColor":"rgb(255,0,0)","unlockPrice":0,"message":"Grass Mowed: ","value":1,"machineName":"Lawnmower"});
+    this.fieldConsts.push({"name":"Dirt","multiplierBuff":0.15,"initialBuff":10,"baseColor":[175,175,175],"grownColor":[122,96,0],"machineColor":"rgb(68, 130, 206)","unlockPrice":100000,"message":"Dirt Vacuumed: ","value":5,"machineName":"Vacuum"});
+    this.fieldConsts.push({"name":"Weed","multiplierBuff":0.25,"initialBuff":50,"baseColor":[239,233,112],"grownColor":[145,233,124],"machineColor":"rgb(255,127,0)","unlockPrice":1000000,"message":"Weeds Whacked: ","value":20,"machineName":"Weed Whacker"});
+    this.fieldConsts.push({"name":"Pumpkin","multiplierBuff":0.35,"initialBuff":100,"baseColor":[181,155,105],"grownColor":[255,188,61],"machineColor":"rgb(119, 119, 119)","unlockPrice":10000000,"message":"Pumpkins Thwacked: ","value":50,"machineName":"Harvester"});
+    this.fieldConsts.push({"name":"Tree","multiplierBuff":0.45,"initialBuff":500,"baseColor":[122,81,0],"grownColor":[54,109,0],"machineColor":"rgb(97, 175, 191)","unlockPrice":100000000,"message":"Trees Chopped: ","value":100,"machineName":"Chainsaw"});
+    this.fieldConsts.push({"name":"Fire","multiplierBuff":0.55,"initialBuff":1000,"baseColor":[255,0,0],"grownColor":[255,255,0],"machineColor":"rgb(0,0,255)","unlockPrice":1000000000,"message":"Fires Extinguished: ","value":200,"machineName":"Wave"});
+    this.fieldConsts.push({"name":"Stone","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,255,255],"grownColor":[124,124,124],"machineColor":"rgb(122, 73, 33)","unlockPrice":10000000000,"message":"Stone Mined: ","value":500,"machineName":"Wooden Pickaxe"});
+    this.fieldConsts.push({"name":"Iron","multiplierBuff":0.75,"initialBuff":10000,"baseColor":[124,124,124],"grownColor":[221,206,193],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000,"message":"Iron Mined: ","value":1000,"machineName":"Stone Pickaxe"});
+    this.fieldConsts.push({"name":"Diamond","multiplierBuff":0.85,"initialBuff":50000,"baseColor":[124,124,124],"grownColor":[124,239,228],"machineColor":"rgb(221, 206, 193)","unlockPrice":1000000000000,"message":"Diamonds Mined: ","value":2000,"machineName":"Iron Pickaxe"});
+    this.fieldConsts.push({"name":"Gold","multiplierBuff":0.95,"initialBuff":100000,"baseColor":[138,202,216],"grownColor":[211,176,0],"machineColor":"rgb(143, 158, 139)","unlockPrice":10000000000000,"message":"Gold Panned: ","value":5000,"machineName":"Pan"});
+    this.fieldConsts.push({"name":"People","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,67,50],"grownColor":[255,211,168],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000000,"message":"People Killed: ","value":10000,"machineName":"Terminator"});
+  }
+
   resetGrid() {
     const s = this.tsize[0];
     const w = this.csize / s;
@@ -1559,7 +1587,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     for (let x = 0; x < w; x++) {
       this.grid[x] = new Array(h);
       for (let y = 0; y < h; y++) {
-        this.grid[x][y] = Math.floor(Math.random() * 15);
+        this.grid[x][y] = Math.floor(Math.random() * this.maxGrowth);
       }
     }
   }
@@ -1579,13 +1607,12 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     if (rate > 0) {
       this.money = Math.floor((curTime - this.state.start)) * rate + this.state.savedMoney;
 
-      this.growRndTile();
-      
-      if (this.tickCount === undefined) {
-        this.tickCount = 0;
-      }
-      this.tickCount = (this.tickCount + 1) % 20;
-      if (this.tickCount === 0) {
+
+      if (curTime >= this.nextTick) {
+        const tickRate = 0.5;
+        this.nextTick = curTime + tickRate;
+        this.growRndTile();
+        
         this.stepMachine();
       }
 
@@ -1611,12 +1638,13 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     super.displayCellInfo(container);
 
     this.UI.cash.innerText = this.money;
+    this.UI.message.innerText = this.fieldConsts[this.state.displayField].message;
     this.UI.totalGrass.innerText = this.state.totalGrass;
     this.upgradeTypes.forEach( u => {
       const ub = this.UI[`button${u}`];
       const ud = this.UI[`desc${u}`];
-      ub.innerText = 'HELLO';
-      ud.innerText = 'WORLD';
+      ub.innerText = this.upgradeName[u]();
+      ud.innerText = 'woRLD';
     });
 
     this.UI.unlock.innerText = 'UNLOCK';
@@ -1626,7 +1654,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.UI.value.innerText = 'VALUE';
     this.UI.growth.innerText = 'GROWTH';
 
-    this.displayMachine();
+    this.displayMachine(this.lastMachinei, true);
+    this.displayMachine(this.machinei, false);
 
   }
 
@@ -1643,7 +1672,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       const xpos = x * s;
       for (let y = 0; y < h; y++) {
         const cell = col[y];
-        ctx.fillStyle = `hsl(100, 50%, ${50 * (15 - cell) / 15 + 20}%)`;
+        ctx.fillStyle = this.getTileColor(cell);
         ctx.fillRect(xpos, y * s, s, s);
       }
     }
@@ -1657,12 +1686,12 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const h = this.csize / s;
     const gx = Math.floor(Math.random() * w);
     const gy = Math.floor(Math.random() * h);
-    const cell = Math.min(15, this.grid[gx][gy] + 1);
+    const cell = Math.min(this.maxGrowth, this.grid[gx][gy] + 1);
     this.grid[gx][gy] = cell;
     if (this.UI.canvas) {
       const ctx = this.UI.canvas.ctx;
       
-      ctx.fillStyle = `hsl(100, 50%, ${50 * (15 - cell) / 15 + 20}%)`;
+      ctx.fillStyle = this.getTileColor(cell);
       ctx.fillRect(gx * s, gy * s, s, s);
     }
   }
@@ -1671,30 +1700,43 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const mw = 2;
     const mh = 2;
     const maxi = Math.ceil(this.csize / (mw * this.tsize[0])) * Math.ceil(this.csize / (mh * this.tsize[0]));
+    this.lastMachinei = this.machinei;
     this.machinei = (this.machinei + 1) % maxi;
-    console.log(this.machinei);
   }
 
-  displayMachine() {
-    this.updateCanvas();
-    //TODO: redraw last machine position only instead of updating entire canvas
+  displayMachine(i, erase) {
     const s = this.tsize[0];
     const mw = 2;
     const mh = 2;
     const cw = Math.floor(this.csize / (this.tsize[0] * mw));
     const ch = Math.floor(this.csize / (this.tsize[0] * mh));
-    const mx = Math.floor(this.machinei / ch);
-    const my = mx % 2 ? ((ch-1) - this.machinei % ch) : this.machinei % ch;
+    const mx = Math.floor(i / ch);
+    const my = mx % 2 ? ((ch-1) - i % ch) : i % ch;
     const ctx = this.UI.canvas.ctx;
-    ctx.fillStyle = 'red';
-    ctx.fillRect(mx * s * mw, my * s * mh, mw * s, mh * s);
-    for (let x = 0; x < mw; x++) {
-      for (let y = 0; y < mh; y++) {
-        const gx = mx * mw + x;
-        const gy = my * mh + y;
-        if (gx >= this.csize / this.tsize[0]) {continue;}
-        if (gy >= this.csize / this.tsize[0]) {continue;}
-        this.grid[mx * mw + x][my * mh + y] = 0;
+    
+    if (erase) {
+      for (let x = 0; x < mw; x++) {
+        for (let y = 0; y < mh; y++) {
+          const gx = mx * mw + x;
+          const gy = my * mh + y;
+          if (gx >= this.csize / this.tsize[0]) {continue;}
+          if (gy >= this.csize / this.tsize[0]) {continue;}
+          const cell = this.grid[gx][gy];
+          ctx.fillStyle = this.getTileColor(cell);
+          ctx.fillRect(gx * s, gy * s, s, s);
+        }
+      }
+    } else {
+      ctx.fillStyle = this.fieldConsts[this.state.displayField].machineColor;
+      ctx.fillRect(mx * s * mw, my * s * mh, mw * s, mh * s);
+      for (let x = 0; x < mw; x++) {
+        for (let y = 0; y < mh; y++) {
+          const gx = mx * mw + x;
+          const gy = my * mh + y;
+          if (gx >= this.csize / this.tsize[0]) {continue;}
+          if (gy >= this.csize / this.tsize[0]) {continue;}
+          this.grid[gx][gy] = 0;
+        }
       }
     }
   }
@@ -1703,18 +1745,19 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     super.initGame(gameContainer);
     
     const containerDiv = this.createElement('div', '', gameContainer, 'lawnContainer');
-    const leftDiv = this.createElement('div', '', containerDiv);
+    const leftDiv = this.createElement('div', 'lawnLeft', containerDiv);
     const rightDiv = this.createElement('div', '', containerDiv);
 
     const cashDiv = this.createElement('div', '', leftDiv, '', '$');
     const cashSpan = this.createElement('span', 'cash', cashDiv, '', '100');
-    const totalDiv = this.createElement('div', '', leftDiv, '', 'Total Grass Mowed: ');
+    const totalDiv = this.createElement('div', '', leftDiv);
+    const msgSpan = this.createElement('span', 'message', totalDiv);
     const totalSpan = this.createElement('span', 'totalGrass', totalDiv, '', '2423');
 
     this.upgradeTypes.forEach( u => {
       const upgradeDiv = this.createElement('div', '', leftDiv);
-      const button = this.createElement('button', `button${u}`, upgradeDiv, '', u);
-      const desc = this.createElement('span', `desc${u}`, upgradeDiv, '', 'desc');
+      const button = this.createElement('button', `button${u}`, upgradeDiv, 'lawnUpgradeButton', u);
+      const desc = this.createElement('div', `desc${u}`, upgradeDiv, '', 'desc');
     });
 
     const unlockDiv = this.createElement('div', '', leftDiv);
@@ -1737,6 +1780,18 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     canvas.ctx = canvas.getContext('2d');
 
     this.updateCanvas();
+  }
+
+  getTileColor(val) {
+    const ratio = val / this.maxGrowth;
+    const fieldi = this.state.displayField;
+    const baseColor = this.fieldConsts[fieldi].baseColor;
+    const grownColor = this.fieldConsts[fieldi].grownColor;
+    const r = baseColor[0] + (ratio * (grownColor[0] - baseColor[0]));
+    const g = baseColor[1] + (ratio * (grownColor[1] - baseColor[1]));
+    const b = baseColor[2] + (ratio * (grownColor[2] - baseColor[2]));
+
+    return `rgb(${r},${g},${b})`;
   }
 }
 
