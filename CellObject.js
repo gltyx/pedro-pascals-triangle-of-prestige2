@@ -1671,12 +1671,18 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   getFieldRate(state) {
     //return grass per second
     if (!state.unlocked) { return 0; }
-    //growthFactor scales from 0.35 to 1.0 as growthAmount changes. Not linearlly
-    const b = 0.035;
+    //growthFactor scales from 0.5 to 1.0 as growthAmount changes. 
+    //It's not linear. It increases quickly at first and then approaches 1.0 slowly.
+    //https://www.desmos.com/calculator/vtzhtwqr2h
+    const b = 0.065;
     const a = 2;
     const x = state.growthAmount;
     const term = (b * x * x + a);
     const growthFactor = x >= 58 ? 1.0 : 2 + term / (-term + 1);
+    //In the original game, the rate occurs naturally due to movement of the machine. We don't move the machine when
+    //  the cell is not selected so here we just estimate the rate. It's not perfect but no one will notice.
+    //If you read this and want to prove it without letting everyone know about the inaccuracy, just mention the phrase "not ice"
+    //  and all the cool kids will know you're in the cool kid club.
     const rate = (1000 / state.tickRate) * state.machineWidth * state.machineHeight * state.machineSpeed * growthFactor;
     return rate;
   }
@@ -1691,7 +1697,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const gain = this.state.fields.reduce( (acc, f) => acc + this.getFieldRate(f), 0);
     const rate = this.tPower * gain;
 
-    //TODO: remove this debug value
+    //this is used elsewhere to determine if the cell is active
     this.rate = rate;
 
     if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
@@ -1706,7 +1712,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       this.totalMoney = Math.floor((curTime - this.state.start)) * rate * this.fieldConsts[this.state.displayField].value + this.state.savedTotalMoney;
 
 
-      if (curTime >= this.nextTick) {
+      if (curTime >= this.nextTick && (curTime - this.lastActive) < 1) {
+        this.tick = true;
         const tickRate = this.state.fields[this.state.displayField].tickRate / 1000;
         this.nextTick = curTime + tickRate;
 
@@ -1714,7 +1721,12 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
           this.growRndTile();
         }
         
-        this.stepMachine();
+        this.lastMachinei = this.machinei;
+        for (let i = 0; i < this.state.fields[this.state.displayField].machineSpeed; i++) {
+          this.stepMachine();
+        }
+      } else {
+        this.tick = false;
       }
 
     } else {
@@ -1738,6 +1750,9 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
+
+    this.lastActive = this.curTime;
+    
     this.UI.cash.innerText = `${this.money} / ${this.baseStrength} (${this.rate})`;
     this.upgradeTypes.forEach( u => {
       const ub = this.UI[`button${u}`];
@@ -1757,7 +1772,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       const nextFieldName = this.fieldConsts[nextFieldIndex].name;
       const nextFieldCost = this.fieldConsts[nextFieldIndex].unlockPrice;
       this.UI.unlock.innerText = `Unlock ${nextFieldName} - \$${nextFieldCost}`;
-      this.UI.unlock.disabled = false;
+      this.UI.unlock.disabled = nextFieldCost > this.money;
     }
     this.UI.prev.disabled = this.state.displayField <= 0;
     this.UI.next.disabled = (this.state.displayField + 1 >= this.state.fields.length) || (!this.state.fields[this.state.displayField + 1].unlocked);
@@ -1765,8 +1780,23 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.UI.value.innerText = 'VALUE';
     this.UI.growth.innerText = 'GROWTH';
 
-    this.displayMachine(this.lastMachinei, true);
-    this.displayMachine(this.machinei, false);
+    if (this.tick) {
+      for (let i = this.lastMachinei; i < this.machinei; i++) {
+        if (i !== this.lastMachinei) {
+          this.displayMachine(i, false);
+        }
+        this.displayMachine(i, true);
+      }
+      let i = this.lastMachinei;
+      while (i !== this.machinei) {
+        if (i !== this.lastMachinei) {
+          this.displayMachine(i, false);
+        }
+        this.displayMachine(i, true);
+        i = (i + 1) % this.getMaxMachinei(); 
+      }
+      this.displayMachine(this.machinei, false);
+    }
 
   }
 
@@ -1807,12 +1837,17 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     }
   }
 
-  stepMachine() {
+  getMaxMachinei() {
     const s = this.tsize[this.state.fields[this.state.displayField].tileSize];
     const mw = this.state.fields[this.state.displayField].machineWidth;
     const mh = this.state.fields[this.state.displayField].machineHeight;
     const maxi = Math.ceil(this.csize / (mw * s)) * Math.ceil(this.csize / (mh * s));
-    this.lastMachinei = this.machinei;
+    return maxi;
+  }
+
+  stepMachine() {
+    const maxi = this.getMaxMachinei();
+    //this.lastMachinei = this.machinei;
     this.machinei = (this.machinei + 1) % maxi;
   }
 
@@ -1840,15 +1875,19 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
         }
       }
     } else {
-      ctx.fillStyle = this.fieldConsts[this.state.displayField].machineColor;
-      ctx.fillRect(mx * s * mw, my * s * mh, mw * s, mh * s);
+      if (i === this.machinei) {
+        ctx.fillStyle = this.fieldConsts[this.state.displayField].machineColor;
+        ctx.fillRect(mx * s * mw, my * s * mh, mw * s, mh * s);
+      }
       for (let x = 0; x < mw; x++) {
         for (let y = 0; y < mh; y++) {
           const gx = mx * mw + x;
           const gy = my * mh + y;
           if (gx >= bound) {continue;}
           if (gy >= bound) {continue;}
-          this.grid[gx][gy] = 0;
+          if (this.grid[gx][gy] >= 5) {
+            this.grid[gx][gy] = 0;
+          }
         }
       }
     }
@@ -1921,15 +1960,41 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     }
   }
 
+  changeField() {
+    this.lastMachinei = 0;
+    this.machinei = 0;
+    this.resetGrid();
+    this.updateCanvas();
+    this.nextTick = this.curTime;
+  }
+
   prevField() {
     this.state.displayField = Math.max(0, this.state.displayField - 1);
+    this.changeField();
   }
 
   nextField() {
-    
+    const nextField = this.state.displayField + 1;
+    if ((nextField < this.fieldConsts.length) && this.state.fields[nextField].unlocked) {
+      this.state.displayField = nextField;
+      this.changeField();
+    }
   }
 
-  unlockField() { }
+  unlockField() {
+    const nextField = this.state.displayField + 1;
+    if (nextField >= this.fieldConsts.length) {return;}
+
+    const cost = this.fieldConsts[nextField].unlockPrice;
+    if (this.money >= cost) {
+      this.state.savedMoney = this.money - cost;
+      this.state.start = this.curTime;
+      this.state.fields[nextField].unlocked = true;
+      this.state.highestUnlock++;
+      this.state.displayField++;
+      this.changeField();
+    }
+  }
 }
 
 class CellObjectEnemyAnti extends CellObjectEnemy {
