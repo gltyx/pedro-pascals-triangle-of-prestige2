@@ -1545,6 +1545,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.lastMachinei = 0;
     this.maxGrowth = 15;
     this.state.fields = [];
+    this.initFieldConsts();
     this.initFields();
     this.initUpgrades();
     this.nextTick = 0;
@@ -1552,11 +1553,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   /*
     TODO:
-      unlock
-      mulch
-      prestige for mulch
-      value bonus
-      growth bonus
+      fix scaling related to actual mowing
+      fix number display
   */
 
   initUpgrades() {
@@ -1616,7 +1614,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     };
   }
 
-  initFields() {
+  initFieldConsts() {
     this.fieldConsts = [];
     this.fieldConsts.push({"name":"Grass","multiplierBuff":0,"initialBuff":1,"baseColor":[0,210,0],"grownColor":[0,130,0],"machineColor":"rgb(255,0,0)","unlockPrice":0,"value":1,"machineName":"Lawnmower"});
     this.fieldConsts.push({"name":"Dirt","multiplierBuff":0.15,"initialBuff":10,"baseColor":[175,175,175],"grownColor":[122,96,0],"machineColor":"rgb(68, 130, 206)","unlockPrice":100000,"value":5,"machineName":"Vacuum"});
@@ -1629,6 +1627,9 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.fieldConsts.push({"name":"Diamond","multiplierBuff":0.85,"initialBuff":50000,"baseColor":[124,124,124],"grownColor":[124,239,228],"machineColor":"rgb(221, 206, 193)","unlockPrice":1000000000000,"value":2000,"machineName":"Iron Pickaxe"});
     this.fieldConsts.push({"name":"Gold","multiplierBuff":0.95,"initialBuff":100000,"baseColor":[138,202,216],"grownColor":[211,176,0],"machineColor":"rgb(143, 158, 139)","unlockPrice":10000000000000,"value":5000,"machineName":"Pan"});
     this.fieldConsts.push({"name":"People","multiplierBuff":0.65,"initialBuff":5000,"baseColor":[255,67,50],"grownColor":[255,211,168],"machineColor":"rgb(100, 100, 100)","unlockPrice":100000000000000,"value":10000,"machineName":"Terminator"});
+  }
+
+  initFields() {
 
     this.fieldConsts.forEach( (f, i) => {
       const fstate = {};
@@ -1668,8 +1669,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     }
   }
 
-  getFieldRate(state) {
-    //return grass per second
+  getFieldRate(state, i) {
+    //return $ per second
     if (!state.unlocked) { return 0; }
     //growthFactor scales from 0.5 to 1.0 as growthAmount changes. 
     //It's not linear. It increases quickly at first and then approaches 1.0 slowly.
@@ -1679,12 +1680,22 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const x = state.growthAmount;
     const term = (b * x * x + a);
     const growthFactor = x >= 58 ? 1.0 : 2 + term / (-term + 1);
+    const value = this.fieldConsts[i].value;
+    //TODO: include growthBonus in calculation
     //In the original game, the rate occurs naturally due to movement of the machine. We don't move the machine when
     //  the cell is not selected so here we just estimate the rate. It's not perfect but no one will notice.
     //If you read this and want to prove it without letting everyone know about the inaccuracy, just mention the phrase "not ice"
     //  and all the cool kids will know you're in the cool kid club.
-    const rate = (1000 / state.tickRate) * state.machineWidth * state.machineHeight * state.machineSpeed * growthFactor;
+    const rate = (1000 / state.tickRate) * state.machineWidth * state.machineHeight * state.machineSpeed * value * growthFactor;
     return rate;
+  }
+
+  getGrowthBonus() {
+    return Math.floor(Math.log(Math.max(1, this.state.mulch))/Math.log(15));
+  }
+
+  getNextMulch() {
+    return Math.floor(Math.max(0, Math.pow(Math.max(0, this.totalMoney / 10 - 7500), 0.575) - this.state.mulch));
   }
 
   update(curTime, neighbors) {
@@ -1694,7 +1705,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       this.resetGrid();
     }
 
-    const gain = this.state.fields.reduce( (acc, f) => acc + this.getFieldRate(f), 0);
+    const gain = this.state.fields.reduce( (acc, f, i) => acc + this.getFieldRate(f, i), 0);
     const rate = this.tPower * gain;
 
     //this is used elsewhere to determine if the cell is active
@@ -1708,8 +1719,9 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     }
 
     if (rate > 0) {
-      this.money = Math.floor((curTime - this.state.start)) * rate * this.fieldConsts[this.state.displayField].value + this.state.savedMoney;
-      this.totalMoney = Math.floor((curTime - this.state.start)) * rate * this.fieldConsts[this.state.displayField].value + this.state.savedTotalMoney;
+      const increase = Math.floor((curTime - this.state.start)) * rate * (1 + this.state.mulch/100);
+      this.money      = increase + this.state.savedMoney;
+      this.totalMoney = increase + this.state.savedTotalMoney;
 
 
       if (curTime >= this.nextTick && (curTime - this.lastActive) < 1) {
@@ -1777,8 +1789,11 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.UI.prev.disabled = this.state.displayField <= 0;
     this.UI.next.disabled = (this.state.displayField + 1 >= this.state.fields.length) || (!this.state.fields[this.state.displayField + 1].unlocked);
     this.UI.mulch.innerText = this.state.mulch;
-    this.UI.value.innerText = 'VALUE';
-    this.UI.growth.innerText = 'GROWTH';
+    const nextMulch = this.getNextMulch();
+    this.UI.prestige.innerText = `Prestige for ${nextMulch} Mulch`;
+    this.UI.prestige.disabled = nextMulch === 0;
+    this.UI.value.innerText = `${this.state.mulch}%`;
+    this.UI.growth.innerText = `${this.getGrowthBonus() + 1}x`;
 
     if (this.tick) {
       for (let i = this.lastMachinei; i < this.machinei; i++) {
@@ -1827,7 +1842,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const h = this.csize / s;
     const gx = Math.floor(Math.random() * w);
     const gy = Math.floor(Math.random() * h);
-    const cell = Math.min(this.maxGrowth, this.grid[gx][gy] + 1);
+    const cell = Math.min(this.maxGrowth, this.grid[gx][gy] + this.getGrowthBonus());
     this.grid[gx][gy] = cell;
     if (this.UI.canvas) {
       const ctx = this.UI.canvas.ctx;
@@ -1911,7 +1926,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       button.onclick = () => this.buyUpgrade(u);
     });
 
-    //TODO: put prev and next buttons on new line than unlock
     const unlockDiv = this.createElement('div', '', leftDiv);
     const unlockB = this.createElement('button', 'unlock', unlockDiv, '', 'Unlock');
     const switchDiv = this.createElement('div', '', leftDiv);
@@ -1923,6 +1937,9 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     const mulchDiv = this.createElement('div', '', leftDiv, '', 'Mulch: ');
     const mulchSpan = this.createElement('span', 'mulch', mulchDiv, '', '0');
+    const prestigeDiv = this.createElement('div', '', leftDiv);
+    const prestigeB = this.createElement('button', 'prestige', prestigeDiv, '', 'prestige');
+    prestigeB.onclick = () => this.prestige();
 
     const valueDiv = this.createElement('div', '', leftDiv, '', 'Value Bonus: ');
     const valueSpan = this.createElement('span', 'value', valueDiv, '', '0%');
@@ -1993,6 +2010,25 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       this.state.highestUnlock++;
       this.state.displayField++;
       this.changeField();
+    }
+  }
+
+  prestige() {
+    const nextMulch = this.getNextMulch();
+    if (nextMulch > 0) {
+      this.state.mulch = nextMulch;
+      this.state.start = this.curTime;
+      this.state.savedMoney = 0;
+      this.money = 0;
+      this.state.savedTotalMoney = 0;
+      this.totalMoney = 0;
+      this.state.displayField = 0;
+      this.state.highestUnlock = 0;
+      this.machinei = 0;
+      this.lastMachinei = 0;
+      this.state.fields = [];
+      this.initFields();
+      this.nextTick = 0;
     }
   }
 }
