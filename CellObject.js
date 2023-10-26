@@ -1540,6 +1540,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.state.mulch = 0;
     this.state.start = (new Date()).getTime() / 1000;
     this.state.displayField = 0;
+    this.state.highestUnlock = 0;
     this.machinei = 0;
     this.lastMachinei = 0;
     this.maxGrowth = 15;
@@ -1748,10 +1749,16 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       ub.disabled = !(canBuy && (cost <= this.money));
     });
 
-    //TODO: implment next 2 lines
-    const nextFieldName = 'NEXT';
-    const nextFieldCost = 'COST';
-    this.UI.unlock.innerText = `Unlock ${nextFieldName} for \$${nextFieldCost}`;
+    const nextFieldIndex = this.state.highestUnlock + 1;
+    if (nextFieldIndex === this.fieldConsts.length) {
+      this.UI.unlock.innerText = `All Fields Unlocked`;
+      this.UI.unlock.disabled = true;
+    } else {
+      const nextFieldName = this.fieldConsts[nextFieldIndex].name;
+      const nextFieldCost = this.fieldConsts[nextFieldIndex].unlockPrice;
+      this.UI.unlock.innerText = `Unlock ${nextFieldName} - \$${nextFieldCost}`;
+      this.UI.unlock.disabled = false;
+    }
     this.UI.prev.disabled = this.state.displayField <= 0;
     this.UI.next.disabled = (this.state.displayField + 1 >= this.state.fields.length) || (!this.state.fields[this.state.displayField + 1].unlocked);
     this.UI.mulch.innerText = this.state.mulch;
@@ -1867,9 +1874,10 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     //TODO: put prev and next buttons on new line than unlock
     const unlockDiv = this.createElement('div', '', leftDiv);
-    const prevB = this.createElement('button', 'prev', unlockDiv, '', '<');
     const unlockB = this.createElement('button', 'unlock', unlockDiv, '', 'Unlock');
-    const nextB = this.createElement('button', 'next', unlockDiv, '', '>');
+    const switchDiv = this.createElement('div', '', leftDiv);
+    const prevB = this.createElement('button', 'prev', switchDiv, '', '<');
+    const nextB = this.createElement('button', 'next', switchDiv, '', '>');
     prevB.onclick = () => this.prevField();
     unlockB.onclick = () => this.unlockField();
     nextB.onclick = () => this.nextField();
@@ -1916,7 +1924,11 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   prevField() {
     this.state.displayField = Math.max(0, this.state.displayField - 1);
   }
-  nextField() { }
+
+  nextField() {
+    
+  }
+
   unlockField() { }
 }
 
