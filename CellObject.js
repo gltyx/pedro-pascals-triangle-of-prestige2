@@ -1551,7 +1551,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   /*
     TODO:
-      fix number display
   */
 
   initUpgrades() {
@@ -1695,13 +1694,15 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const maxW = 500 / tileSizes[z];
     const wl = Math.floor((w - 1) / wstep) * wstep + 1;
     const wh = Math.min(maxW, Math.ceil(w / wstep) * wstep + 1);
+    const tickRateMul = 1 / (state.tickRate / 1000);
+    const value = this.fieldConsts[i].value;
     if (w === wl) {
-      return LAWNRATES[`${g},${s},${z},${w}`] * scale;
+      return LAWNRATES[`${g},${s},${z},${w}`] * scale * tickRateMul * value;
     } else {
       const lb = LAWNRATES[`${g},${s},${z},${wl}`];
       const ub = LAWNRATES[`${g},${s},${z},${wh}`];
       const f = (w - wl) / (wh - wl);
-      return (lb + (ub - lb) * f) * scale;
+      return (lb + (ub - lb) * f) * scale * tickRateMul * value;
     }
   }
 
@@ -1728,7 +1729,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
       this.state.savedMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedMoney;
-      this.state.totalMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedTotalMoney;
+      this.state.savedTotalMoney = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedTotalMoney;
 
       this.state.start = curTime;
     }
@@ -1994,6 +1995,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const cost = this.getUpgradePrice(upgradeName);
     if (this.money >= cost) {
       this.state.savedMoney = this.money - cost;
+      this.state.savedTotalMoney = this.totalMoney;
       this.state.start = this.curTime;
       this.upgradeConsts[upgradeName].onBuy();
       this.state.fields[this.state.displayField].upgrades[upgradeName]++;
@@ -2028,6 +2030,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const cost = this.fieldConsts[nextField].unlockPrice;
     if (this.money >= cost) {
       this.state.savedMoney = this.money - cost;
+      this.state.savedTotalMoney = this.totalMoney;
       this.state.start = this.curTime;
       this.state.fields[nextField].unlocked = true;
       this.state.highestUnlock++;
@@ -2052,6 +2055,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       this.state.fields = [];
       this.initFields();
       this.nextTick = 0;
+      this.changeField();
     }
   }
 }
