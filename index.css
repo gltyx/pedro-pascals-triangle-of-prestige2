@@ -424,9 +424,19 @@ body {
   grid-template-columns: 1fr 256px;
 }
 
+#lawnLeft {
+  margin-right: 0.5em;
+}
+
 .lawnCanvas {
   width: 256px;
   height: 256px;
   background: green;
   outline: 2px solid black;
+}
+
+.lawnUpgradeButton {
+  width: 100%;
+  text-align: left;
+  font-size: 11px;
 }
