@@ -1764,7 +1764,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     this.percent = 100 * (1 - this.money / this.baseStrength);
 
-    /* TODO: Uncomment to enable win condition
     if (this.percent <= 0) {
       //game over
       return {
@@ -1772,7 +1771,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
         cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
-    */
 
   }
 
