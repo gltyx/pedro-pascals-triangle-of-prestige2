@@ -110,10 +110,14 @@ class CellObject {
   }
 
   formatCurrency(value, roundType) {
+    return this.formatValue(value, roundType, '$');
+  }
+
+  formatValue(value, roundType, prefix) {
     if (value < 1000) {
-      return `\$${this.roundToVal(value, roundType, 0.01).toFixed(2)}`;
+      return `${prefix}${this.roundToVal(value, roundType, 0.01).toFixed(2)}`;
     } else {
-      return `\$${value.toExponential(3)}`;
+      return `${prefix}${value.toExponential(3)}`;
     }
   }
 }
@@ -1514,22 +1518,16 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
 
 //permission granted by firefliesalco, the creator of lawnmower game, on discord 10/20/2023
 //  to "Feel free to use the code for the game however you wish"
-//  Some constants, code, etc. taken or adapted from https://www.firefliesalco.com/lawnmower-game/
+//  Some constants, code, etc. copied or adapted from https://www.firefliesalco.com/lawnmower-game/
 class CellObjectEnemyLawn extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'lawn');
     this.state.type = 'enemyLawn';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.csize = 240;
+    //TODO: handle 0.5 tsize case
     this.tsize = [24, 12, 10, 5, 3, 2, 1, 0.5];
     this.upgradeTypes = 'tr,gr,ls,lz,ts'.split`,`;
-    this.upgradeName = {
-      tr: () => 'Tick Rate',
-      gr: () => 'Growth Rate',
-      ls: () => `${this.fieldConsts[this.state.displayField].machineName} Speed`,
-      lz: () => `${this.fieldConsts[this.state.displayField].machineName} Size`,
-      ts: () => 'Tile Size'
-    };
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
     this.state.savedMoney = 0;
@@ -1553,7 +1551,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
   /*
     TODO:
-      fix scaling related to actual mowing
       fix number display
   */
 
@@ -1672,22 +1669,40 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   getFieldRate(state, i) {
     //return $ per second
     if (!state.unlocked) { return 0; }
-    //growthFactor scales from 0.5 to 1.0 as growthAmount changes. 
-    //It's not linear. It increases quickly at first and then approaches 1.0 slowly.
-    //https://www.desmos.com/calculator/vtzhtwqr2h
-    const b = 0.065;
-    const a = 2;
-    const x = state.growthAmount;
-    const term = (b * x * x + a);
-    const growthFactor = x >= 58 ? 1.0 : 2 + term / (-term + 1);
-    const value = this.fieldConsts[i].value;
-    //TODO: include growthBonus in calculation
-    //In the original game, the rate occurs naturally due to movement of the machine. We don't move the machine when
-    //  the cell is not selected so here we just estimate the rate. It's not perfect but no one will notice.
-    //If you read this and want to prove it without letting everyone know about the inaccuracy, just mention the phrase "not ice"
-    //  and all the cool kids will know you're in the cool kid club.
-    const rate = (1000 / state.tickRate) * state.machineWidth * state.machineHeight * state.machineSpeed * value * growthFactor;
-    return rate;
+
+    //get rate from LAWNRATES table defined elsewhere. The table is
+    //based on simulations of the actual game code at all combinations
+    //of upgrades except width. The width value is only sampled at 5
+    //places and we interpolate between them here to get a final rate.
+
+    //need to use orig tile sizes, not the ones used in this version
+    const tileSizes = [50,25,20,10,5,4,2,1];
+    let g = state.growthAmount;
+    let scale = 1.0;
+    //accidentally missed some values in the data so we compensate here
+    if (g > 58) {
+      scale *= 1.01;
+      g = 58;
+    }
+    let s = state.machineSpeed;
+    if (s > 19) {
+      scale *= 1.01;
+      s = 19;
+    }
+    const z = state.tileSize;
+    const w = state.machineWidth;
+    const wstep = Math.floor((500 / tileSizes[z]) / 5);
+    const maxW = 500 / tileSizes[z];
+    const wl = Math.floor(w / wstep) * wstep + 1;
+    const wh = Math.min(maxW, Math.ceil(w / wstep) * wstep + 1);
+    if (w === wl) {
+      return LAWNRATES[`${g},${s},${z},${w}`] * scale;
+    } else {
+      const lb = LAWNRATES[`${g},${s},${z},${wl}`];
+      const ub = LAWNRATES[`${g},${s},${z},${wh}`];
+      const f = (w - wl) / (wh - wl);
+      return (lb + (ub - lb) * f) * scale;
+    }
   }
 
   getGrowthBonus() {
@@ -1765,13 +1780,13 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     this.lastActive = this.curTime;
     
-    this.UI.cash.innerText = `${this.money} / ${this.baseStrength} (${this.rate})`;
+    this.UI.cash.innerText = `${this.formatCurrency(this.money, 'floor')} / ${this.formatCurrency(this.baseStrength, 'ceil')}`;
     this.upgradeTypes.forEach( u => {
       const ub = this.UI[`button${u}`];
       const ud = this.UI[`desc${u}`];
       const cost = this.getUpgradePrice(u);
       const canBuy = this.upgradeConsts[u].canBuy();
-      ub.innerText = `${this.upgradeConsts[u].name()} - ${canBuy ? '$' + cost : 'MAXED'}`;
+      ub.innerText = `${this.upgradeConsts[u].name()} - ${canBuy ? this.formatCurrency(cost, 'ceil') : 'MAXED'}`;
       ud.innerText = this.upgradeConsts[u].dispVal();
       ub.disabled = !(canBuy && (cost <= this.money));
     });
@@ -1783,17 +1798,17 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     } else {
       const nextFieldName = this.fieldConsts[nextFieldIndex].name;
       const nextFieldCost = this.fieldConsts[nextFieldIndex].unlockPrice;
-      this.UI.unlock.innerText = `Unlock ${nextFieldName} - \$${nextFieldCost}`;
+      this.UI.unlock.innerText = `Unlock ${nextFieldName} - ${this.formatCurrency(nextFieldCost, 'ceil')}`;
       this.UI.unlock.disabled = nextFieldCost > this.money;
     }
     this.UI.prev.disabled = this.state.displayField <= 0;
     this.UI.next.disabled = (this.state.displayField + 1 >= this.state.fields.length) || (!this.state.fields[this.state.displayField + 1].unlocked);
-    this.UI.mulch.innerText = this.state.mulch;
+    this.UI.mulch.innerText = this.formatValue(this.state.mulch, 'floor', '');
     const nextMulch = this.getNextMulch();
-    this.UI.prestige.innerText = `Prestige for ${nextMulch} Mulch`;
+    this.UI.prestige.innerText = `Prestige for ${this.formatValue(nextMulch, 'floor', '')} Mulch`;
     this.UI.prestige.disabled = nextMulch === 0;
-    this.UI.value.innerText = `${this.state.mulch}%`;
-    this.UI.growth.innerText = `${this.getGrowthBonus() + 1}x`;
+    this.UI.value.innerText = `${this.formatValue(this.state.mulch, 'floor', '')}%`;
+    this.UI.growth.innerText = `${this.formatValue(this.getGrowthBonus() + 1, 'floor', '')}x`;
 
     if (this.tick) {
       for (let i = this.lastMachinei; i < this.machinei; i++) {
@@ -1837,6 +1852,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   }
 
   growRndTile() {
+    if (this.state.fields[this.state.displayField].machineWidth > 50) {return;}
     const s = this.tsize[this.state.fields[this.state.displayField].tileSize];
     const w = this.csize / s;
     const h = this.csize / s;
@@ -1876,17 +1892,22 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const my = mx % 2 ? ((ch-1) - i % ch) : i % ch;
     const ctx = this.UI.canvas.ctx;
     const bound = this.csize / s;
-    
+   
     if (erase) {
-      for (let x = 0; x < mw; x++) {
-        for (let y = 0; y < mh; y++) {
-          const gx = mx * mw + x;
-          const gy = my * mh + y;
-          if (gx >= bound) {continue;}
-          if (gy >= bound) {continue;}
-          const cell = this.grid[gx][gy];
-          ctx.fillStyle = this.getTileColor(cell);
-          ctx.fillRect(gx * s, gy * s, s, s);
+      if (mw > 50) {
+        ctx.fillStyle = this.getTileColor(0);
+        ctx.fillRect(mx * mw * s, my * mh * s, mw * s, mh * s);
+      } else {
+        for (let x = 0; x < mw; x++) {
+          for (let y = 0; y < mh; y++) {
+            const gx = mx * mw + x;
+            const gy = my * mh + y;
+            if (gx >= bound) {continue;}
+            if (gy >= bound) {continue;}
+            const cell = this.grid[gx][gy];
+            ctx.fillStyle = this.getTileColor(cell);
+            ctx.fillRect(gx * s, gy * s, s, s);
+          }
         }
       }
     } else {
@@ -1894,14 +1915,16 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
         ctx.fillStyle = this.fieldConsts[this.state.displayField].machineColor;
         ctx.fillRect(mx * s * mw, my * s * mh, mw * s, mh * s);
       }
-      for (let x = 0; x < mw; x++) {
-        for (let y = 0; y < mh; y++) {
-          const gx = mx * mw + x;
-          const gy = my * mh + y;
-          if (gx >= bound) {continue;}
-          if (gy >= bound) {continue;}
-          if (this.grid[gx][gy] >= 5) {
-            this.grid[gx][gy] = 0;
+      if (mw <= 50) {
+        for (let x = 0; x < mw; x++) {
+          for (let y = 0; y < mh; y++) {
+            const gx = mx * mw + x;
+            const gy = my * mh + y;
+            if (gx >= bound) {continue;}
+            if (gy >= bound) {continue;}
+            if (this.grid[gx][gy] >= 5) {
+              this.grid[gx][gy] = 0;
+            }
           }
         }
       }
@@ -1915,8 +1938,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const leftDiv = this.createElement('div', 'lawnLeft', containerDiv);
     const rightDiv = this.createElement('div', '', containerDiv);
 
-    const cashDiv = this.createElement('div', '', leftDiv, '', '$');
-    const cashSpan = this.createElement('span', 'cash', cashDiv, '', '100');
+    const cashDiv = this.createElement('div', '', leftDiv);
+    const cashSpan = this.createElement('span', 'cash', cashDiv);
     const totalDiv = this.createElement('div', '', leftDiv);
 
     this.upgradeTypes.forEach( u => {
@@ -1927,7 +1950,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     });
 
     const unlockDiv = this.createElement('div', '', leftDiv);
-    const unlockB = this.createElement('button', 'unlock', unlockDiv, '', 'Unlock');
+    const unlockB = this.createElement('button', 'unlock', unlockDiv, 'lawnUpgradeButton');
     const switchDiv = this.createElement('div', '', leftDiv);
     const prevB = this.createElement('button', 'prev', switchDiv, '', '<');
     const nextB = this.createElement('button', 'next', switchDiv, '', '>');
@@ -1938,7 +1961,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const mulchDiv = this.createElement('div', '', leftDiv, '', 'Mulch: ');
     const mulchSpan = this.createElement('span', 'mulch', mulchDiv, '', '0');
     const prestigeDiv = this.createElement('div', '', leftDiv);
-    const prestigeB = this.createElement('button', 'prestige', prestigeDiv, '', 'prestige');
+    const prestigeB = this.createElement('button', 'prestige', prestigeDiv, 'lawnUpgradeButton');
     prestigeB.onclick = () => this.prestige();
 
     const valueDiv = this.createElement('div', '', leftDiv, '', 'Value Bonus: ');
