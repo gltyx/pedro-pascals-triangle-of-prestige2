@@ -2042,7 +2042,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
   prestige() {
     const nextMulch = this.getNextMulch();
     if (nextMulch > 0) {
-      this.state.mulch = nextMulch;
+      this.state.mulch += nextMulch;
       this.state.start = this.curTime;
       this.state.savedMoney = 0;
       this.money = 0;
