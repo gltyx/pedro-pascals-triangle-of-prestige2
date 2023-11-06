@@ -1525,8 +1525,8 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.state.type = 'enemyLawn';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.csize = 240;
-    //TODO: handle 0.5 tsize case
-    this.tsize = [24, 12, 10, 5, 3, 2, 1, 0.5];
+    //note that there's no upgrade here for the last value but the LAWNRATE accounts for it
+    this.tsize = [24, 12, 10, 5, 3, 2, 1, 1];
     this.upgradeTypes = 'tr,gr,ls,lz,ts'.split`,`;
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
