@@ -1693,7 +1693,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const w = state.machineWidth;
     const wstep = Math.floor((500 / tileSizes[z]) / 5);
     const maxW = 500 / tileSizes[z];
-    const wl = Math.floor(w / wstep) * wstep + 1;
+    const wl = Math.floor((w - 1) / wstep) * wstep + 1;
     const wh = Math.min(maxW, Math.ceil(w / wstep) * wstep + 1);
     if (w === wl) {
       return LAWNRATES[`${g},${s},${z},${w}`] * scale;
@@ -1858,7 +1858,7 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     const h = this.csize / s;
     const gx = Math.floor(Math.random() * w);
     const gy = Math.floor(Math.random() * h);
-    const cell = Math.min(this.maxGrowth, this.grid[gx][gy] + this.getGrowthBonus());
+    const cell = Math.min(this.maxGrowth, this.grid[gx][gy] + 1 + this.getGrowthBonus());
     this.grid[gx][gy] = cell;
     if (this.UI.canvas) {
       const ctx = this.UI.canvas.ctx;
