@@ -2064,8 +2064,37 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.type = 'enemyAnti';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
-    this.state.anti = 0;
+    this.state.savedAnti = 0;
+    this.anti = 0;
     this.state.strength = this.baseStrength;
+  }
+
+  update(curTime, neighbors) {
+    super.update(curTime, neighbors);
+  }
+
+  displayCellInfo(container) {
+    super.displayCellInfo(container);
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+
+    /*
+    You have X antimatter.
+    You are getting X antimatter per second.
+    ADs produce xX faster per Tickspeed upgrade
+    Total Tickspeed: x / sec
+    [Until 10][Max All (M)]
+          Buy 10 Dimension purchase multiplier: xX
+    nth Antimatter Dimension       | Buy X      |
+    xX                       X     | Cost: X AM |
+
+    Dimension Boost (X)             Antimatter Galaxies (X)
+    Requires: X Xth Antimatter D    Requires: X 8th Antimatter D
+    [Reset...]                      [Reset ...]
+    [X.XX%------|          ]
+    */
   }
 }
 
