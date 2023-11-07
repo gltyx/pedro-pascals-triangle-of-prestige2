@@ -2069,6 +2069,14 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.strength = this.baseStrength;
   }
 
+  /*
+    start gaining antimatter at a rate equal to the number of first dimensions you own
+    first upgrade costs 10 AM
+    higher dimensions create the dimension below
+    8 dimensions total
+    multiplier for each dimension increases by 2xBase for every 10 purchased, then the price will increase
+  */
+
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
   }
@@ -2095,6 +2103,76 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     [Reset...]                      [Reset ...]
     [X.XX%------|          ]
     */
+
+    const am = this.createElement('div', '', gameContainer, 'antiCenter');
+    this.createElement('span', '', am, '', 'You have ');
+    this.createElement('span', 'am', am, 'anti', '10.0');
+    this.createElement('span', '', am, '', ' anti.');
+
+    const rate = this.createElement('div', '', gameContainer, 'antiCenter');
+    this.createElement('span', '', rate, '', 'You are getting ');
+    this.createElement('span', 'rate', rate, '', '0');
+    this.createElement('span', '', rate, '', ' anti per second.');
+
+    const tsu = this.createElement('div', '', gameContainer, 'antiCenter');
+    this.createElement('span', '', tsu, '', 'ADs produce x');
+    this.createElement('span', 'tsu', tsu, '', '1.125'); 
+    this.createElement('span', '', tsu, '', ' faster per Tickspeed upgrade');
+
+    const ts = this.createElement('div', '', gameContainer, 'antiCenter');
+    this.createElement('span', '', ts, '', 'Total Tickspeed: ');
+    this.createElement('span', 'ts', ts, '', '1.000');
+    this.createElement('span', '', ts, '', ' / sec');
+
+    const buyRow = this.createElement('div', '', gameContainer, 'antiCenter');
+    const buyNext = this.createElement('button', 'buyNext', buyRow, '', 'Until 10');
+    const buyMax = this.createElement('button', 'buyMax', buyRow, '', 'Max All');
+
+    const dm = this.createElement('div', '', gameContainer, 'antiCenter');
+    this.createElement('span', '', dm, '', 'Buy 10 Dimension purchase multiplier: x');
+    this.createElement('span', 'dm', dm, '', '2.00');
+
+    const dimensionsContainer = this.createElement('div', 'dimensionsContainer', gameContainer, 'antiTable');
+    for (let d = 1; d <= 8; d++) {
+      const dcont = this.createElement('div', `dcont${d}`, dimensionsContainer, 'antiRow');
+      this.createElement('div', '', dcont, '', `D${d}`);
+      this.createElement('div', `d${d}_mult`, dcont, '', 'x1.03');
+      this.createElement('div', `d${d}_owned`, dcont, '', '0');
+      const bcont = this.createElement('div', '', dcont);
+      const buyButton = this.createElement('button', `d${d}_buy`, bcont, '', 'Buy 1 Cost: 10');
+    }
+
+    const resetContainer = this.createElement('div', '', gameContainer);
+    const boostContainer = this.createElement('div', '', resetContainer);
+    const boostLabel = this.createElement('div', '', boostContainer, 'antiCenter');
+    this.createElement('span', '', boostLabel, '', 'Dimension Boost (');
+    this.createElement('span', 'boost', boostLabel, '', '0');
+    this.createElement('span', '', boostLabel, '', ')');
+
+    const boostReq = this.createElement('div', '', boostContainer, 'antiCenter');
+    this.createElement('span', '', boostReq, '', 'Requires: ');
+    this.createElement('span', 'boostReqCount', boostReq, '', '20');
+    this.createElement('span', '', boostReq, '', ' AD ');
+    this.createElement('span', 'boostReqType', boostReq, '', '4');
+
+    const boostButtonContainer = this.createElement('div', '', boostContainer, 'antiCenter');
+    const boostButton = this.createElement('button', 'boostButton', boostButtonContainer, '', 'Reset your Dimensions to unlock the 5th Dimension and give a x2.0 multiplier to the 1st Dimension');
+
+    const galaxiesContainer = this.createElement('div', '', resetContainer);
+    const galaxiesLabel = this.createElement('div', '', galaxiesContainer, 'antiCenter');
+    this.createElement('span', '', galaxiesLabel, '', 'Antimatter Galaxies (');
+    this.createElement('span', 'galaxies', galaxiesLabel, '', '0');
+    this.createElement('span', '', galaxiesLabel, '', ')');
+
+    const galaxiesReq = this.createElement('div', '', galaxiesContainer, 'antiCenter');
+    this.createElement('span', '', galaxiesReq, '', 'Requires: ');
+    this.createElement('span', 'galaxiesReqCount', galaxiesReq, '', '80');
+    this.createElement('span', '', galaxiesReq, '', ' AD ');
+    this.createElement('span', 'galaxiesReqType', galaxiesReq, '', '8');
+
+    const galaxiesButtonContainer = this.createElement('div', '', galaxiesContainer, 'antiCenter');
+    const galaxiesButton = this.createElement('button', 'galaxiesButton', galaxiesButtonContainer, '', 'Reset your Dimensions and Dimension Boosts to increase the power of Tickspeed upgrades');
+
   }
 }
 

@@ -440,3 +440,16 @@ body {
   text-align: left;
   font-size: 11px;
 }
+
+.antiCenter {
+  text-align: center;
+}
+
+.antiTable {
+  width: 100%;
+}
+
+.antiRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
