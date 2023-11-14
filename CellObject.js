@@ -113,11 +113,11 @@ class CellObject {
     return this.formatValue(value, roundType, '$');
   }
 
-  formatValue(value, roundType, prefix) {
+  formatValue(value, roundType, prefix = '', suffix = '') {
     if (value < 1000) {
-      return `${prefix}${this.roundToVal(value, roundType, 0.01).toFixed(2)}`;
+      return `${prefix}${this.roundToVal(value, roundType, 0.01).toFixed(2)}${suffix}`;
     } else {
-      return `${prefix}${value.toExponential(3)}`;
+      return `${prefix}${value.toExponential(3)}${suffix}`;
     }
   }
 }
@@ -2067,14 +2067,42 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.savedAnti = 0;
     this.anti = 0;
     this.state.strength = this.baseStrength;
+    this.state.maxDimUnlocked = 0;
+
+    this.state.dims = [];
+    for (let i = 0; i < 8; i++) {
+      const dim = {
+        bought: 0,
+        saved: 0
+      };
+      this.state.dims.push(dim);
+    }
+
+    this.dimBasePrice = [10, 100, 10000, 1e6, 1e9, 1e13, 1e18, 1e24];
+    this.basePer10 = [1, 1000, 10000, 1e5, 1e6, 1e8, 1e10, 1e12, 1e15];
   }
 
   /*
     start gaining antimatter at a rate equal to the number of first dimensions you own
-    first upgrade costs 10 AM
+    first upgrade costs 10 AM, cost only increases when you pass the x10 threshold
+    d1 goes from cost 10 to cost 10k
     higher dimensions create the dimension below
     8 dimensions total
     multiplier for each dimension increases by 2xBase for every 10 purchased, then the price will increase
+  */
+
+  /*
+    TODO:
+      add tickspeed purchasing button and buy max button
+      set up state storage
+      set up update function
+      get buy buttons working
+      only show unlocked dimensions
+      buttons only enabled if purchasable
+      make resets work
+      understand why 1 3rd dimension doesn't increase 2nd dimensions at 1 per second (in original game)
+      until 10/buy 1 is supposed to be a toggle button
+      add progress bar to infinity
   */
 
   update(curTime, neighbors) {
@@ -2083,6 +2111,12 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
+
+    //for (let i = 0; i <= this.state.maxDimUnlocked; i++) {
+    for (let i = 0; i <= 7; i++) {
+      this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
+    }
+
   }
 
   initGame(gameContainer) {
@@ -2133,9 +2167,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.createElement('span', 'dm', dm, '', '2.00');
 
     const dimensionsContainer = this.createElement('div', 'dimensionsContainer', gameContainer, 'antiTable');
-    for (let d = 1; d <= 8; d++) {
+    for (let d = 0; d <= 7; d++) {
       const dcont = this.createElement('div', `dcont${d}`, dimensionsContainer, 'antiRow');
-      this.createElement('div', '', dcont, '', `D${d}`);
+      this.createElement('div', '', dcont, '', `D${d+1}`);
       this.createElement('div', `d${d}_mult`, dcont, '', 'x1.03');
       this.createElement('div', `d${d}_owned`, dcont, '', '0');
       const bcont = this.createElement('div', '', dcont);
@@ -2174,6 +2208,12 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     const galaxiesButton = this.createElement('button', 'galaxiesButton', galaxiesButtonContainer, '', 'Reset your Dimensions and Dimension Boosts to increase the power of Tickspeed upgrades');
 
   }
+
+  getDimCost(index) {
+    const dimBought = this.state.dims[index].bought;
+    return this.dimBasePrice[index] * this.basePer10[Math.floor(dimBought / 10)];
+  }
+
 }
 
 const TYPE_TO_CLASS_MAP = {
