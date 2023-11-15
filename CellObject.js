@@ -2064,19 +2064,14 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.type = 'enemyAnti';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
-    this.state.savedAnti = 0;
+    this.state.savedAnti = 10; //start with 10
     this.anti = 0;
     this.state.strength = this.baseStrength;
     this.state.maxDimUnlocked = 0;
 
-    this.state.dims = [];
-    for (let i = 0; i < 8; i++) {
-      const dim = {
-        bought: 0,
-        saved: 0
-      };
-      this.state.dims.push(dim);
-    }
+    this.dims = (new Array(9)).fill(0);
+    this.state.boughtDims = (new Array(9)).fill(0);
+    this.state.savedDims = (new Array(9)).fill(0);
 
     this.dimBasePrice = [10, 100, 10000, 1e6, 1e9, 1e13, 1e18, 1e24];
     this.basePer10 = [1, 1000, 10000, 1e5, 1e6, 1e8, 1e10, 1e12, 1e15];
@@ -2107,14 +2102,56 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
+
+    
+    const gain = this.state.start < Infinity ? (
+      this.getCompoundValue(this.state.savedDims, curTime - this.state.start)
+    ) : 0;
+    const rate = this.tPower * gain;
+
+    if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
+       this.state.savedAnti = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedAnti;
+
+       this.state.start = curTime;
+    }
+
+    if (rate > 0) {
+      this.anti = rate + this.state.savedAnti; 
+
+      const d = [...this.state.boughtDims];
+      for (let i = 0; i < 9; i++) {
+        d.shift();
+        d.push(0);
+        this.dims[i] = this.getCompoundValue(d, (curTime - this.state.start)) + this.state.savedDims[i];
+      }
+    } else {
+      this.anti = this.state.savedAnti;
+    }
+
+    this.percent = 100 * (1 - this.anti / this.baseStrength);
+
+    //TODO: uncomment to enable game end
+    /*
+    if (this.percent <= 0) {
+      //game over
+      return {
+        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
+      };
+    }
+    */
   }
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
 
+    this.UI.am.innerText = this.formatValue(this.anti);
+
+    //TODO: only show unlocked dimensions
     //for (let i = 0; i <= this.state.maxDimUnlocked; i++) {
     for (let i = 0; i <= 7; i++) {
       this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
+      this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor');
     }
 
   }
@@ -2174,6 +2211,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       this.createElement('div', `d${d}_owned`, dcont, '', '0');
       const bcont = this.createElement('div', '', dcont);
       const buyButton = this.createElement('button', `d${d}_buy`, bcont, '', 'Buy 1 Cost: 10');
+      buyButton.onclick = () => this.buyDimension(d);
     }
 
     const resetContainer = this.createElement('div', '', gameContainer);
@@ -2210,10 +2248,50 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   }
 
   getDimCost(index) {
-    const dimBought = this.state.dims[index].bought;
+    const dimBought = this.state.boughtDims[index];
     return this.dimBasePrice[index] * this.basePer10[Math.floor(dimBought / 10)];
   }
 
+  //return the amount of anti after t seconds given initial dimension values in d
+  //can also be used for the current amount of a dimension given the higher dimension values
+  //The values were determined by simulating the system, fitting a degree 8 polynomial, multiplying by 40320/40320,
+  //  then setting only 1 d value to 1 while the others were zero to see the correct factor for that term
+  //I tried to do it more algebraicly but I could not understand the pattern.
+  getCompoundValue(d, t) {
+    const val = (
+        Math.pow(t,8)*(d[7])
+      + Math.pow(t,7)*(8*d[6]-28*d[7])
+      + Math.pow(t,6)*(56*d[5]-168*d[6]+322*d[7])
+      + Math.pow(t,5)*(336*d[4]-840*d[5]+1400*d[6]-1960*d[7])
+      + Math.pow(t,4)*(1680*d[3]-3360*d[4]+4760*d[5]-5880*d[6]+6769*d[7])
+      + Math.pow(t,3)*(6720*d[2]-10080*d[3]+11760*d[4]-12600*d[5]+12992*d[6]-13132*d[7])
+      + Math.pow(t,2)*(20160*d[1]-20160*d[2]+18480*d[3]-16800*d[4]+15344*d[5]-14112*d[6]+13068*d[7])
+      + Math.pow(t,1)*(40320*d[0]-20160*d[1]+13440*d[2]-10080*d[3]+8064*d[4]-6720*d[5]+5760*d[6]-5040*d[7])
+      ) / 40320;
+    return val;
+  }
+
+  updateSavedDims(deltaT) {
+    //use getCompoundValue to update this.state.savedDims
+    const dimList = [...this.state.savedDims];
+    for (let i = 0; i < 7; i++) {
+      dimList.shift();
+      dimList.push(0);
+      this.state.savedDims[i] += this.getCompoundValue(dimList, deltaT);
+    }
+  }
+
+  buyDimension(i) {
+    const cost = this.getDimCost(i);
+    if (this.anti >= cost) {
+      this.state.savedAnti =  this.anti - cost;
+      const deltaT = this.state.start < Infinity ? (this.curTime - this.state.start) : 0;
+      this.updateSavedDims(deltaT);
+      this.state.start = this.curTime;
+      this.state.boughtDims[i] += 1;
+      this.state.savedDims[i] += 1;
+    }
+  }
 }
 
 const TYPE_TO_CLASS_MAP = {
