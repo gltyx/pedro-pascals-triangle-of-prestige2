@@ -2073,6 +2073,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.boughtDims = (new Array(9)).fill(0);
     this.state.savedDims = (new Array(9)).fill(0);
     this.state.dimMults = (new Array(9)).fill(1);
+    this.state.tickLevel = 0;
 
     this.dimBasePrice = [10, 100, 10000, 1e6, 1e9, 1e13, 1e18, 1e24];
     this.basePer10 = [1, 1000, 10000, 1e5, 1e6, 1e8, 1e10, 1e12, 1e15];
@@ -2090,12 +2091,16 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   /*
     TODO:
       add tickspeed purchasing button and buy max button
-      set up state storage
+        tickspeed decreases by 11% per purchase (rate increases by 1.125x per purchase)
+        tickspeed starts at 1/second
+        tickspeed cost Math.pow(10, purchased + 3). starts at 1e3, then 1e4, 1e5, multiplies by 10 each time it seems
+        tickspeed upgrade power increases with antimatter galaxies purchased
       set up update function
       get buy buttons working
       only show unlocked dimensions
       buttons only enabled if purchasable
       make resets work
+        boost needs to multiply some dimensions power by 2 based on how many have been purchased so far
       understand why 1 3rd dimension doesn't increase 2nd dimensions at 1 per second (in original game)
       until 10/buy 1 is supposed to be a toggle button
       add progress bar to infinity
@@ -2104,7 +2109,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
-    
+    //TODO: include tickspeed value in gain via this.getTickspeeVal() 
     const dt = curTime - this.state.start;
     const gain = this.state.start < Infinity ? (
       this.getCompoundValue(this.state.savedDims, this.state.dimMults, dt)
@@ -2151,8 +2156,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   displayCellInfo(container) {
     super.displayCellInfo(container);
 
-    this.UI.am.innerText = this.formatValue(this.anti);
-    this.UI.rate.innerText = this.formatValue(this.rate);
+    this.UI.am.innerText = this.formatValue(this.anti, 'floor');
+    this.UI.rate.innerText = this.formatValue(this.rate, 'floor');
+    this.UI.ts.innerText = this.formatValue(this.getTickspeedVal(), 'floor')
 
     //TODO: only show unlocked dimensions
     //for (let i = 0; i <= this.state.maxDimUnlocked; i++) {
@@ -2202,7 +2208,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     const ts = this.createElement('div', '', gameContainer, 'antiCenter');
     this.createElement('span', '', ts, '', 'Total Tickspeed: ');
     this.createElement('span', 'ts', ts, '', '1.000');
-    this.createElement('span', '', ts, '', ' / sec');
+    this.createElement('span', '', ts, '', ' / sec ');
+    const tsb = this.createElement('button', 'tsb', ts, '', 'Tickspeed Cost: 1e3');
+    tsb.onclick = this.buyTickspeed;
 
     const buyRow = this.createElement('div', '', gameContainer, 'antiCenter');
     const buyNext = this.createElement('button', 'buyNext', buyRow, '', 'Until 10');
@@ -2299,18 +2307,41 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     }
   }
 
+  snapshot() {
+    const deltaT = this.state.start < Infinity ? (this.curTime - this.state.start) : 0;
+    this.updateSavedDims(deltaT);
+    //TODO: is this right even if current rate is zero?
+    this.state.start = this.curTime;
+  }
+
   buyDimension(i) {
     const cost = this.getDimCost(i);
     if (this.anti >= cost) {
       this.state.savedAnti =  this.anti - cost;
-      const deltaT = this.state.start < Infinity ? (this.curTime - this.state.start) : 0;
-      this.updateSavedDims(deltaT);
-      this.state.start = this.curTime;
+      this.snapshot();
       this.state.boughtDims[i] += 1;
       this.state.savedDims[i] += 1;
       this.state.dimMults[i] = Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
     }
   }
+
+  getTickspeedCost() {
+    return Math.pow(10, this.state.tickLevel + 3);
+  }
+
+  getTickspeedVal() {
+    return Math.pow(1.125, this.state.tickLevel);
+  }
+
+  buyTickspeed() {
+    const cost = this.getTickspeedCost();
+    if (this.anti >= cost) {
+      this.state.savedAnti = this.anti - cost;
+      this.snapshot();
+      this.state.tickLevel += 1;
+    }
+  }
+
 }
 
 const TYPE_TO_CLASS_MAP = {
