@@ -2072,7 +2072,8 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.dims = (new Array(9)).fill(0);
     this.state.boughtDims = (new Array(9)).fill(0);
     this.state.savedDims = (new Array(9)).fill(0);
-    this.state.dimMults = (new Array(9)).fill(1);
+    this.state.dimMults = (new Array(9)).fill(0.1);
+    this.state.dimMults[0] = 1;
     this.state.tickLevel = 0;
 
     this.dimBasePrice = [10, 100, 10000, 1e6, 1e9, 1e13, 1e18, 1e24];
@@ -2090,13 +2091,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   /*
     TODO:
-      add tickspeed purchasing button and buy max button
-        tickspeed decreases by 11% per purchase (rate increases by 1.125x per purchase)
-        tickspeed starts at 1/second
-        tickspeed cost Math.pow(10, purchased + 3). starts at 1e3, then 1e4, 1e5, multiplies by 10 each time it seems
-        tickspeed upgrade power increases with antimatter galaxies purchased
+      add buy max button function
+      tickspeed upgrade power increases with antimatter galaxies purchased
       set up update function
-      get buy buttons working
       only show unlocked dimensions
       buttons only enabled if purchasable
       make resets work
@@ -2104,6 +2101,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       understand why 1 3rd dimension doesn't increase 2nd dimensions at 1 per second (in original game)
       until 10/buy 1 is supposed to be a toggle button
       add progress bar to infinity
+      add indicator for how far into purchasing the next 10 each dimension is
   */
 
   update(curTime, neighbors) {
@@ -2169,8 +2167,11 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     for (let i = 0; i <= 7; i++) {
       this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
       this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor');
-      this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i], 'floor');
-      //Math.pow(2, Math.floor(this.state.boughtDims[i] / 10)), 'floor', 'x')
+      if (i === 0) {
+        this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i], 'floor');
+      } else {
+        this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i] * 10, 'floor');
+      }
     }
 
   }
@@ -2326,7 +2327,11 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       this.snapshot();
       this.state.boughtDims[i] += 1;
       this.state.savedDims[i] += 1;
-      this.state.dimMults[i] = Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
+      if (i === 0) {
+        this.state.dimMults[i] = Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
+      } else {
+        this.state.dimMults[i] = 0.1 * Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
+      }
     }
   }
 
