@@ -2109,22 +2109,25 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
-    //TODO: include tickspeed value in gain via this.getTickspeeVal() 
     const dt = curTime - this.state.start;
+    const scaledDt = dt * this.getTickspeedVal() * this.tPower;
     const gain = this.state.start < Infinity ? (
-      this.getCompoundValue(this.state.savedDims, this.state.dimMults, dt)
+      this.getCompoundValue(this.state.savedDims, this.state.dimMults, scaledDt)
     ) : 0;
-    const rate = this.tPower * gain / dt;
+    const rate = this.state.start < Infinity ? (
+      this.getCompoundValue(this.dims, this.state.dimMults, this.getTickspeedVal())
+    ) : 0;
     this.rate = rate;
 
     if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
-       this.state.savedAnti = Math.floor((curTime - this.state.start)) * this.lasttPower * gain + this.state.savedAnti;
+      const lastGain = this.getCompoundValue(this.state.savedDims, this.state.dimMults, dt * this.lasttPower * this.getTickspeedVal());
+      this.state.savedAnti = Math.floor((curTime - this.state.start)) * lastGain + this.state.savedAnti;
 
-       this.state.start = curTime;
+      this.state.start = curTime;
     }
 
-    if (rate > 0) {
-      this.anti = rate * dt + this.state.savedAnti; 
+    if (gain > 0) {
+      this.anti = gain + this.state.savedAnti; 
 
       const d = [...this.state.boughtDims];
       const m = [...this.state.dimMults];
@@ -2133,7 +2136,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
         d.push(0);
         m.shift();
         m.push(0);
-        this.dims[i] = this.getCompoundValue(d, m, dt) + this.state.savedDims[i];
+        this.dims[i] = this.getCompoundValue(d, m, scaledDt) + this.state.savedDims[i];
       }
     } else {
       this.anti = this.state.savedAnti;
@@ -2158,7 +2161,8 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
     this.UI.am.innerText = this.formatValue(this.anti, 'floor');
     this.UI.rate.innerText = this.formatValue(this.rate, 'floor');
-    this.UI.ts.innerText = this.formatValue(this.getTickspeedVal(), 'floor')
+    this.UI.ts.innerText = this.formatValue(this.getTickspeedVal(), 'floor');
+    this.UI.tsb.innerText = this.formatValue(this.getTickspeedCost(), 'ceil', 'Tickspeed Cost: ');
 
     //TODO: only show unlocked dimensions
     //for (let i = 0; i <= this.state.maxDimUnlocked; i++) {
@@ -2174,6 +2178,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   initGame(gameContainer) {
     super.initGame(gameContainer);
 
+    //TODO: display target anti needed to end game
     /*
     You have X antimatter.
     You are getting X antimatter per second.
@@ -2210,7 +2215,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.createElement('span', 'ts', ts, '', '1.000');
     this.createElement('span', '', ts, '', ' / sec ');
     const tsb = this.createElement('button', 'tsb', ts, '', 'Tickspeed Cost: 1e3');
-    tsb.onclick = this.buyTickspeed;
+    tsb.onclick = () => this.buyTickspeed();
 
     const buyRow = this.createElement('div', '', gameContainer, 'antiCenter');
     const buyNext = this.createElement('button', 'buyNext', buyRow, '', 'Until 10');
@@ -2308,7 +2313,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   }
 
   snapshot() {
-    const deltaT = this.state.start < Infinity ? (this.curTime - this.state.start) : 0;
+    const deltaT = this.state.start < Infinity ? (this.curTime - this.state.start) * this.getTickspeedVal() * this.tPower : 0;
     this.updateSavedDims(deltaT);
     //TODO: is this right even if current rate is zero?
     this.state.start = this.curTime;
