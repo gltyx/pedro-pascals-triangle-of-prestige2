@@ -2068,6 +2068,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.anti = 0;
     this.state.strength = this.baseStrength;
     this.state.maxDimUnlocked = 0;
+    this.buySize = 1;
 
     this.dims = (new Array(9)).fill(0);
     this.state.boughtDims = (new Array(9)).fill(0);
@@ -2093,11 +2094,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     TODO:
       add buy max button function
       tickspeed upgrade power increases with antimatter galaxies purchased
-      only show unlocked dimensions
       buttons only enabled if purchasable
       make resets work
         boost needs to multiply some dimensions power by 2 based on how many have been purchased so far
-      until 10/buy 1 is supposed to be a toggle button
       add indicator for how far into purchasing the next 10 each dimension is
   */
 
@@ -2164,7 +2163,11 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
         this.UI[`dcont${i}`].style.display = 'none';
       } else {
         this.UI[`dcont${i}`].style.display = 'grid';
-        this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
+        if (this.buySize === 1) {
+          this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
+        } else {
+          this.UI[`d${i}_buy`].innerText = `Buy ${this.getDimUntil10Size(i)} Cost: ${this.formatValue(this.getDimUntil10Cost(i), 'ceil', '', ' AM')}`;
+        }
         this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor');
         if (i === 0) {
           this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i], 'floor');
@@ -2219,8 +2222,10 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     tsb.onclick = () => this.buyTickspeed();
 
     const buyRow = this.createElement('div', '', gameContainer, 'antiCenter');
-    const buyNext = this.createElement('button', 'buyNext', buyRow, '', 'Until 10');
+    const buyNext = this.createElement('button', 'buySize', buyRow, '', 'Buy 1');
+    buyNext.onclick = () => this.toggleBuySize();
     const buyMax = this.createElement('button', 'buyMax', buyRow, '', 'Max All');
+    buyMax.onclick = () => this.buyMax();
 
     const dm = this.createElement('div', '', gameContainer, 'antiCenter');
     this.createElement('span', '', dm, '', 'Buy 10 Dimension purchase multiplier: x');
@@ -2275,6 +2280,14 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     return this.dimBasePrice[index] * this.basePer10[Math.floor(dimBought / 10)];
   }
 
+  getDimUntil10Size(index) {
+    return 10 - (this.state.boughtDims[index] % 10);
+  }
+
+  getDimUntil10Cost(index) {
+    return this.getDimUntil10Size(index) * this.getDimCost(index);
+  }
+
   //return the amount of anti after t seconds given initial dimension values in d and multiplier values given in m
   //can also be used for the current amount of a dimension given the higher dimension values
   //The values were determined by simulating the system, fitting a degree 8 polynomial, multiplying by 40320/40320,
@@ -2321,12 +2334,20 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   }
 
   buyDimension(i) {
-    const cost = this.getDimCost(i);
+    let cost;
+    let size;
+    if (this.buySize === 1) {
+      size = 1;
+      cost = this.getDimCost(i);
+    } else {
+      size = this.getDimUntil10Size(i);
+      cost = this.getDimUntil10Cost(i);
+    }
     if (this.anti >= cost) {
       this.state.savedAnti =  this.anti - cost;
       this.snapshot();
-      this.state.boughtDims[i] += 1;
-      this.state.savedDims[i] += 1;
+      this.state.boughtDims[i] += size;
+      this.state.savedDims[i] += size;
       if (i === 0) {
         this.state.dimMults[i] = Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
       } else {
@@ -2350,6 +2371,16 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       this.snapshot();
       this.state.tickLevel += 1;
     }
+  }
+
+  toggleBuySize() {
+    this.buySize = this.buySize === 1 ? 10 : 1;
+    this.UI.buySize.innerText = this.buySize === 1 ? 'Buy 1' : 'Until 10';
+  }
+
+  buyMax() {
+    //TODO: implement
+    //what order to buy things?
   }
 
 }
