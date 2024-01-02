@@ -2067,7 +2067,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.savedAnti = 10; //start with 10
     this.anti = 0;
     this.state.strength = this.baseStrength;
-    this.state.maxDimUnlocked = 0;
+    this.state.maxDimUnlocked = 3;
     this.buySize = 1;
 
     this.dims = (new Array(9)).fill(0);
@@ -2098,6 +2098,15 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       make resets work
         boost needs to multiply some dimensions power by 2 based on how many have been purchased so far
       add indicator for how far into purchasing the next 10 each dimension is
+      dimension boost adds a dimension and gives a x2 multiplier to dimensions 0, then 0,1, then 0,1,2, then 0,1,2,3, etc.
+      when highest dimension is already unlocked, dimension boost just boosts all dimension multiplier by 2
+      boosts unlocked boosts
+      0      4        0 0 0 0 0 0 0 0
+      1      5        1 0 0 0 0 0 0 0
+      2      6        2 1 0 0 0 0 0 0 
+      3      7        3 2 1 0 0 0 0 0 
+      4      8        4 3 2 1 0 0 0 0
+      5      8        5 4 3 2 1 0 0 0
   */
 
   update(curTime, neighbors) {
@@ -2257,6 +2266,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
     const boostButtonContainer = this.createElement('div', '', boostContainer, 'antiCenter');
     const boostButton = this.createElement('button', 'boostButton', boostButtonContainer, '', 'Reset your Dimensions to unlock the 5th Dimension and give a x2.0 multiplier to the 1st Dimension');
+    boostButton.onclick = () => this.buyBoost();
 
     const galaxiesContainer = this.createElement('div', '', resetContainer);
     const galaxiesLabel = this.createElement('div', '', galaxiesContainer, 'antiCenter');
@@ -2272,6 +2282,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
     const galaxiesButtonContainer = this.createElement('div', '', galaxiesContainer, 'antiCenter');
     const galaxiesButton = this.createElement('button', 'galaxiesButton', galaxiesButtonContainer, '', 'Reset your Dimensions and Dimension Boosts to increase the power of Tickspeed upgrades');
+    galaxiesButton.onclick = () => this.buyGalaxy();
 
   }
 
@@ -2334,6 +2345,8 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   }
 
   buyDimension(i) {
+    //TODO: when buySize is 10, should still buy as many as possible even if not 
+    //  all the way until 10. except when doing it from the buy max button
     let cost;
     let size;
     if (this.buySize === 1) {
@@ -2353,7 +2366,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       } else {
         this.state.dimMults[i] = 0.1 * Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
       }
+      return true;
     }
+    return false;
   }
 
   getTickspeedCost() {
@@ -2370,6 +2385,26 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       this.state.savedAnti = this.anti - cost;
       this.snapshot();
       this.state.tickLevel += 1;
+      return true;
+    }
+    return false;
+  }
+
+  buyMaxTickspeed() {
+    //TODO: this may be very slow if buying a lot...
+    while (true) {
+      if (!this.buyTickspeed()) {
+        break;
+      }
+    }
+  }
+
+  buyMaxDimension(i) {
+    //TODO: this may be very slow if buying a lot ...
+    while (true) {
+      if (!this.buyDimension(i)) {
+        break;
+      }
     }
   }
 
@@ -2379,8 +2414,27 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   }
 
   buyMax() {
+    //tickspeed
+    this.buyMaxTickspeed();
+
+    
+    //dimensions in reverse order but only up to 10
+    const origBuySize = this.buySize;
+    for (let dim = 7; dim >= 0; dim--) {
+      if (dim >= this.state.maxDimUnlocked) {
+        this.buyMaxDimension(dim);
+      }
+    }
+
+    this.buySize = origBuySize;
+  }
+
+  buyBoost() {
     //TODO: implement
-    //what order to buy things?
+  }
+
+  buyGalaxy() {
+    //TODO: implement
   }
 
 }
