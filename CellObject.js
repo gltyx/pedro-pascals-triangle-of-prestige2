@@ -2064,24 +2064,17 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.state.type = 'enemyAnti';
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
-    this.state.savedAnti = 10; //start with 10
-    this.anti = 0;
     this.state.strength = this.baseStrength;
     this.state.maxDimUnlocked = 3;
     this.buySize = 1;
+    this.state.boosts = 0;
+    this.state.galaxies = 0;
 
-    this.dims = (new Array(9)).fill(0);
-    this.state.boughtDims = (new Array(9)).fill(0);
-    this.state.savedDims = (new Array(9)).fill(0);
-    this.state.dimMults = (new Array(9)).fill(0.1);
-    this.state.dimMults[0] = 1;
-    this.state.tickLevel = 0;
+    this.resetDimensions();
 
     this.dimBasePrice = [10, 100, 10000, 1e6, 1e9, 1e13, 1e18, 1e24];
     this.basePer10 = [1, 1000, 10000, 1e5, 1e6, 1e8, 1e10, 1e12, 1e15];
 
-    this.state.boosts = 0;
-    this.state.galaxies = 0;
   }
 
   /*
@@ -2374,10 +2367,11 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       this.snapshot();
       this.state.boughtDims[i] += size;
       this.state.savedDims[i] += size;
+      const boostMult = this.getBoostMult(i);
       if (i === 0) {
-        this.state.dimMults[i] = Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
+        this.state.dimMults[i] = boostMult * Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
       } else {
-        this.state.dimMults[i] = 0.1 * Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
+        this.state.dimMults[i] = boostMult * 0.1 * Math.pow(2, Math.floor(this.state.boughtDims[i] / 10));
       }
       return true;
     }
@@ -2445,7 +2439,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   getBoostReq() {
     if (this.state.boosts < 4) {
-      return {count: 20, type: this.state.boosts + 4};
+      return {count: 20, type: this.state.boosts + 3};
     } else {
       const count = -40 + 15 * this.state.boosts;
       return {count, type: 8};
@@ -2453,19 +2447,47 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   }
 
   getBoostReqText(req) {
-    return `${req.count} AD ${req.type}`;
+    return `${req.count} AD ${req.type + 1}`;
   }
 
   getBoostButtonText(req) {
     if (this.state.boosts < 4) {
-      return `Reset your Dimensions to unlock D${req.type + 1} and give a x2 multiplier to the 1st ${Math.min(8, this.state.boosts + 1)} Dimensions`;
+      return `Reset your Dimensions to unlock D${req.type + 2} and give a x2 multiplier to the 1st ${Math.min(8, this.state.boosts + 1)} Dimensions`;
     } else {
       return `Reset your Dimensions to give a x2 multiplier to the 1st ${Math.min(8, this.state.boosts + 1)} Dimensions`;
     }
   }
 
+  getBoostMult(i) {
+    return Math.pow(2, Math.max(0, this.state.boosts - i));
+  }
+
+  resetDimensions() {
+    this.state.savedAnti = 10;
+    this.anti = 0;
+    this.dims = (new Array(8)).fill(0);
+    this.state.boughtDims = (new Array(8)).fill(0);
+    this.state.savedDims = (new Array(8)).fill(0);
+    this.state.tickLevel = 0;
+
+    this.state.dimMults = (new Array(9)).fill(0.1);
+    this.state.dimMults[0] = 1;
+
+    for (let i = 0; i < Math.min(8, this.state.boosts); i++) {
+      this.state.dimMults[i] *= this.getBoostMult(i);
+    }
+  }
+
   buyBoost() {
-    //TODO: implement
+    const req = this.getBoostReq();
+    if (this.dims[req.type] >= req.count) {
+      this.state.boosts += 1;
+      this.resetDimensions();
+      
+      if (this.state.maxDimUnlocked < 7) {
+        this.state.maxDimUnlocked += 1;
+      }
+    }
   }
 
   buyGalaxy() {
