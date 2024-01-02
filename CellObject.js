@@ -2093,14 +2093,11 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     TODO:
       add buy max button function
       tickspeed upgrade power increases with antimatter galaxies purchased
-      set up update function
       only show unlocked dimensions
       buttons only enabled if purchasable
       make resets work
         boost needs to multiply some dimensions power by 2 based on how many have been purchased so far
-      understand why 1 3rd dimension doesn't increase 2nd dimensions at 1 per second (in original game)
       until 10/buy 1 is supposed to be a toggle button
-      add progress bar to infinity
       add indicator for how far into purchasing the next 10 each dimension is
   */
 
@@ -2162,15 +2159,18 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.UI.ts.innerText = this.formatValue(this.getTickspeedVal(), 'floor');
     this.UI.tsb.innerText = this.formatValue(this.getTickspeedCost(), 'ceil', 'Tickspeed Cost: ');
 
-    //TODO: only show unlocked dimensions
-    //for (let i = 0; i <= this.state.maxDimUnlocked; i++) {
     for (let i = 0; i <= 7; i++) {
-      this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
-      this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor');
-      if (i === 0) {
-        this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i], 'floor');
+      if (i > this.state.maxDimUnlocked) {
+        this.UI[`dcont${i}`].style.display = 'none';
       } else {
-        this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i] * 10, 'floor');
+        this.UI[`dcont${i}`].style.display = 'grid';
+        this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
+        this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor');
+        if (i === 0) {
+          this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i], 'floor');
+        } else {
+          this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i] * 10, 'floor');
+        }
       }
     }
 
