@@ -2079,6 +2079,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
     this.dimBasePrice = [10, 100, 10000, 1e6, 1e9, 1e13, 1e18, 1e24];
     this.basePer10 = [1, 1000, 10000, 1e5, 1e6, 1e8, 1e10, 1e12, 1e15];
+
+    this.state.boosts = 0;
+    this.state.galaxies = 0;
   }
 
   /*
@@ -2092,12 +2095,8 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   /*
     TODO:
-      add buy max button function
       tickspeed upgrade power increases with antimatter galaxies purchased
       buttons only enabled if purchasable
-      make resets work
-        boost needs to multiply some dimensions power by 2 based on how many have been purchased so far
-      add indicator for how far into purchasing the next 10 each dimension is
       dimension boost adds a dimension and gives a x2 multiplier to dimensions 0, then 0,1, then 0,1,2, then 0,1,2,3, etc.
       when highest dimension is already unlocked, dimension boost just boosts all dimension multiplier by 2
       boosts unlocked boosts
@@ -2165,19 +2164,22 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     this.UI.am.innerText = this.formatValue(this.anti, 'floor');
     this.UI.rate.innerText = this.formatValue(this.rate, 'floor');
     this.UI.ts.innerText = this.formatValue(this.getTickspeedVal(), 'floor');
-    this.UI.tsb.innerText = this.formatValue(this.getTickspeedCost(), 'ceil', 'Tickspeed Cost: ');
+    const tickspeedCost = this.getTickspeedCost();
+    this.UI.tsb.innerText = this.formatValue(tickspeedCost, 'ceil', 'Tickspeed Cost: ');
+    this.UI.tsb.disabled = tickspeedCost > this.anti;
 
     for (let i = 0; i <= 7; i++) {
       if (i > this.state.maxDimUnlocked) {
         this.UI[`dcont${i}`].style.display = 'none';
       } else {
+        this.UI[`d${i}_buy`].disabled = this.getDimCost(i) > this.anti;
         this.UI[`dcont${i}`].style.display = 'grid';
         if (this.buySize === 1) {
           this.UI[`d${i}_buy`].innerText = `Buy 1 Cost: ${this.formatValue(this.getDimCost(i), 'ceil', '', ' AM')}`;
         } else {
           this.UI[`d${i}_buy`].innerText = `Buy ${this.getDimUntil10Size(i)} Cost: ${this.formatValue(this.getDimUntil10Cost(i), 'ceil', '', ' AM')}`;
         }
-        this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor');
+        this.UI[`d${i}_owned`].innerText = this.formatValue(this.dims[i], 'floor') + `(${this.state.boughtDims[i] % 10})`;
         if (i === 0) {
           this.UI[`d${i}_mult`].innerText = this.formatValue(this.state.dimMults[i], 'floor');
         } else {
@@ -2185,6 +2187,19 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
         }
       }
     }
+
+    //TODO: don't update boost/galaxy every draw if too expensive
+
+    this.UI.boost.innerText = this.state.boosts;
+    const boostReq = this.getBoostReq();
+    this.UI.boostReq.innerText = this.getBoostReqText(boostReq);
+    this.UI.boostButton.disabled = this.dims[boostReq.type] < boostReq.count;
+    this.UI.boostButton.innerText = this.getBoostButtonText(boostReq);
+
+
+    this.UI.galaxies.innerText = this.state.galaxies;
+    //TODO: update text of galaxies button & requirement span
+    //TODO: update disabled state of galaxies button
 
   }
 
@@ -2260,9 +2275,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
     const boostReq = this.createElement('div', '', boostContainer, 'antiCenter');
     this.createElement('span', '', boostReq, '', 'Requires: ');
-    this.createElement('span', 'boostReqCount', boostReq, '', '20');
-    this.createElement('span', '', boostReq, '', ' AD ');
-    this.createElement('span', 'boostReqType', boostReq, '', '4');
+    this.createElement('span', 'boostReq', boostReq, '', '20 AD 4');
 
     const boostButtonContainer = this.createElement('div', '', boostContainer, 'antiCenter');
     const boostButton = this.createElement('button', 'boostButton', boostButtonContainer, '', 'Reset your Dimensions to unlock the 5th Dimension and give a x2.0 multiplier to the 1st Dimension');
@@ -2420,13 +2433,35 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     
     //dimensions in reverse order but only up to 10
     const origBuySize = this.buySize;
+    this.buySize = 10;
     for (let dim = 7; dim >= 0; dim--) {
-      if (dim >= this.state.maxDimUnlocked) {
+      if (dim <= this.state.maxDimUnlocked) {
         this.buyMaxDimension(dim);
       }
     }
 
     this.buySize = origBuySize;
+  }
+
+  getBoostReq() {
+    if (this.state.boosts < 4) {
+      return {count: 20, type: this.state.boosts + 4};
+    } else {
+      const count = -40 + 15 * this.state.boosts;
+      return {count, type: 8};
+    }
+  }
+
+  getBoostReqText(req) {
+    return `${req.count} AD ${req.type}`;
+  }
+
+  getBoostButtonText(req) {
+    if (this.state.boosts < 4) {
+      return `Reset your Dimensions to unlock D${req.type + 1} and give a x2 multiplier to the 1st ${Math.min(8, this.state.boosts + 1)} Dimensions`;
+    } else {
+      return `Reset your Dimensions to give a x2 multiplier to the 1st ${Math.min(8, this.state.boosts + 1)} Dimensions`;
+    }
   }
 
   buyBoost() {
