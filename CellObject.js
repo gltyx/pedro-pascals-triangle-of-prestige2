@@ -2087,18 +2087,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   */
 
   /*
-    TODO:
-      tickspeed upgrade power increases with antimatter galaxies purchased
-      buttons only enabled if purchasable
-      dimension boost adds a dimension and gives a x2 multiplier to dimensions 0, then 0,1, then 0,1,2, then 0,1,2,3, etc.
-      when highest dimension is already unlocked, dimension boost just boosts all dimension multiplier by 2
-      boosts unlocked boosts
-      0      4        0 0 0 0 0 0 0 0
-      1      5        1 0 0 0 0 0 0 0
-      2      6        2 1 0 0 0 0 0 0 
-      3      7        3 2 1 0 0 0 0 0 
-      4      8        4 3 2 1 0 0 0 0
-      5      8        5 4 3 2 1 0 0 0
   */
 
   update(curTime, neighbors) {
@@ -2160,6 +2148,8 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     const tickspeedCost = this.getTickspeedCost();
     this.UI.tsb.innerText = this.formatValue(tickspeedCost, 'ceil', 'Tickspeed Cost: ');
     this.UI.tsb.disabled = tickspeedCost > this.anti;
+    this.UI.tsu.innerText = this.getTickspeedBase().toFixed(3);
+
 
     for (let i = 0; i <= 7; i++) {
       if (i > this.state.maxDimUnlocked) {
@@ -2191,8 +2181,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
 
     this.UI.galaxies.innerText = this.state.galaxies;
-    //TODO: update text of galaxies button & requirement span
-    //TODO: update disabled state of galaxies button
+    const galaxyReq = this.getGalaxyReq();
+    this.UI.galaxiesReqCount.innerText = galaxyReq;
+    this.UI.galaxiesButton.disabled = this.dims[7] < galaxyReq;
 
   }
 
@@ -2382,8 +2373,12 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     return Math.pow(10, this.state.tickLevel + 3);
   }
 
+  getTickspeedBase() {
+    return this.state.galaxies * 0.02 + 1.125;
+  }
+
   getTickspeedVal() {
-    return Math.pow(1.125, this.state.tickLevel);
+    return Math.pow(this.getTickspeedBase(), this.state.tickLevel);
   }
 
   buyTickspeed() {
@@ -2490,8 +2485,19 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     }
   }
 
+  getGalaxyReq() {
+    return 80 + 60 * this.state.galaxies;
+  }
+
   buyGalaxy() {
-    //TODO: implement
+    const req = this.getGalaxyReq();
+    if (this.dims[7] >= req) {
+      this.state.galaxies += 1;
+      this.state.boosts = 0;
+      this.state.maxDimUnlocked = 3;
+      this.resetDimensions();
+      //tickspeed increase happens automatically elsewhere
+    }
   }
 
 }
