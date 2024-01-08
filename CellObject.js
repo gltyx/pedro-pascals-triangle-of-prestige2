@@ -2087,6 +2087,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   */
 
   /*
+  TODO: 
+    figure out of the game might accidentally result in Infinity antimatter and deal
+    requirement for buying dimension boost after D8 is unlocked is not right
   */
 
   update(curTime, neighbors) {
@@ -2109,12 +2112,12 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       this.state.start = curTime;
     }
 
-    if (gain > 0) {
+    if (this.state.start < Infinity) {
       this.anti = gain + this.state.savedAnti; 
 
-      const d = [...this.state.boughtDims];
+      const d = [...this.dims];
       const m = [...this.state.dimMults];
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < 8; i++) {
         d.shift();
         d.push(0);
         m.shift();
@@ -2171,8 +2174,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       }
     }
 
-    //TODO: don't update boost/galaxy every draw if too expensive
-
     this.UI.boost.innerText = this.state.boosts;
     const boostReq = this.getBoostReq();
     this.UI.boostReq.innerText = this.getBoostReqText(boostReq);
@@ -2190,7 +2191,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   initGame(gameContainer) {
     super.initGame(gameContainer);
 
-    //TODO: display target anti needed to end game
     /*
     You have X antimatter.
     You are getting X antimatter per second.
@@ -2210,7 +2210,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     const am = this.createElement('div', '', gameContainer, 'antiCenter');
     this.createElement('span', '', am, '', 'You have ');
     this.createElement('span', 'am', am, 'anti', '10.0');
-    this.createElement('span', '', am, '', ' anti.');
+    this.createElement('span', '', am, '', this.formatValue(this.baseStrength, 'ceil', ' / ', ' anti'));
 
     const rate = this.createElement('div', '', gameContainer, 'antiCenter');
     this.createElement('span', '', rate, '', 'You are getting ');
@@ -2302,7 +2302,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   //  then setting only 1 d value to 1 while the others were zero to see the correct factor for that term
   //I tried to do it more algebraicly but I could not understand the pattern.
   getCompoundValue(dorig, m, t) {
-    //TODO: determine if this is too slow and we need to store cumulativeMul
     let cumulativeMul = 1;
     const d = dorig.map( (v, i) => {
       cumulativeMul *= m[i];
@@ -2318,14 +2317,14 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       + Math.pow(t,2)*(20160*d[1]-20160*d[2]+18480*d[3]-16800*d[4]+15344*d[5]-14112*d[6]+13068*d[7])
       + Math.pow(t,1)*(40320*d[0]-20160*d[1]+13440*d[2]-10080*d[3]+8064*d[4]-6720*d[5]+5760*d[6]-5040*d[7])
       ) / 40320;
-    return val;
+    return Math.max(0, val);
   }
 
   updateSavedDims(deltaT) {
     //use getCompoundValue to update this.state.savedDims
-    const dimList = [...this.state.savedDims];
+    const dimList = [...this.dims];
     const multList = [...this.state.dimMults];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       dimList.shift();
       dimList.push(0);
       multList.shift();
@@ -2337,21 +2336,34 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   snapshot() {
     const deltaT = this.state.start < Infinity ? (this.curTime - this.state.start) * this.getTickspeedVal() * this.tPower : 0;
     this.updateSavedDims(deltaT);
-    //TODO: is this right even if current rate is zero?
     this.state.start = this.curTime;
   }
 
-  buyDimension(i) {
-    //TODO: when buySize is 10, should still buy as many as possible even if not 
-    //  all the way until 10. except when doing it from the buy max button
+  getPurchasableTo10(i) {
+    const cost = this.getDimCost(i);
+    const size = this.getDimUntil10Size(i);
+    const rawCount = Math.floor(this.anti / cost);
+    return Math.min(size, rawCount);
+  }
+
+  buyDimension(i, maxMode) {
     let cost;
     let size;
     if (this.buySize === 1) {
       size = 1;
       cost = this.getDimCost(i);
     } else {
-      size = this.getDimUntil10Size(i);
-      cost = this.getDimUntil10Cost(i);
+      if (maxMode) {
+        //in max mode, only buy if we can get to the next level of 10
+        //in max mode, buySize is always 10
+        size = this.getDimUntil10Size(i);
+        cost = this.getDimUntil10Cost(i);
+      } else {
+        //in normal mode, buy as many as we can up until 10
+        const individualCost = this.getDimCost(i);
+        size = this.getPurchasableTo10(i);
+        cost = size * individualCost;
+      }
     }
     if (this.anti >= cost) {
       this.state.savedAnti =  this.anti - cost;
@@ -2403,8 +2415,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   buyMaxDimension(i) {
     //TODO: this may be very slow if buying a lot ...
+    //this is called with buySize always = 10
     while (true) {
-      if (!this.buyDimension(i)) {
+      if (!this.buyDimension(i, true)) {
         break;
       }
     }
