@@ -57,6 +57,7 @@ const CHAR_TO_CLASS_MAP = {
   'a': CellObjectEnemyAnti
 };
 
+//TODO: place every lore 
 //map enemy cell index into a lore index that it unlocks when defeated
 const LORE_UNLOCK_MAP = {
   [`${0 + 0 * 32}`]: 0,
@@ -179,7 +180,7 @@ LORE[24] = `Cul:I feel like I was in a nightmare but somehow I'm alone in this
   be able to feel right again. They were inside my head. I could feel that they
   were trying to open something down here and they finally succeeded. There is one final
   step before their master becomes free. They need to complete the triangle
-  thing they were working on. I can't seem to move my legs yet so but somehow we
+  thing they were working on. I can't seem to move my legs yet but somehow we
   have got to stop them! Do not let them complete PEDRO PASCAL'S TRIANGLE OF PRESTIGE!!!`;
 LORE[25] = `Ass:I'm here and I can't believe it but I'm going inside. I'll 
   find both of you soon and we will find a way to stop this!`;
