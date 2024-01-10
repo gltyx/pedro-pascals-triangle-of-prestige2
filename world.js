@@ -32,7 +32,7 @@ const WORLD = [
  '.xxxxxxx...x..x..xxxxx....x...xx',
  '..........x..x..x........x......',
  '.xxxxxxx.x.....x.x...xxxx...x.x.',
- '.........x....x.............x..e',
+ '.........x....x.............x..F',
 ];
 
 /*
@@ -54,7 +54,8 @@ const CHAR_TO_CLASS_MAP = {
   'p': CellObjectEnemyPrestige,
   'r': CellObjectEnemyCrank,
   'l': CellObjectEnemyLawn,
-  'a': CellObjectEnemyAnti
+  'a': CellObjectEnemyAnti,
+  'F': CellObjectEnemySnail
 };
 
 //TODO: place every lore 

@@ -801,9 +801,15 @@ class CellObjectBuild extends CellObject {
 
 class CellObjectInfo extends CellObject {
 
+  //TODO: expand tutorial text
   static tutorialHTML = `
   <h1>Tutorial</h1>
-  add tutorial text here
+  dragging spot/boss
+  lore icons
+  drag grid
+  goal to get to bottom right corner
+  spot/boss strength, building, merging
+  paths
   `;
 
   constructor(cell, dist) {
@@ -2546,6 +2552,29 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
 }
 
+class CellObjectEnemySnail extends CellObjectEnemy {
+  constructor(cell, dist) {
+    super(cell, dist, 'snail');
+    this.state.type = 'enemySnail';
+    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.state.start = Infinity;
+    this.state.strength = this.baseStrength;
+
+  }
+
+  update(curTime, neighbors) {
+    super.update(curTime, neighbors);
+  }
+
+  displayCellInfo(container) {
+    super.displayCellInfo(container);
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+  }
+}
+
 const TYPE_TO_CLASS_MAP = {
   'none': CellObject,
   'spot': CellObjectSpot,
@@ -2560,6 +2589,7 @@ const TYPE_TO_CLASS_MAP = {
   'enemyPrestige': CellObjectEnemyPrestige,
   'enemyCrank': CellObjectEnemyCrank,
   'enemyLawn': CellObjectEnemyLawn,
-  'enemyAnti': CellObjectEnemyAnti
+  'enemyAnti': CellObjectEnemyAnti,
+  'enemySnail': CellObjectEnemySnail
 };
 
