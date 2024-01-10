@@ -830,16 +830,33 @@ class CellObjectInfo extends CellObject {
     const tabTutorial = this.createElement('div', 'tabTutorial', tabContainer, 'infoTab', 'Tutorial');
     const tabLog = this.createElement('div', 'tabLog', tabContainer, 'infoTab' ,'Log');
     const tabLore = this.createElement('div', 'tabLore', tabContainer, 'infoTab', 'Lore');
+    const tabSettings = this.createElement('div', 'tabSettings', tabContainer, 'infoTab', 'Settings');
 
     tabTutorial.onclick = () => this.selectTab('Tutorial');
     tabLog.onclick = () => this.selectTab('Log');
     tabLore.onclick = () => this.selectTab('Lore');
+    tabSettings.onclick = () => this.selectTab('Settings');
 
     const tabBodyTutorial = this.createElement('div', 'infoContainerTutorial', gameContainer, 'infoTabBody');
     const tabBodyLog = this.createElement('dl', 'infoContainerLog', gameContainer, 'infoTabBody');
     const tabBodyLore = this.createElement('div', 'infoContainerLore', gameContainer, 'infoTabBody');
+    const tabBodySettings = this.createElement('div', 'infoContainerSettings', gameContainer, 'infoTabBody');
 
     tabBodyTutorial.innerHTML = CellObjectInfo.tutorialHTML;
+
+
+    const saveBtn = this.createElement('button', '', tabBodySettings, '', 'Save');
+    const resetBtn = this.createElement('button', '', tabBodySettings, '', 'Reset');
+    saveBtn.onclick = () => this.save();
+    resetBtn.onclick = () => this.reset();
+
+    const resetDlg = this.createElement('dialog', 'resetDlg', tabBodySettings, '', 'Are you sure you want to reset?');
+    const resetBtnContainer = this.createElement('div', '', resetDlg);
+    const resetYes = this.createElement('button', '', resetBtnContainer, '', 'Yes');
+    const resetNo = this.createElement('button', '', resetBtnContainer, '', 'No');
+    resetYes.onclick = () => this.resetYes();
+    resetNo.onclick = () =>  this.resetNo();
+
 
     this.updateHistory(true);
     this.updateLore(true);
@@ -944,6 +961,23 @@ class CellObjectInfo extends CellObject {
       }
     }).join``;
     return result;
+  }
+
+  save() {
+    app.saveToStorage();
+    app.displayToast('Game Saved');
+  }
+
+  reset() {
+    this.UI.resetDlg.showModal();
+  }
+
+  resetYes() {
+    app.reset();
+  }
+
+  resetNo() {
+    this.UI.resetDlg.close();
   }
 }
 
@@ -2130,8 +2164,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
     this.percent = 100 * (1 - this.anti / this.baseStrength);
 
-    //TODO: uncomment to enable game end
-    /*
     if (this.percent <= 0) {
       //game over
       return {
@@ -2139,7 +2171,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
         cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
-    */
   }
 
   displayCellInfo(container) {
