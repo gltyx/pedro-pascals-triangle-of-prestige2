@@ -27,10 +27,26 @@ body {
   margin: 0px;
   user-select: none;
   overflow: hidden;
+  transition: 1s grid-template-columns;
 }
+
+.bodyGameWide {
+  grid-template-columns: 800px 1fr;
+}
+
 
 .hidden {
   display: none;
+}
+
+.blur2px {
+  filter: blur(2px);
+}
+
+dialog {
+  background: yellow;
+  box-shadow: 6px 6px 5px black;
+  border-radius: 6px
 }
 
 #gameInfoContainer {
@@ -115,6 +131,10 @@ body {
   padding: 0.5em;
   box-shadow: inset 1px 1px 3px black;
   overflow-y: scroll;
+}
+
+.cellInfoGameContainerSnail {
+  background: hsl(176, 48%, 54%) !important;
 }
 
 .divButton {
@@ -452,4 +472,68 @@ body {
 .antiRow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+}
+
+.snailInfoBox {
+  background-color: hsl(60, 48%, 54%);
+  outline: 1px solid black;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+}
+
+.snailRow {
+  display: flex;
+  justify-content: center;
+}
+
+/*
+86.66:53.33
+*/
+.snailCell {
+  width: 38px;
+  height: 23px;
+  outline: 1px solid black;
+  position: relative;
+  background-color: hsl(151, 0%, 54%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: not-allowed;
+  font-size: 9px;
+}
+
+.snailCellContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 30;
+}
+
+.snailProgress {
+  width: 100%;
+  height: 0%;
+  background-color: limegreen;
+  position: absolute;
+  background: url('./p1.png');
+  background-size: cover;
+  background-position: center;
+  filter: opacity(0.5);
+}
+
+.snailCellTime {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 30;
+  background: hsla(0, 0%, 100%, 0.5);
+}
+
+.snailCellRowEnd {
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+}
+
+.snailCellClickable {
+  background-color: hsl(123, 0%, 74%);
+  cursor: default;
 }

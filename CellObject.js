@@ -23,6 +23,9 @@ class CellObject {
     this.fixInfinities(this.state);
   }
 
+  postLoad() {
+  }
+
   fixInfinities(o) {
     Object.keys(o).forEach( k => {
       if (typeof o[k] === 'object' && o[k] !== null) {
@@ -975,6 +978,7 @@ class CellObjectInfo extends CellObject {
   }
 
   reset() {
+    document.querySelector('body').classList.add('blur2px');
     this.UI.resetDlg.showModal();
   }
 
@@ -984,6 +988,7 @@ class CellObjectInfo extends CellObject {
 
   resetNo() {
     this.UI.resetDlg.close();
+    document.querySelector('body').classList.remove('blur2px');
   }
 }
 
@@ -2559,19 +2564,312 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
+    this.cellValues = {};
+    this.progressElements = {};
+    this.timeElements = {};
+    this.state.activeCells = [];
+    this.state.completeCells = {};
+    this.state.started = false;
+    this.rowCount = 20;
+    this.cellColors = ['hsl(123, 15%, 54%)', 'hsl(60, 48%, 54%)'];
+    this.completeTime = 0;
+    this.totalTime = 0;
+    this.cellCount = 0;
+    this.completeCount = 0;
+    this.activated = 0;
+
+    for (let i = 0; i < this.rowCount; i++) {
+      for (let j = 0; j <= i; j++) {
+        //TODO: uncomment
+        //this.state.completeCells[`${i},${j}`] = true;
+      }
+    }
 
   }
 
+  postLoad() {
+    //gets called during startup after constructor and after state is restored
+  }
+
+  initFinalCell() {
+    //TODO: remove return
+    return;
+    const finalCellRow = this.rowCount - 1;
+    const finalCellCol = this.rowCount >> 1;
+    this.state.completeCells[`${finalCellRow},${finalCellCol}`] = false;
+
+    const finalCellDuration = this.getCellVal(finalCellRow, finalCellCol);
+    const curTime = (new Date()).getTime();
+    //leave 10 minutes left on the timer
+    const finalCellStartTime = curTime - finalCellDuration * 1000 + (10 * 60 * 1000); 
+    this.state.activeCells.push({
+      name: `${this.rowCount - 1},${this.rowCount >> 1}`,
+      startTime: finalCellStartTime,
+      duration: finalCellDuration,
+      percent: 0,
+      remaining: finalCellDuration,
+      row: finalCellRow,
+      col: finalCellCol
+    });
+
+    this.state.gameStart = (new Date()).getTime();
+  }
+
+  /*
+    TODO:
+      use correct mouse cursors
+      snail can randomly click.
+        at what rate?
+        faster when there are fewer remaining cells?
+      user can click cells to reverse them
+        only click cells when there are none done or in progress below (or they are on the bottom)
+      get better images
+      set background color of game area?
+      do something special when the game has been won
+      start with the grid nearly completed
+      make it obvious that the player should be playing the game backwards
+      get shadows behind triangle
+      do something with infoBox
+      fix formatting
+      figure out what appropriate scaling should be so that we can use the scaling
+        from spot and it takes between 1 to 7 days to finish
+      
+  */
+
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
+
+    this.partialCompleteTime = this.completeTime;
+    const curMS = curTime * 1000;
+    this.state.activeCells.forEach( cell => {
+      const completeTime = curMS - cell.startTime;
+      const remaining = Math.max(0, (cell.startTime + cell.duration) - curMS);
+      cell.percent = Math.min(100, 100 * (curMS - cell.startTime) / cell.duration);
+      cell.remaining = remaining;
+      if (remaining <= 0) {
+        cell.complete = true;
+        this.progressComplete(cell.row, cell.col);
+      }
+      this.partialCompleteTime += completeTime;
+    });
+
+    this.clickableCount = this.activated - (this.completeCount + this.state.activeCells.length);
+
   }
 
   displayCellInfo(container) {
     super.displayCellInfo(container);
+
+    let minRemaining = Infinity;
+    this.state.activeCells.forEach( cell => {
+      const progressElement = this.progressElements[cell.name];
+      const timeElement = this.timeElements[cell.name];
+      progressElement.style.height = `${cell.percent}%`;
+
+      //TODO: fix this with call to remainingToStr
+      const timeText = 0;
+      if (cell.remaining < minRemaining) {
+        minRemaining = cell.remaining;
+      }
+      if (cell.percent < 100) {
+        timeElement.innerText = timeText;
+      } else {
+        timeElement.innerText = '';
+        progressElement.style.filter = 'opacity(1.0)';
+        progressElement.parentElement.style.cursor = 'not-allowed';
+      }
+    });
+
+
+    this.state.activeCells = this.state.activeCells.filter( cell => cell.complete !== true );
+
+    const curTime = this.state.endTime ?? (new Date()).getTime();
+    const playTime = curTime - this.state.gameStart;
+    
+    //TODO: figure out what to do with these lines
+    /*
+    this.UI.infoPlayTime.innerText = this.remainingToStr(playTime, true);
+    this.UI.infoNext.innerText = this.remainingToStr(minRemaining, true);
+    document.title = `Pedro Pascal's Triangle of Prestige - ${this.remainingToStr(minRemaining)}`;
+
+
+
+    const timeRemaining = this.totalTime - this.partialCompleteTime;
+    this.UI.infoTimeRemaining.innerText = this.remainingToStr(timeRemaining, true);
+
+    const remainingPercent = 100 - 100 * timeRemaining / this.totalTime;
+    this.UI.infoProgress.style.width = `${remainingPercent}%`;
+    
+    const icon = ['./favicon.png', './faviconAlert.png'][+(this.clickableCount > 0)];
+    if (this.UI.linkIcon.href !== icon) {
+      this.UI.linkIcon.href = icon;
+    }
+
+    */
+
   }
 
+  getCellVal(row, col) {
+    if (col === 0 || col === row) { return 1; }
+    if (col < 0 || col > row) { return 0; }
+
+    const key = `${row},${col}`;
+    let cellValue = this.cellValues[key];
+    if (cellValue === undefined) {
+      cellValue = this.getCellVal(row - 1, col) + this.getCellVal(row - 1, col - 1);
+      this.cellValues[key] = cellValue;
+    }
+
+    return cellValue;
+  }
+    
   initGame(gameContainer) {
     super.initGame(gameContainer);
+
+    if (!this.state.started) {
+      this.initFinalCell();
+      this.state.started = true;
+    }
+
+    //expand the gameplay area
+    document.querySelector('body').classList.add('bodyGameWide');
+    document.querySelector('#cellInfoGameContainer').classList.add('cellInfoGameContainerSnail');
+
+    //info box
+    //  title
+    //  total time remaining
+    //  progress bar
+    //  some kind of comment like "there are no upgrades, there is only"
+    const infoBox = this.createElement('div', '', gameContainer, 'snailInfoBox', 'infoBOX');
+
+
+
+    
+
+    //game
+    const completeList = [];
+    for (let i = 0; i < this.rowCount; i++) {
+      const row = this.createElement('div', '', gameContainer, 'snailRow');
+      for (let j = 0; j <= i; j++) {
+        this.cellCount++;
+        const cellValue = this.getCellVal(i, j);
+        const styleIndex = cellValue % 2;
+        const button = this.createElement('div', `cellButton${i}_${j}`, row, 'snailCell');
+        const progress = this.createElement('div', '', button, 'snailProgress');
+        progress.style.background = `url('./p${styleIndex}.png')`;
+        progress.style.backgroundSize = 'cover';
+        progress.style.backgroundPosition = 'center';
+        const cellContent = this.createElement('div', '', button, 'snailCellContent', cellValue);
+        const cellTime = this.createElement('div', '', button, 'snailCellTime', 'rem');
+
+        this.progressElements[`${i},${j}`] = progress;
+        this.timeElements[`${i},${j}`] = cellTime;
+
+        button.onclick = () => {
+          this.cellButtonClick(button, i, j);
+        }
+
+        button.progress = progress;
+
+        if (this.state.completeCells[`${i},${j}`]) {
+          completeList.push({row: i, col: j});
+          progress.style.height = '100%';
+          cellTime.innerText = '';
+          progress.style.filter = 'opacity(1.0)';
+          button.style.cursor = 'not-allowed';
+          button.style.backgroundColor = this.cellColors[styleIndex];
+        }
+        
+        if (this.state.activeCells.some( cell => {return cell.row === i && cell.col === j;} )) {
+          button.style.cursor = 'not-allowed';
+          button.style.backgroundColor = this.cellColors[styleIndex];
+        }
+
+        if (j === i || (i === (this.rowCount - 1))) {
+          button.classList.add('snailCellRowEnd');
+        }
+        
+      }
+    }
+
+    completeList.forEach( cell => {
+      this.progressComplete(cell.row, cell.col);
+    });
+
+    this.completeCount = completeList.length;
+
+    this.UI['cellButton0_0'].classList.add('snailCellClickable');
+    this.activated++;
+  }
+
+  closeGame() {
+    //return gameplay to normal size
+    document.querySelector('body').classList.remove('bodyGameWide');
+    document.querySelector('#cellInfoGameContainer').classList.remove('cellInfoGameContainerSnail');
+  }
+
+  progressComplete(row, col) {
+    this.state.completeCells[`${row},${col}`] = true;
+    this.completeTime += this.getCellVal(row, col) * 1000; 
+    this.completeCount++;
+    if (col === 0 || this.state.completeCells[`${row},${col-1}`]) {
+      //mark row+1 col as clickable
+      const cell = this.UI[`cellButton${row+1}_${col}`];
+      if (cell && !cell.classList.contains('snailCellClickable')) {
+        cell.classList.add('snailCellClickable');
+        this.activated++;
+      }
+    }
+    if (col === row || this.state.completeCells[`${row},${col+1}`]) {
+      //mark row+1 col+1 as clickable
+      const cell = this.UI[`cellButton${row+1}_${col+1}`];
+      if (cell && !cell.classList.contains('snailCellClickable')) {
+        cell.classList.add('snailCellClickable');
+        this.activated++;
+      }
+    }
+
+    if (this.completeCount >= this.cellCount && this.state.endTime === undefined) {
+      //TODO: handle the win condition properly. this is actually the lose condition
+      this.state.endTime = (new Date()).getTime();
+      const playTime = this.state.endTime - this.state.gameStart;
+      this.UI.winPlayTime.innerText = this.remainingToStr(playTime);
+      this.UI.winContainer.style.display = 'block'; 
+      this.saveToStorage();
+    }
+  }
+
+  isCellActive(row, col) {
+    if (row < 0) {return true;}
+    if (col < 0 || col > row) {return true;}
+    return this.state.completeCells[`${row},${col}`];
+  }
+
+  cellButtonClick(button, row, col) {
+    if (this.isCellActive(row - 1, col) && this.isCellActive(row - 1, col - 1)) {
+      const alreadyActive = this.state.activeCells.some( cell => {
+        return cell.row === row && cell.col === col;
+      });
+
+      if (alreadyActive || this.isCellActive(row, col)) {
+        return;
+      }
+
+      button.style.cursor = 'not-allowed';
+      const styleIndex = this.getCellVal(row, col) % 2;
+      button.style.background = this.cellColors[styleIndex];
+
+      const duration = this.getCellVal(row, col) * 1000;
+      this.state.activeCells.push({
+        name: `${row},${col}`,
+        startTime: (new Date()).getTime(),
+        duration: duration,
+        percent: 0,
+        remaining: duration,
+        row,
+        col
+      });       
+    }
   }
 }
 
