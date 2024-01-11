@@ -76,6 +76,8 @@ class App {
     this.fps = 60;
     setInterval(() => this.tick(), 1000/this.fps);
     setInterval(() => this.saveToStorage(), 10000);
+
+    setTimeout(() => this.clickCell(undefined, 0), 200);
   }
 
   loadFromStorage() {
@@ -103,6 +105,7 @@ class App {
         const dist = this.cells[i].x + this.cells[i].y;
         this.cells[i].content = new TYPE_TO_CLASS_MAP[c.type](this.cells[i].ui, dist);
         this.cells[i].content.loadFromObj(c);
+        this.cells[i].content.postLoad();
       });
     }
 
@@ -167,7 +170,11 @@ class App {
         let worldChar = WORLD[y][x];
         if (worldChar === '.') {
           const enemyList = 'c$prla';
-          worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
+          if (x === 0 && y === 2) {
+            worldChar = 'F';
+          } else {
+            worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
+          }
         }
 
         const worldClass = CHAR_TO_CLASS_MAP[worldChar];
@@ -393,7 +400,8 @@ class App {
   }
 
   clickCell(evt, cellIndex) {
-    if (!evt.ctrlKey && cellIndex !== this.selectedCellIndex && this.cells[cellIndex].selectable) {
+    const notCtrl = evt === undefined || !evt.ctrlKey;
+    if (notCtrl && cellIndex !== this.selectedCellIndex && this.cells[cellIndex].selectable) {
       const cell = this.cells[cellIndex];
       const e = cell.ui;
       this.clearAllSelectedCells();
