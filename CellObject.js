@@ -2568,6 +2568,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.progressElements = {};
     this.timeElements = {};
     this.state.activeCells = [];
+    this.state.reverseActiveCells = [];
     this.state.completeCells = {};
     this.state.started = false;
     this.rowCount = 20;
@@ -2581,7 +2582,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j <= i; j++) {
         //TODO: uncomment
-        //this.state.completeCells[`${i},${j}`] = true;
+        this.state.completeCells[`${i},${j}`] = true;
       }
     }
 
@@ -2623,11 +2624,9 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       user can click cells to reverse them
         only click cells when there are none done or in progress below (or they are on the bottom)
       get better images
-      set background color of game area?
       do something special when the game has been won
       start with the grid nearly completed
       make it obvious that the player should be playing the game backwards
-      get shadows behind triangle
       do something with infoBox
       fix formatting
       figure out what appropriate scaling should be so that we can use the scaling
@@ -2638,31 +2637,19 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
-    //TODO: use strength to advance time properly
-
     this.partialCompleteTime = this.completeTime;
     const curMS = curTime * 1000;
     this.state.activeCells.forEach( cell => {
-      /* original code
-      const completeTime = curMS - cell.startTime; //time since active started
-      const remaining = Math.max(0, (cell.startTime + cell.duration) - curMS); //time remaining until completion
-      cell.percent = Math.min(100, 100 * (curMS - cell.startTime) / cell.duration);
-      cell.remaining = remaining;
-      if (remaining <= 0) {
-        cell.complete = true;
-        this.progressComplete(cell.row, cell.col);
-      }
-      this.partialCompleteTime += completeTime;
-      */
-
-      //TODO: I think changing duration will mess up the percent
+      //for forward cells, power is always 1
+      /*
       if (this.tPower !== this.lasttPower) {
         cell.duration = cell.duration - (curMS - cell.startTime) * this.lasttPower;
         cell.startTime = curMS;
       }
+      */
 
-      //const remaining = Math.max(0, (cell.startTime + cell.duration) * this.tPower - curMS);
-      const completeTime = (curMS - cell.startTime) * this.tPower
+      //const completeTime = (curMS - cell.startTime) * this.tPower;
+      const completeTime = (curMS - cell.startTime);
       const remaining = Math.max(0, cell.duration - completeTime);
       cell.percent = Math.min(100, 100 * (cell.baseDuration - remaining) / cell.baseDuration);
       cell.remaining = remaining;
@@ -2670,11 +2657,43 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         cell.complete = true;
         this.progressComplete(cell.row, cell.col);
       }
-      //this.partialCompleteTime += completeTime;
     });
+
+    this.state.reverseActiveCells.forEach( cell => {
+      if (this.tPower !== this.lasttPower) {
+        cell.duration = cell.duration + (curMS - cell.startTime) * this.lasttPower;
+        cell.startTime = curMS;
+      }
+
+      const completeTime = cell.duration - (curMS - cell.startTime) * this.tPower
+      const remaining = Math.min(cell.duration, cell.duration - completeTime);
+      cell.percent = Math.max(0, 100 * (cell.baseDuration - remaining) / cell.baseDuration);
+      cell.remaining = remaining;
+      if (remaining >= cell.baseDuration) {
+        cell.reverseComplete = true;
+        this.progressReverseComplete(cell.row, cell.col);
+      }
+    });
+
 
     this.clickableCount = this.activated - (this.completeCount + this.state.activeCells.length);
 
+  }
+
+  displayCellInProgress(cell) {
+    const progressElement = this.progressElements[cell.name];
+    const timeElement = this.timeElements[cell.name];
+    progressElement.style.height = `${cell.percent}%`;
+
+    const timeText = this.remainingToStr(cell.remaining);
+    if (cell.percent < 100) {
+      timeElement.innerText = timeText;
+    } else {
+      timeElement.innerText = '';
+      progressElement.style.filter = 'opacity(1.0)';
+      progressElement.parentElement.style.cursor = 'not-allowed';
+    }
+    return cell.remaining;
   }
 
   displayCellInfo(container) {
@@ -2682,26 +2701,16 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
     let minRemaining = Infinity;
     this.state.activeCells.forEach( cell => {
-      const progressElement = this.progressElements[cell.name];
-      const timeElement = this.timeElements[cell.name];
-      progressElement.style.height = `${cell.percent}%`;
+      minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell));
+    });
 
-      //TODO: fix this with call to remainingToStr
-      const timeText = this.remainingToStr(cell.remaining);
-      if (cell.remaining < minRemaining) {
-        minRemaining = cell.remaining;
-      }
-      if (cell.percent < 100) {
-        timeElement.innerText = timeText;
-      } else {
-        timeElement.innerText = '';
-        progressElement.style.filter = 'opacity(1.0)';
-        progressElement.parentElement.style.cursor = 'not-allowed';
-      }
+    this.state.reverseActiveCells.forEach( cell => {
+      minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell));
     });
 
 
     this.state.activeCells = this.state.activeCells.filter( cell => cell.complete !== true );
+    this.state.reverseActiveCells = this.state.reverseActiveCells.filter( cell => cell.reverseComplete !== true );
 
     const curTime = this.state.endTime ?? (new Date()).getTime();
     const playTime = curTime - this.state.gameStart;
@@ -2824,7 +2833,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         this.timeElements[`${i},${j}`] = cellTime;
 
         button.onclick = () => {
-          this.cellButtonClick(button, i, j);
+          this.cellButtonReverseClick(button, i, j);
         }
 
         button.progress = progress;
@@ -2888,13 +2897,40 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     }
 
     if (this.completeCount >= this.cellCount && this.state.endTime === undefined) {
-      //TODO: handle the win condition properly. this is actually the lose condition
+      //TODO: handle the lose condition properly.
+      /*
       this.state.endTime = (new Date()).getTime();
       const playTime = this.state.endTime - this.state.gameStart;
       this.UI.winPlayTime.innerText = this.remainingToStr(playTime);
       this.UI.winContainer.style.display = 'block'; 
       this.saveToStorage();
+      */
     }
+  }
+
+  progressReverseComplete(row, col) {
+    if (this.isCellReverseActive(row - 1, col)) {
+      const cell = this.UI[`cellButton${row-1}_${col}`];
+      cell.classList.add('snailCellClickable');
+      this.activated--;
+    }
+    if (this.isCellReverseActive(row - 1, col - 1)) {
+      const cell = this.UI[`cellButton${row-1}_${col-1}`];
+      cell.classList.add('snailCellClickable');
+      this.activated--;
+    }
+
+    if (this.completeCount <= 0 && this.state.endTime === undefined) {
+      //TODO: handle the win condition properly.
+      /*
+      this.state.endTime = (new Date()).getTime();
+      const playTime = this.state.endTime - this.state.gameStart;
+      this.UI.winPlayTime.innerText = this.remainingToStr(playTime);
+      this.UI.winContainer.style.display = 'block'; 
+      this.saveToStorage();
+      */
+    }
+    
   }
 
   isCellActive(row, col) {
@@ -2903,11 +2939,33 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     return this.state.completeCells[`${row},${col}`];
   }
 
+  isCellInList(list, row, col) {
+    return list.some( cell => {return cell.row === row && cell.col === col;} );
+  }
+
+  isCellRevActiveOrComplete(row, col) {
+    if (row >= this.rowCount) {return false;}
+    return this.state.completeCells[`${row},${col}`] || this.isCellInList(this.state.reverseActiveCells, row, col);
+  }
+
+  isCellReverseActive(row, col) {
+    if (row < 0 || col > row || col < 0) { return false; }
+    //active if the cell is in the active list or it's complete and the two cells below it are neither active nor complete
+    if (this.isCellInList(this.state.activeCells, row, col)) {
+      return true;
+    }
+
+    if (this.state.completeCells[`${row},${col}`]) {
+      return !this.isCellRevActiveOrComplete(row + 1, col) && !this.isCellRevActiveOrComplete(row + 1, col + 1);
+    } else {
+      return false;
+    }
+
+  }
+
   cellButtonClick(button, row, col) {
     if (this.isCellActive(row - 1, col) && this.isCellActive(row - 1, col - 1)) {
-      const alreadyActive = this.state.activeCells.some( cell => {
-        return cell.row === row && cell.col === col;
-      });
+      const alreadyActive = this.isCellInList(this.state.activeCells, row, col);
 
       if (alreadyActive || this.isCellActive(row, col)) {
         return;
@@ -2924,6 +2982,41 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         baseDuration: duration,
         duration: duration,
         percent: 0,
+        remaining: duration,
+        row,
+        col
+      });       
+    }
+  }
+
+
+  cellButtonReverseClick(button, row, col) {
+    console.log('REV CLICK');
+    if (this.isCellReverseActive(row, col)) {
+      console.log('REVERSE ACTIVE');
+      const alreadyReverseActive = this.state.reverseActiveCells.some( cell => {
+        return cell.row === row && cell.col === col;
+      });
+
+      if (alreadyReverseActive || this.state.completeCells[`${row},${col}`] === undefined) {
+        return;
+      }
+      delete this.state.completeCells[`${row},${col}`];
+      this.completeTime -= this.getCellVal(row, col) * 1000; 
+      this.completeCount--;
+
+      button.style.cursor = 'not-allowed';
+      const baseDuration = this.getCellVal(row, col) * 1000;
+      const activeCell = this.state.activeCells.filter( cell => {return cell.row === row && cell.col === col;} );
+      const duration = activeCell.length > 0 ? activeCell[0].remaining : baseDuration;
+      const percent = activeCell.length > 0 ? activeCell[0].percent : 100;
+
+      this.state.reverseActiveCells.push({
+        name: `${row},${col}`,
+        startTime: (new Date()).getTime(),
+        baseDuration,
+        duration,
+        percent,
         remaining: duration,
         row,
         col
