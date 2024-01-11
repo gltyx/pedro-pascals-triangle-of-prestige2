@@ -32,6 +32,7 @@ body {
 
 .bodyGameWide {
   grid-template-columns: 800px 1fr;
+  background-image: url('./bg.png');
 }
 
 
@@ -134,7 +135,7 @@ dialog {
 }
 
 .cellInfoGameContainerSnail {
-  background: hsl(176, 48%, 54%) !important;
+  background: hsl(176, 48%, 31%) !important;
 }
 
 .divButton {

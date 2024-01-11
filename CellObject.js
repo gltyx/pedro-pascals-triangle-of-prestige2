@@ -2621,9 +2621,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       snail can randomly click.
         at what rate?
         faster when there are fewer remaining cells?
-      user can click cells to reverse them
-        only click cells when there are none done or in progress below (or they are on the bottom)
-      get better images
       do something special when the game has been won
       start with the grid nearly completed
       make it obvious that the player should be playing the game backwards
@@ -2822,7 +2819,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         const styleIndex = cellValue % 2;
         const button = this.createElement('div', `cellButton${i}_${j}`, row, 'snailCell');
         const progress = this.createElement('div', '', button, 'snailProgress');
-        progress.style.background = `url('./p${styleIndex}.png')`;
+        progress.style.background = `url('./p${styleIndex}_true.png')`;
         progress.style.backgroundSize = 'cover';
         progress.style.backgroundPosition = 'center';
         const cellContent = this.createElement('div', '', button, 'snailCellContent', cellValue);
