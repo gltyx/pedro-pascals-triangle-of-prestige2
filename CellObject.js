@@ -2617,7 +2617,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
   /*
     TODO:
-      use correct mouse cursors
       snail can randomly click.
         at what rate?
         faster when there are fewer remaining cells?
@@ -2639,11 +2638,14 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
+    //TODO: use strength to advance time properly
+
     this.partialCompleteTime = this.completeTime;
     const curMS = curTime * 1000;
     this.state.activeCells.forEach( cell => {
-      const completeTime = curMS - cell.startTime;
-      const remaining = Math.max(0, (cell.startTime + cell.duration) - curMS);
+      /* original code
+      const completeTime = curMS - cell.startTime; //time since active started
+      const remaining = Math.max(0, (cell.startTime + cell.duration) - curMS); //time remaining until completion
       cell.percent = Math.min(100, 100 * (curMS - cell.startTime) / cell.duration);
       cell.remaining = remaining;
       if (remaining <= 0) {
@@ -2651,6 +2653,24 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         this.progressComplete(cell.row, cell.col);
       }
       this.partialCompleteTime += completeTime;
+      */
+
+      //TODO: I think changing duration will mess up the percent
+      if (this.tPower !== this.lasttPower) {
+        cell.duration = cell.duration - (curMS - cell.startTime) * this.lasttPower;
+        cell.startTime = curMS;
+      }
+
+      //const remaining = Math.max(0, (cell.startTime + cell.duration) * this.tPower - curMS);
+      const completeTime = (curMS - cell.startTime) * this.tPower
+      const remaining = Math.max(0, cell.duration - completeTime);
+      cell.percent = Math.min(100, 100 * (cell.baseDuration - remaining) / cell.baseDuration);
+      cell.remaining = remaining;
+      if (remaining <= 0) {
+        cell.complete = true;
+        this.progressComplete(cell.row, cell.col);
+      }
+      //this.partialCompleteTime += completeTime;
     });
 
     this.clickableCount = this.activated - (this.completeCount + this.state.activeCells.length);
@@ -2667,7 +2687,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       progressElement.style.height = `${cell.percent}%`;
 
       //TODO: fix this with call to remainingToStr
-      const timeText = 0;
+      const timeText = this.remainingToStr(cell.remaining);
       if (cell.remaining < minRemaining) {
         minRemaining = cell.remaining;
       }
@@ -2709,6 +2729,42 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
   }
 
+  timeToObj(t) {
+    const result = {};
+
+    result.y = Math.floor(t / (365 * 24 * 60 * 60));
+    t = t % (365 * 24 * 60 * 60);
+    result.d = Math.floor(t / (24 * 60 * 60));
+    t = t % (24 * 60 * 60);
+    result.h = Math.floor(t / (60 * 60));
+    t = t % (60 * 60);
+    result.m = Math.floor(t / 60);
+    t = t % 60;
+    result.s = t;
+
+    return result;
+  }
+
+  remainingToStr(ms, full) {
+    if (ms === Infinity) {
+      return 'Infinity';
+    }
+
+    const timeObj = this.timeToObj(ms / 1000);
+
+    if (full) {
+      return `${timeObj.y}:${timeObj.d.toString().padStart(3,0)}:${timeObj.h.toString().padStart(2,0)}:${timeObj.m.toString().padStart(2,0)}:${timeObj.s.toFixed(1).padStart(4,0)}`;
+    }
+
+    if (timeObj.y > 0 || timeObj.d > 0 || timeObj.h > 0) {
+      //return `${timeObj.y}:${timeObj.d.toString().padStart(3,0)}:${timeObj.h.toString().padStart(2,0)}:${timeObj.m.toString().padStart(2,0)}`;
+      return `${timeObj.d.toString().padStart(3,0)}:${timeObj.h.toString().padStart(2,0)}:${timeObj.m.toString().padStart(2,0)}`;
+    } else {
+      return `${timeObj.m.toString().padStart(2,0)}:${timeObj.s.toFixed(1).padStart(4,0)}`;
+    }
+
+  }
+
   getCellVal(row, col) {
     if (col === 0 || col === row) { return 1; }
     if (col < 0 || col > row) { return 0; }
@@ -2740,6 +2796,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     //  total time remaining
     //  progress bar
     //  some kind of comment like "there are no upgrades, there is only"
+    //TODO: do something here
     const infoBox = this.createElement('div', '', gameContainer, 'snailInfoBox', 'infoBOX');
 
 
@@ -2760,7 +2817,8 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         progress.style.backgroundSize = 'cover';
         progress.style.backgroundPosition = 'center';
         const cellContent = this.createElement('div', '', button, 'snailCellContent', cellValue);
-        const cellTime = this.createElement('div', '', button, 'snailCellTime', 'rem');
+        const cellTime = this.createElement('div', '', button, 'snailCellTime', this.remainingToStr(cellValue * 1000));
+        this.totalTime += cellValue * 1000;
 
         this.progressElements[`${i},${j}`] = progress;
         this.timeElements[`${i},${j}`] = cellTime;
@@ -2863,6 +2921,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       this.state.activeCells.push({
         name: `${row},${col}`,
         startTime: (new Date()).getTime(),
+        baseDuration: duration,
         duration: duration,
         percent: 0,
         remaining: duration,
