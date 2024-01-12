@@ -2575,6 +2575,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.cellColors = ['hsl(123, 15%, 54%)', 'hsl(60, 48%, 54%)'];
     this.completeTime = 0;
     this.totalTime = 0;
+    this.partialCompleteTime = 0;
     this.cellCount = 0;
     this.completeCount = 0;
     this.activated = 0;
@@ -2595,9 +2596,12 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   initFinalCell() {
     const finalCellRow = this.rowCount - 1;
     const finalCellCol = this.rowCount >> 1;
-    this.state.completeCells[`${finalCellRow},${finalCellCol}`] = false;
+    delete this.state.completeCells[`${finalCellRow},${finalCellCol}`];
 
     const finalCellDuration = this.getCellVal(finalCellRow, finalCellCol);
+    this.completeTime -= finalCellDuration;
+    this.completeCount--;
+
     const curTime = (new Date()).getTime();
     //leave 10 minutes left on the timer
     const finalCellStartTime = curTime - finalCellDuration * 1000 + (10 * 60 * 1000); 
@@ -2649,6 +2653,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         cell.complete = true;
         this.progressComplete(cell.row, cell.col);
       }
+      this.partialCompleteTime += completeTime;
     });
 
     this.state.reverseActiveCells.forEach( cell => {
@@ -2670,6 +2675,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         cell.reverseComplete = true;
         this.progressReverseComplete(cell.row, cell.col);
       }
+      this.partialCompleteTime += (cell.baseDuration - remaining);
     });
 
 
@@ -2722,6 +2728,9 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     const curTime = this.state.endTime ?? (new Date()).getTime();
     const playTime = curTime - this.state.gameStart;
     
+    const completePercent = 100 * this.partialCompleteTime / this.totalTime;
+    this.UI.infoBoxProgress.style.width = `${completePercent}%`;
+
     //TODO: figure out what to do with these lines
     /*
     this.UI.infoPlayTime.innerText = this.remainingToStr(playTime, true);
@@ -2816,7 +2825,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     const infoBox = this.createElement('div', '', gameContainer, 'snailInfoBox');
     const infoTitle = this.createElement('div', '', infoBox, 'snailInfoBoxTitle', "Pedro Pascal's Triangle of Prestige");
     const infoProgressContainer = this.createElement('div', '', infoBox, 'snailInfoBoxProgressContainer');
-    const infoProgress = this.createElement('div', '', infoProgressContainer, 'snailInfoBoxProgress');
+    const infoProgress = this.createElement('div', 'infoBoxProgress', infoProgressContainer, 'snailInfoBoxProgress');
     const infoDialogCont = this.createElement('div', '', infoBox, 'snailInfoDialogCont');
     const infoDialogImg = this.createElement('div', '', infoDialogCont, 'snailInfoDialogImg', '\ud83d\udc0c');
     const infoDialogText = this.createElement('div', '', infoDialogCont, 'snailInfoDialogText');
@@ -2828,6 +2837,9 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
     //game
     const completeList = [];
+    this.totalTime = 0;
+    this.completeTime = 0;
+    this.partialCompleteTime = 0;
     for (let i = 0; i < this.rowCount; i++) {
       const row = this.createElement('div', '', gameContainer, 'snailRow');
       for (let j = 0; j <= i; j++) {
@@ -3017,23 +3029,34 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   cellButtonReverseClick(button, row, col) {
     console.log('REV CLICK');
     if (this.isCellReverseActive(row, col)) {
+      //TODO: why does this condition continue on the final cell even after we've reversed it?
       console.log('REVERSE ACTIVE');
       const alreadyReverseActive = this.state.reverseActiveCells.some( cell => {
         return cell.row === row && cell.col === col;
       });
 
-      if (alreadyReverseActive || this.state.completeCells[`${row},${col}`] === undefined) {
+
+      if (alreadyReverseActive) {// || !this.isCellInListthis.state.completeCells[`${row},${col}`] !== undefined) {
         return;
       }
-      delete this.state.completeCells[`${row},${col}`];
-      this.completeTime -= this.getCellVal(row, col) * 1000; 
-      this.completeCount--;
+
+      //TODO: handle these properly depending on if the clicked cell was completed or not
+      if (this.state.completeCells[`${row},${col}`]) {
+        delete this.state.completeCells[`${row},${col}`];
+        this.completeTime -= this.getCellVal(row, col) * 1000; 
+        this.completeCount--;
+      }
+
 
       button.style.cursor = 'not-allowed';
       const baseDuration = this.getCellVal(row, col) * 1000;
       const activeCell = this.state.activeCells.filter( cell => {return cell.row === row && cell.col === col;} );
       const remaining = activeCell.length > 0 ? activeCell[0].remaining : 0;
       const percent = activeCell.length > 0 ? activeCell[0].percent : 100;
+
+      if (this.isCellInList(this.state.activeCells, row, col)) {
+        this.state.activeCells = this.state.activeCells.filter( cell => !(cell.row === row && cell.col === col) );
+      }
 
       this.state.reverseActiveCells.push({
         name: `${row},${col}`,
