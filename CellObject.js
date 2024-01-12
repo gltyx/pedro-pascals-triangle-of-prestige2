@@ -2581,7 +2581,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j <= i; j++) {
-        //TODO: uncomment
         this.state.completeCells[`${i},${j}`] = true;
       }
     }
@@ -2593,8 +2592,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   }
 
   initFinalCell() {
-    //TODO: remove return
-    return;
     const finalCellRow = this.rowCount - 1;
     const finalCellCol = this.rowCount >> 1;
     this.state.completeCells[`${finalCellRow},${finalCellCol}`] = false;
@@ -2606,9 +2603,10 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.state.activeCells.push({
       name: `${this.rowCount - 1},${this.rowCount >> 1}`,
       startTime: finalCellStartTime,
-      duration: finalCellDuration,
+      duration: finalCellDuration * 1000,
+      baseDuration: finalCellDuration * 1000,
       percent: 0,
-      remaining: finalCellDuration,
+      remaining: finalCellDuration * 1000,
       row: finalCellRow,
       col: finalCellCol
     });
@@ -2628,6 +2626,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       fix formatting
       figure out what appropriate scaling should be so that we can use the scaling
         from spot and it takes between 1 to 7 days to finish
+      make it obvious which cells are moving in which direction
       
   */
 
@@ -2657,13 +2656,18 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     });
 
     this.state.reverseActiveCells.forEach( cell => {
+      //duration is saved complete time
       if (this.tPower !== this.lasttPower) {
         cell.duration = cell.duration + (curMS - cell.startTime) * this.lasttPower;
         cell.startTime = curMS;
       }
 
-      const completeTime = cell.duration - (curMS - cell.startTime) * this.tPower
-      const remaining = Math.min(cell.duration, cell.duration - completeTime);
+      const completeTime = cell.duration + (curMS - cell.startTime) * this.tPower
+      //remaining time to get to 100%. in this case, it will be increasing since we're going backwards
+      //typically, duration is constant and completeTime goes down. but, duration can change with
+      //  snaptshotting
+      const remaining = Math.min(cell.baseDuration, completeTime);
+      //percent complete. will be decreasing. baseDuration is constant, remaining increases
       cell.percent = Math.max(0, 100 * (cell.baseDuration - remaining) / cell.baseDuration);
       cell.remaining = remaining;
       if (remaining >= cell.baseDuration) {
@@ -2677,18 +2681,28 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
   }
 
-  displayCellInProgress(cell) {
+  displayCellInProgress(cell, reverse) {
     const progressElement = this.progressElements[cell.name];
     const timeElement = this.timeElements[cell.name];
     progressElement.style.height = `${cell.percent}%`;
 
     const timeText = this.remainingToStr(cell.remaining);
-    if (cell.percent < 100) {
-      timeElement.innerText = timeText;
+    if (reverse) {
+      if (cell.percent > 0) {
+        timeElement.innerText = timeText;
+      } else {
+        timeElement.innerText = timeText;
+        progressElement.style.filter = 'opacity(1.0)';
+        progressElement.parentElement.style.cursor = 'not-allowed';
+      }
     } else {
-      timeElement.innerText = '';
-      progressElement.style.filter = 'opacity(1.0)';
-      progressElement.parentElement.style.cursor = 'not-allowed';
+      if (cell.percent < 100) {
+        timeElement.innerText = timeText;
+      } else {
+        timeElement.innerText = '';
+        progressElement.style.filter = 'opacity(1.0)';
+        //progressElement.parentElement.style.cursor = 'not-allowed';
+      }
     }
     return cell.remaining;
   }
@@ -2698,11 +2712,11 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
     let minRemaining = Infinity;
     this.state.activeCells.forEach( cell => {
-      minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell));
+      minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell, false));
     });
 
     this.state.reverseActiveCells.forEach( cell => {
-      minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell));
+      minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell, true));
     });
 
 
@@ -2840,14 +2854,22 @@ class CellObjectEnemySnail extends CellObjectEnemy {
           progress.style.height = '100%';
           cellTime.innerText = '';
           progress.style.filter = 'opacity(1.0)';
-          button.style.cursor = 'not-allowed';
+          //button.style.cursor = 'not-allowed';
           button.style.backgroundColor = this.cellColors[styleIndex];
+        } else {
+          button.style.cursor = 'not-allowed';
         }
+
         
-        if (this.state.activeCells.some( cell => {return cell.row === i && cell.col === j;} )) {
+        if (this.isCellInList(this.state.reverseActiveCells, i, j)) {
           button.style.cursor = 'not-allowed';
           button.style.backgroundColor = this.cellColors[styleIndex];
+        } else if (this.isCellInList(this.state.activeCells, i, j)) { 
+          button.style.backgroundColor = this.cellColors[styleIndex];
         }
+
+        button.style.cursor = this.isCellReverseActive(i, j) ? '' : 'not-allowed';
+
 
         if (j === i || (i === (this.rowCount - 1))) {
           button.classList.add('snailCellRowEnd');
@@ -2916,6 +2938,8 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       cell.classList.add('snailCellClickable');
       this.activated--;
     }
+    this.UI[`cellButton${row}_${col}`].style.backgroundColor = '';
+    //this.timeElements[`${row},${col}`].innerText = this.remainingToStr(this.getCellVal(row, col) * 1000);
 
     if (this.completeCount <= 0 && this.state.endTime === undefined) {
       //TODO: handle the win condition properly.
@@ -3002,19 +3026,20 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       this.completeTime -= this.getCellVal(row, col) * 1000; 
       this.completeCount--;
 
+      //TODO: need to start from current completion if active
       button.style.cursor = 'not-allowed';
       const baseDuration = this.getCellVal(row, col) * 1000;
       const activeCell = this.state.activeCells.filter( cell => {return cell.row === row && cell.col === col;} );
-      const duration = activeCell.length > 0 ? activeCell[0].remaining : baseDuration;
+      const remaining = activeCell.length > 0 ? activeCell[0].remaining : baseDuration;
       const percent = activeCell.length > 0 ? activeCell[0].percent : 100;
 
       this.state.reverseActiveCells.push({
         name: `${row},${col}`,
         startTime: (new Date()).getTime(),
         baseDuration,
-        duration,
+        duration: remaining,
         percent,
-        remaining: duration,
+        remaining,
         row,
         col
       });       
