@@ -2622,7 +2622,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   /*
     TODO:
       do something special when the game has been won
-      do something with infoBox
       figure out what appropriate scaling should be
         this.tPowerScale
         should take between 1 to 7 days to finish
@@ -2681,6 +2680,14 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
     this.clickableCount = this.activated - (this.completeCount + this.state.activeCells.length);
 
+    if (this.state.winClosed !== undefined) {
+      //game over
+      return {
+        tpoints: 1e3 * Math.pow(rewardDistFactor, this.dist),
+        cpoints: 1e3 * Math.pow(rewardDistFactor, this.dist)
+      };
+    }
+
   }
 
   displayCellInProgress(cell, reverse) {
@@ -2730,27 +2737,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     
     const completePercent = 100 * this.partialCompleteTime / this.totalTime;
     this.UI.infoBoxProgress.style.width = `${completePercent}%`;
-
-    //TODO: figure out what to do with these lines
-    /*
-    this.UI.infoPlayTime.innerText = this.remainingToStr(playTime, true);
-    this.UI.infoNext.innerText = this.remainingToStr(minRemaining, true);
-    document.title = `Pedro Pascal's Triangle of Prestige - ${this.remainingToStr(minRemaining)}`;
-
-
-
-    const timeRemaining = this.totalTime - this.partialCompleteTime;
-    this.UI.infoTimeRemaining.innerText = this.remainingToStr(timeRemaining, true);
-
-    const remainingPercent = 100 - 100 * timeRemaining / this.totalTime;
-    this.UI.infoProgress.style.width = `${remainingPercent}%`;
-    
-    const icon = ['./favicon.png', './faviconAlert.png'][+(this.clickableCount > 0)];
-    if (this.UI.linkIcon.href !== icon) {
-      this.UI.linkIcon.href = icon;
-    }
-
-    */
 
   }
 
@@ -2821,7 +2807,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     //  total time remaining
     //  progress bar
     //  some kind of comment like "there are no upgrades, there is only"
-    //TODO: do something here
     const infoBox = this.createElement('div', '', gameContainer, 'snailInfoBox');
     const infoTitle = this.createElement('div', '', infoBox, 'snailInfoBoxTitle', "Pedro Pascal's Triangle of Prestige");
     const infoProgressContainer = this.createElement('div', '', infoBox, 'snailInfoBoxProgressContainer');
@@ -2829,9 +2814,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     const infoDialogCont = this.createElement('div', '', infoBox, 'snailInfoDialogCont');
     const infoDialogImg = this.createElement('div', '', infoDialogCont, 'snailInfoDialogImg', '\ud83d\udc0c');
     const infoDialogText = this.createElement('div', '', infoDialogCont, 'snailInfoDialogText');
-    infoDialogText.innerText = "Meddling here invites suffering! You must not prevent my acolytes from completing PPTOP!";
-
-
+    infoDialogText.innerText = "I have not approved your meddling here! You must not prevent my acolytes from completing PPTOP!";
 
     
 
@@ -2901,6 +2884,10 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
     this.UI['cellButton0_0'].classList.add('snailCellClickable');
     this.activated++;
+
+    if (this.state.endTime !== undefined) {
+      this.showGameEnd();
+    }
   }
 
   closeGame() {
@@ -2942,6 +2929,20 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     }
   }
 
+  showGameEnd() {
+    const playTime = this.state.endTime - app.state.gameStart;
+    document.querySelector('#winLore').innerHTML = `${LORE[26].substr(4)}<br>Your total play time was ${this.remainingToStr(playTime)}`;
+    //document.querySelector('#winContainer').style.display = 'block';
+    document.querySelector('#winContainer').showModal();
+    document.querySelector('body').classList.add('blur2px');
+
+    document.querySelector('#winBtn').onclick = () => {
+      document.querySelector('#winContainer').close();
+      document.querySelector('body').classList.remove('blur2px');
+      this.state.winClosed = true;
+    };
+  }
+
   progressReverseComplete(row, col) {
     if (this.isCellReverseActive(row - 1, col)) {
       const cell = this.UI[`cellButton${row-1}_${col}`];
@@ -2957,16 +2958,11 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     //this.timeElements[`${row},${col}`].innerText = this.remainingToStr(this.getCellVal(row, col) * 1000);
 
     if (this.completeCount <= 0 && this.state.endTime === undefined) {
-      //TODO: handle the win condition properly.
-      /*
+      //game won case
+
       this.state.endTime = (new Date()).getTime();
-      const playTime = this.state.endTime - this.state.gameStart;
-      this.UI.winPlayTime.innerText = this.remainingToStr(playTime);
-      this.UI.winContainer.style.display = 'block'; 
-      this.saveToStorage();
-      */
+      this.showGameEnd();
     }
-    
   }
 
   isCellActive(row, col) {
@@ -3029,7 +3025,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
   cellButtonReverseClick(button, row, col) {
     console.log('REV CLICK');
     if (this.isCellReverseActive(row, col)) {
-      //TODO: why does this condition continue on the final cell even after we've reversed it?
       console.log('REVERSE ACTIVE');
       const alreadyReverseActive = this.state.reverseActiveCells.some( cell => {
         return cell.row === row && cell.col === col;
@@ -3040,7 +3035,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         return;
       }
 
-      //TODO: handle these properly depending on if the clicked cell was completed or not
       if (this.state.completeCells[`${row},${col}`]) {
         delete this.state.completeCells[`${row},${col}`];
         this.completeTime -= this.getCellVal(row, col) * 1000; 

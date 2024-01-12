@@ -170,10 +170,11 @@ class App {
         let worldChar = WORLD[y][x];
         if (worldChar === '.') {
           const enemyList = 'c$prla';
+          //TODO: don't hard code anything and don't comment out generating rnd
           if (x === 0 && y === 2) {
             worldChar = 'F';
           } else {
-            worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
+            //worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
           }
         }
 
@@ -343,6 +344,7 @@ class App {
           this.addToLog(`Lore ${loreUnlock} unlocked!`);
           document.getElementById(`loreIcon${i}`).style.display = 'none';
         }
+        cell.content.closeGame();
         const dist = cell.x + cell.y;
         cell.content = new CellObject(cell.ui, dist);
         if (this.selectedCellIndex === i) {

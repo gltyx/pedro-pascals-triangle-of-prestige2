@@ -476,14 +476,70 @@ dialog {
 }
 
 .snailInfoBox {
+  position: fixed;
   background-color: hsl(60, 48%, 54%);
   outline: 1px solid black;
   box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+  width: 250px;
+  padding: 3px;
+  position: fixed;
+  z-index: 100;
+}
+
+.snailInfoBoxTitle {
+  font-weight: bold;
+}
+
+.snailInfoBoxProgressContainer {
+  width: 100%;
+  height: 13px;
+  background: white;
+  box-shadow: inset 1px 1px 3px -1px black;
+}
+
+.snailInfoBoxProgress {
+  width: 10%;
+  height: 13px;
+  background: hsl(123, 48%, 54%);
+}
+
+.snailInfoDialogCont {
+  display: grid;
+  grid-template-columns: 80px auto;
+  grid-column-gap: 15px;
+  margin-top: 4px;
+}
+
+.snailInfoDialogImg {
+  font-size: 64px;
+  filter: hue-rotate(45deg);
+}
+
+.snailInfoDialogText {
+  border-radius: 8px;
+  padding: 4px;
+  background-color: grey;
+  text-align: center;
+  font-size: 14px;
+}
+
+.snailInfoDialogText::before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid grey;
+  border-bottom: 10px solid grey;
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 81px;
+  top: 50px;
 }
 
 .snailRow {
   display: flex;
   justify-content: center;
+  height: 24px;
 }
 
 /*
@@ -537,4 +593,36 @@ dialog {
 .snailCellClickable {
   background-color: hsl(123, 0%, 74%);
   cursor: default;
+}
+
+#winContainer {
+  position: fixed;
+  z-index: 300;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+  padding: 0.5em;
+  outline: 1px solid black;
+  background-color: hsl(39, 71%, 67%);
+}
+
+#winLore {
+  width: 512px;
+  background-color: grey;
+  border-radius: 8px;
+  padding: 4px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-style: italic;
+  color: white;
+  text-shadow: 2px 2px 2px black;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+
+}
+
+#winImg {
+  width: 512px;
+  height: 288px;
+  background-image: url('./win.png');
+  background-size: cover;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+  border-radius: 8px;
 }
