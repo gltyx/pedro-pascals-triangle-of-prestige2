@@ -2617,19 +2617,12 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
   /*
     TODO:
-      snail can randomly click.
-        at what rate?
-        faster when there are fewer remaining cells?
       do something special when the game has been won
-      start with the grid nearly completed
-      make it obvious that the player should be playing the game backwards
       do something with infoBox
-      fix formatting
-      make it obvious which cells are moving in which direction
-      figure out what appropriate scaling should be so that we can use the scaling
+      figure out what appropriate scaling should be
         this.tPowerScale
-        from spot and it takes between 1 to 7 days to finish
-        do something to indicate a scaling factor on spot's power
+        should take between 1 to 7 days to finish
+        do something to indicate the scaling factor on spot's power
       
   */
 
@@ -2820,7 +2813,14 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     //  progress bar
     //  some kind of comment like "there are no upgrades, there is only"
     //TODO: do something here
-    const infoBox = this.createElement('div', '', gameContainer, 'snailInfoBox', 'infoBOX');
+    const infoBox = this.createElement('div', '', gameContainer, 'snailInfoBox');
+    const infoTitle = this.createElement('div', '', infoBox, 'snailInfoBoxTitle', "Pedro Pascal's Triangle of Prestige");
+    const infoProgressContainer = this.createElement('div', '', infoBox, 'snailInfoBoxProgressContainer');
+    const infoProgress = this.createElement('div', '', infoProgressContainer, 'snailInfoBoxProgress');
+    const infoDialogCont = this.createElement('div', '', infoBox, 'snailInfoDialogCont');
+    const infoDialogImg = this.createElement('div', '', infoDialogCont, 'snailInfoDialogImg', '\ud83d\udc0c');
+    const infoDialogText = this.createElement('div', '', infoDialogCont, 'snailInfoDialogText');
+    infoDialogText.innerText = "Meddling here invites suffering! You must not prevent my acolytes from completing PPTOP!";
 
 
 
@@ -3029,7 +3029,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       this.completeTime -= this.getCellVal(row, col) * 1000; 
       this.completeCount--;
 
-      //TODO: something is being set wrong if not active cell
       button.style.cursor = 'not-allowed';
       const baseDuration = this.getCellVal(row, col) * 1000;
       const activeCell = this.state.activeCells.filter( cell => {return cell.row === row && cell.col === col;} );
