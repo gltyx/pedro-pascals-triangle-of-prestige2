@@ -2578,6 +2578,7 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.cellCount = 0;
     this.completeCount = 0;
     this.activated = 0;
+    this.tPowerScale = 0.5;
 
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j <= i; j++) {
@@ -2624,9 +2625,11 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       make it obvious that the player should be playing the game backwards
       do something with infoBox
       fix formatting
-      figure out what appropriate scaling should be so that we can use the scaling
-        from spot and it takes between 1 to 7 days to finish
       make it obvious which cells are moving in which direction
+      figure out what appropriate scaling should be so that we can use the scaling
+        this.tPowerScale
+        from spot and it takes between 1 to 7 days to finish
+        do something to indicate a scaling factor on spot's power
       
   */
 
@@ -2658,11 +2661,11 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.state.reverseActiveCells.forEach( cell => {
       //duration is saved complete time
       if (this.tPower !== this.lasttPower) {
-        cell.duration = cell.duration + (curMS - cell.startTime) * this.lasttPower;
+        cell.duration = cell.duration + (curMS - cell.startTime) * this.lasttPower * this.tPowerScale;
         cell.startTime = curMS;
       }
 
-      const completeTime = cell.duration + (curMS - cell.startTime) * this.tPower
+      const completeTime = cell.duration + (curMS - cell.startTime) * this.tPower * this.tPowerScale;
       //remaining time to get to 100%. in this case, it will be increasing since we're going backwards
       //typically, duration is constant and completeTime goes down. but, duration can change with
       //  snaptshotting
@@ -3026,11 +3029,11 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       this.completeTime -= this.getCellVal(row, col) * 1000; 
       this.completeCount--;
 
-      //TODO: need to start from current completion if active
+      //TODO: something is being set wrong if not active cell
       button.style.cursor = 'not-allowed';
       const baseDuration = this.getCellVal(row, col) * 1000;
       const activeCell = this.state.activeCells.filter( cell => {return cell.row === row && cell.col === col;} );
-      const remaining = activeCell.length > 0 ? activeCell[0].remaining : baseDuration;
+      const remaining = activeCell.length > 0 ? activeCell[0].remaining : 0;
       const percent = activeCell.length > 0 ? activeCell[0].percent : 100;
 
       this.state.reverseActiveCells.push({
