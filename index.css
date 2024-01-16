@@ -108,7 +108,7 @@ dialog {
   height: 4px;
 }
 
-.loreIcon {
+.loreMark {
   width: 32px;
   height: 32px;
   position: absolute;
@@ -626,3 +626,4 @@ dialog {
   box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
   border-radius: 8px;
 }
+

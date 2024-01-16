@@ -1,42 +1,6 @@
 "use strict";
 
 /*
-  snails can be the antagonists
-  defeating enemies and disassembling resources shouldn't just be a time wait
-    it should be simple/short versions of other basic incrementals
-    - cheese game - idle
-    - adventure capitalist
-    - pedro - but modified for the last game
-    - prestige - idle
-    - cookie clicker
-    - crank - active
-    - antimatter dimensions
-    - lawnmower game
-
-  different types of units near enemies give upgrades based on the unit type and level
-    tick speed
-    click power
-    disassembly power
-  maybe the cult is trying to complete PPToP because it believes something good will
-   happen when it's finished but in fact it unleashes the snail
-
-  add some license info as necessary
-
-  TODO:
-    get drag/drop working on mobile
-    need better favicon
-    add antimatter dimensions 
-    add lawnmower game
-    add game end
-      confrontation with snail and cult
-      player has to play a game based on bell triangle to win
-    add reset with confirmation
-    get building new units to cost points
-    get point display looking nice
-    why does crank always show Rem: 100 in object details?
-
-
-
 
   s  active
    \   ---
@@ -161,7 +125,7 @@ class App {
         if (LORE_UNLOCK_MAP[cellIndex] !== undefined) {
           const lore = document.createElement('div');
           lore.id = `loreIcon${cellIndex}`;
-          lore.classList.add('loreIcon');
+          lore.classList.add('loreMark');
           applySprite(lore, 'lore', true);
           cell.appendChild(lore);
         }

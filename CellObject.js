@@ -808,6 +808,13 @@ class CellObjectInfo extends CellObject {
   static tutorialHTML = `
   <h1>Tutorial</h1>
   dragging spot/boss
+  <div class="spotIcon"></div>
+  <div class="bossIcon"></div>
+  <div class="infoIcon"></div>
+  <div class="wallIcon"></div>
+  <div class="buildIcon"></div>
+  <div class="mergeIcon"></div>
+  <div class="loreIcon"></div>
   lore icons
   drag grid
   goal to get to bottom right corner
@@ -853,6 +860,14 @@ class CellObjectInfo extends CellObject {
 
     tabBodyTutorial.innerHTML = CellObjectInfo.tutorialHTML;
 
+    ['spot', 'boss', 'info', 'wall', 'build', 'merge', 'lore'].forEach( name => {
+      document.querySelectorAll(`.${name}Icon`).forEach( e => {
+        applySprite(e, name);
+        e.style.width = '32px';
+        e.style.height = '32px';
+        e.style.boxShadow = 'inset -1px -1px 3px black';
+      });
+    });
 
     const saveBtn = this.createElement('button', '', tabBodySettings, '', 'Save');
     const resetBtn = this.createElement('button', '', tabBodySettings, '', 'Reset');
@@ -2621,7 +2636,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
 
   /*
     TODO:
-      do something special when the game has been won
       figure out what appropriate scaling should be
         this.tPowerScale
         should take between 1 to 7 days to finish
