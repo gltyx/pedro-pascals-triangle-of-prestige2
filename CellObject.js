@@ -804,8 +804,14 @@ class CellObjectBuild extends CellObject {
 
 class CellObjectInfo extends CellObject {
 
+  //TODO: add some kind of "please review the first lore item"
   static tutorialHTML = `
-  <h1>Tutorial</h1>
+  <h1 id='tutTitle'>Pauahtan's Pupils' Trial of Prayer</h1>
+  <h2>(PPToP 2)</h2>
+  In this game, you observe the story of 3 strangers in Belize while controlling
+    two entities to help them make progress. You can read parts of the story as
+    they unlock in the Lore tab above. The first of which is already unlocked.
+  <h2>Tutorial</h2>
   <ul>
     <li>Return to this text any time by selecting <span class="infoIcon"></span></li>
     <li>Drag and drop <span class="spotIcon"></span> <span class="bossIcon"></span> 
@@ -822,7 +828,6 @@ class CellObjectInfo extends CellObject {
         Unlock more of a character's dialog by defeating enemies in their path 
         with the <span class='loreIcon'></span> icon.</li>
     <li>Unlocked dialog can be viewed in the Lore tab above</li>
-
   </ul>
   `;
 

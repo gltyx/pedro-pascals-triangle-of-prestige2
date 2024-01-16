@@ -8,6 +8,8 @@
   --loreCulBg: hsl(268, 100%, 70%);
   --loreAdvBg: hsl(148, 100%, 70%);
   --loreUnkBg: hsl(0, 0%, 70%);
+  --bg: hsl(60, 48%, 76%);
+  --uiBg: hsl(176, 48%, 54%);
 }
 
 * {
@@ -51,7 +53,7 @@ dialog {
 }
 
 #gameInfoContainer {
-  background: white;
+  background: var(--bg);
   box-shadow: inset 1px 1px 3px black;
   padding: 0.5em;
 }
@@ -74,6 +76,7 @@ dialog {
 
 #mainUI {
   background: cyan;
+  background: var(--uiBg);
   z-index: 100;
   padding: 0.5em;
   box-shadow: inset -2px -2px 3px black;
@@ -122,13 +125,13 @@ dialog {
 }
 
 #cellInfoInfo {
-  background: white;
+  background: var(--bg);
   padding: 0.5em;
   box-shadow: inset 1px 1px 3px black;
 }
 
 #cellInfoGameContainer {
-  background: white;
+  background: var(--bg);
   padding: 0.5em;
   box-shadow: inset 1px 1px 3px black;
   overflow-y: scroll;
@@ -177,6 +180,10 @@ dialog {
   border-radius: 6px;
   overflow-wrap: anywhere;
   transition: filter 1s;
+}
+
+#tutTitle {
+  font-size: 30px;
 }
 
 .prestigeCenter {
