@@ -7,21 +7,21 @@ const WORLD = [
  '.x333x33xx1111x1x11x111111x1x1x1',
  '2x3333333x1111x11x1x1xxxx1x1x1x1',
  '2xxx3x33x11111x1111x111111x1x1x1',
- '22x333x33xxxxxx111x1xxxxx1x1x1x1',
+ '22x333x33xxxxxx111x.xxxxx1x1x1x1',
  '2mx333333333333x1x111x111111x1x1',
  '22xx3x333xxxx333x11x11xxxxxx1111',
  '2xxxx2x3x3333x333x111x11111111xx',
  '222222x3x3xx3x3333x1x11111111x11',
  '222222x3x3x33333333x11xxxxxxx111',
  'xxx222x3x333x33x3x3xx11111111111',
- '222222x33xx33xx333x11x1111111x11',
+ '222222x33xx33xx333xxxx1111111x11',
  'xx2xxxx333333xx333xxxx1xxxxxx11x',
  '2222222x3333x33x333333333x1111x1',
  'xxxx2222x3333333xxxxxx3x3x111x11',
  '2222x22x2x33x333xx33333x3x11x1x1',
  '222222x222x33xx3x33x3x3x3x11x111',
- 'x2xxxx22x22xx2x3x3x33x3x3x11x111',
- '222222x222x2x2x3x333xx3x3x11x111',
+ 'x2xxxx.2x22xxxx3x3x33x3x3x11x111',
+ '222222x222x2xxx3x333xx3x3x11x111',
  'x2x2x2xx2x222xx3x3xxx33x3x11x1x1',
  'x2x2x2x2x2222223333333xx3x1111x1',
  'x2x2x2x2x22x22x3xxxxxxx33xx111x1',
@@ -30,9 +30,9 @@ const WORLD = [
  'xxxxxxx2x22x22x22222222x3333x111',
  '22222222x22x22x222222222xx331111',
  '2xxxxxxx222x22x22xxxxx2222x231xx',
- '2222222222x22x22x22222222x222311',
- '2xxxxxxx2x22222x2x222xxxx222x2x1',
- '222222222x2222x2222222222222x22F',
+ '2222222222x22x22x22222222x2223$r',
+ '2xxxxxxx2x22222x2x222xxxx222xcxa',
+ '222222222x2222x2222222222222xlpF',
 ];
 
 /*
@@ -58,13 +58,35 @@ const CHAR_TO_CLASS_MAP = {
   'F': CellObjectEnemySnail
 };
 
-//TODO: place every lore 
 //map enemy cell index into a lore index that it unlocks when defeated
 const LORE_UNLOCK_MAP = {
-  [`${0 + 0 * 32}`]: 0,
-  [`${4 + 0 * 32}`]: 1,
-  [`${2 + 2 * 32}`]: 2,
-  [`${0 + 4 * 32}`]: 3
+  [`${0 + 0 * 32}`]: 0, //unk
+  [`${4 + 0 * 32}`]: 1, //adv
+  [`${2 + 2 * 32}`]: 2, //cul
+  [`${0 + 4 * 32}`]: 3, //ass
+  [`${9 + 0 * 32}`]: 4, //adv
+  [`${4 + 4 * 32}`]: 5, //cul
+  [`${0 + 9 * 32}`]: 6, //ass
+  [`${15 + 4 * 32}`]: 7, //adv
+  [`${4 + 15 * 32}`]: 8, //ass
+  [`${8 + 8 * 32}`]: 9, //cul
+  [`${19 + 10 * 32}`]: 10, //adv
+  [`${10 + 19 * 32}`]: 11, //ass
+  [`${9 + 9 * 32}`]: 12, //cul
+  [`${29 + 8 * 32}`]: 13, //adv
+  [`${8 + 29 * 32}`]: 14, //ass
+  [`${18 + 18 * 32}`]: 15, //cul
+  [`${12 + 29 * 32}`]: 16, //ass
+  [`${29 + 12 * 32}`]: 17, //adv
+  [`${21 + 21 * 32}`]: 18, //cul
+  [`${22 + 28 * 32}`]: 19, //ass
+  [`${31 + 21 * 32}`]: 20, //adv
+  [`${25 + 25 * 32}`]: 21, //cul
+  [`${26 + 30 * 32}`]: 22, //ass
+  [`${29 + 28 * 32}`]: 23, //adv
+  [`${29 + 29 * 32}`]: 24, //cul
+  [`${28 + 29 * 32}`]: 25, //ass
+  [`${31 + 31 * 32}`]: 26  //unk
 };
 
 const LORE = [];
@@ -192,18 +214,6 @@ LORE[26] = `Unk:My children, you have emboldened the divine order this day.
   I will watch over you for the rest of your many natural days and see that you 
   each have a place in the heavens amongs the stars for your service and sacrifice.`;
 
-
-/*
-  msg counts
-  Adv: 8
-  Cul: 8
-  Ass: 8
-
-*/
-
-/*
-TODO: 
-*/
 
 /*
   introduction
