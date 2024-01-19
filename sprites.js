@@ -9,13 +9,13 @@ const SPRITES = {
   snail: [5, 0],
   cheese: [6, 0],
   spot: [7, 0],
-  wall: [8, 0],
+  wall_orig: [8, 0],
   business: [9, 0],
-  business_limeade: [10, 0],
-  business_spam: [11, 0],
-  business_dogWash: [12, 0],
-  business_taco: [13, 0],
-  business_cupcake: [14, 0],
+  business_limeade_orig: [10, 0],
+  business_spam_orig: [11, 0],
+  business_dogWash_orig: [12, 0],
+  business_taco_orig: [13, 0],
+  business_cupcake_orig: [14, 0],
   merge: [15, 0],
   build: [16, 0],
   info: [17, 0],
@@ -28,7 +28,14 @@ const SPRITES = {
   crank: [4, 1],
   iconHidden: [5, 1],
   lawn: [6, 1],
-  anti: [7, 1]
+  anti: [7, 1],
+  wall: [8, 1],
+  business_limeade: [10, 1],
+  business_spam: [11, 1],
+  business_dogWash: [12, 1],
+  business_taco: [13, 1],
+  business_cupcake: [14, 1],
+
 };
 
 const SPRITE_PATH = './sprites.png';
