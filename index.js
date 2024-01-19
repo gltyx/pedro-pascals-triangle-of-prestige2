@@ -20,6 +20,7 @@ function reset() {
 class App {
   constructor() {
     this.UI = {};
+    this.rndBags = {};
 
     const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoCPoints,gameInfoDPoints,toastRight';
     uiIDs.split`,`.forEach( id => {
@@ -100,12 +101,52 @@ class App {
     window.location.reload();
   }
 
+  rnd(seed) {
+    //return a value in [0,1)
+    const x = Math.sin(seed++) * 14324;
+    return x - Math.floor(x);
+  }
+
+  initRndBag(bagName, contents, duplicates, seed) {
+    let bag = [];
+    for (let i = 0; i < duplicates; i++) {
+      bag = bag.concat(contents);
+    }
+
+    for (let i = bag.length - 1; i >= 1; i--) {
+      seed = Math.floor(this.rnd(seed) * Number.MAX_SAFE_INTEGER);
+      const swapIndex = seed % (i + 1);
+      [bag[i], bag[swapIndex]] = [bag[swapIndex], bag[i]];
+    }
+
+    this.rndBags[bagName] = {
+      name: bagName,
+      contents,
+      duplicates,
+      seed,
+      bag
+    }
+  }
+
+  rndFromBag(bagName) {
+    const bag = this.rndBags[bagName];
+
+    if (bag.bag.length === 0) {
+      this.initRndBag(bagName, bag.contents, bag.duplicates, bag.seed);
+    }
+
+    return this.rndBags[bagName].bag.shift();
+  }
+
   initGrid(container) {
     this.gridWidth = 32;
     this.gridHeight = 32;
     this.totalEnemies = 0;
     this.totalWalls = 0;
     this.cells = new Array(this.gridWidth * this.gridHeight);
+    this.initRndBag('path1', '$ra'.split``, 3, 260);
+    this.initRndBag('path3', 'c$prla'.split``, 3, 365);
+    this.initRndBag('path2', 'cpl'.split``, 3, 52);
     for (let y = 0; y < this.gridHeight; y++) {
       for (let x = 0; x < this.gridWidth; x++) {
         const cellIndex = x + y * this.gridWidth;
@@ -131,15 +172,16 @@ class App {
         }
 
         //const worldChar = WORLD[y][x];
+        const pathEnemiesList = [
+          '$ra', //top = active
+          'c$prla', //mid = both
+          'cpl' //bot = idle
+        ];
         let worldChar = WORLD[y][x];
-        if (worldChar === '.') {
-          const enemyList = 'c$prla';
-          //TODO: don't hard code anything and don't comment out generating rnd
-          if (x === 0 && y === 2) {
-            worldChar = 'F';
-          } else {
-            //worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
-          }
+        if (worldChar === '1' || worldChar === '2' || worldChar === '3') {
+          const pathNum = parseInt(worldChar);
+          //worldChar = enemyList[Math.floor(Math.random() * enemyList.length)];
+          worldChar = this.rndFromBag(`path${pathNum}`);
         }
 
         const worldClass = CHAR_TO_CLASS_MAP[worldChar];
