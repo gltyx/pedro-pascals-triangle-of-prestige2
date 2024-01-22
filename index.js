@@ -13,7 +13,7 @@
 
 */
 function reset() {
-  localStorage.removeItem('gridGame');
+  localStorage.removeItem('pptop2');
   window.location.reload();
 }
 
@@ -46,7 +46,7 @@ class App {
   }
 
   loadFromStorage() {
-    const rawState = localStorage.getItem('gridGame');
+    const rawState = localStorage.getItem('pptop2');
 
     this.state = {
       log: [],
@@ -91,12 +91,12 @@ class App {
     });
 
     const saveString = JSON.stringify(this.state);
-    localStorage.setItem('gridGame', saveString);
+    localStorage.setItem('pptop2', saveString);
   }
 
   reset() {
     this.disableSaves = true;
-    localStorage.removeItem('gridGame');
+    localStorage.removeItem('pptop2');
     window.location.reload();
   }
 
