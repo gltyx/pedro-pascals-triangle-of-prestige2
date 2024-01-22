@@ -1018,7 +1018,7 @@ class CellObjectInfo extends CellObject {
     const tabTutorial = this.createElement('div', 'tabTutorial', tabContainer, 'infoTab', 'Tutorial');
     const tabLog = this.createElement('div', 'tabLog', tabContainer, 'infoTab' ,'Log');
     const tabLore = this.createElement('div', 'tabLore', tabContainer, 'infoTab', 'Lore');
-    const tabSettings = this.createElement('div', 'tabSettings', tabContainer, 'infoTab', 'Settings');
+    const tabSettings = this.createElement('div', 'tabSettings', tabContainer, 'infoTab', 'Settings/Info');
 
     tabTutorial.onclick = () => this.selectTab('Tutorial');
     tabLog.onclick = () => this.selectTab('Log');
@@ -1043,6 +1043,22 @@ class CellObjectInfo extends CellObject {
     const resetBtn = this.createElement('button', '', tabBodySettings, '', 'Reset');
     saveBtn.onclick = () => this.save();
     resetBtn.onclick = () => this.reset();
+    const extraText = this.createElement('div', '', tabBodySettings);
+    extraText.innerHTML = `
+    <a href='./attributions.html'>Attributions</a> 
+    <div>
+      Inspirations:
+      <ul>
+        <li><a href='https://makiki99.github.io/prestige/'>Prestige</a></li>
+        <li><a href='https://unihedro.github.io/cheese-game/'>Cheese Game</a></li>
+        <li><a href='https://www.firefliesalco.com/lawnmower-game/'>Lawnmower Game</a></li>
+        <li><a href='https://faedine.com/games/crank/'>Crank</a></li>
+        <li><a href='https://ivark.github.io/'>Antimater Dimensions</a></li>
+        <li><a href='https://hyperhippo.com/games/adventure-capitalist/'>Adventure Capitalist</a></li>
+        <li><a href='https://play.google.com/store/apps/details?id=com.redcell.goldandgoblins'>Gold & Goblins: Idle Merger</a></li>
+      </ul>
+    </div>
+    `;
 
     const resetDlg = this.createElement('dialog', 'resetDlg', tabBodySettings, '', 'Are you sure you want to reset?');
     const resetBtnContainer = this.createElement('div', '', resetDlg);
