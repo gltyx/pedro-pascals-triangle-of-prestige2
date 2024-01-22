@@ -993,6 +993,12 @@ class CellObjectInfo extends CellObject {
         Unlock more of a character's dialog by defeating enemies in their path 
         with the <span class='loreIcon'></span> icon.</li>
     <li>Unlocked dialog can be viewed in the Lore tab above</li>
+    <li>You can sacrifice <span class='spotIcon'></span><span class='bossIcon'></span>
+        to increase the power of <span class='spawnIcon'></span>. It will generate
+        an amount of power equal to that which was sacrificed every 260 "days". To access
+        the power, you must harvest it which converts it into points and sets the generation rate back
+        to zero.
+        </li>
   </ul>
   `;
 
@@ -1034,7 +1040,7 @@ class CellObjectInfo extends CellObject {
 
     tabBodyTutorial.innerHTML = CellObjectInfo.tutorialHTML;
 
-    ['spot', 'boss', 'info', 'wall', 'build', 'merge', 'lore'].forEach( name => {
+    ['spot', 'boss', 'info', 'wall', 'build', 'merge', 'lore', 'spawn'].forEach( name => {
       document.querySelectorAll(`.${name}Icon`).forEach( e => {
         applySprite(e, name);
         e.style.width = '32px';
