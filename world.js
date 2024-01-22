@@ -3,7 +3,7 @@
 const WORLD = [
  '?b..11111111x1x1x11x1xxxxxx11111',
  'sB.xxx1m1x11x1x1x111111111x1x1x1',
- '.S333xxxxx11x111x11x1xxxx1x1x1x1',
+ '..333xxxxx11x111x11x1xxxx1x1x1x1',
  '.x333x33xx1111x1x11x111111x1x1x1',
  '2x3333333x1111x11x1x1xxxx1x1x1x1',
  '2xxx3x33x11111x1111x111111x1x1x1',
