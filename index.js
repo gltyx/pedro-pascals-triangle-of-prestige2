@@ -22,7 +22,7 @@ class App {
     this.UI = {};
     this.rndBags = {};
 
-    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoCPoints,gameInfoDPoints,toastRight';
+    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoDPoints,toastRight';
     uiIDs.split`,`.forEach( id => {
       this.UI[id] = document.getElementById(id);
     });
@@ -52,7 +52,6 @@ class App {
       log: [],
       loreUnlocks: [true],
       tpoints: 0,
-      cpoints: 0,
       dpoints: 0
     };
 
@@ -341,7 +340,6 @@ class App {
 
       if (cellOutput !== undefined) {
         this.state.tpoints += cellOutput.tpoints ?? 0;
-        this.state.cpoints += cellOutput.cpoints ?? 0;
         this.state.dpoints += cellOutput.dpoints ?? 0;
         const loreUnlock = LORE_UNLOCK_MAP[i];
         if (loreUnlock) {
@@ -393,7 +391,6 @@ class App {
 
   draw() {
     this.UI.gameInfoTPoints.innerText = this.state.tpoints;
-    this.UI.gameInfoCPoints.innerText = this.state.cpoints;
     this.UI.gameInfoDPoints.innerText = this.state.dpoints;
     this.UI.gameInfoCompletionEnemies.innerText = (this.totalEnemies - this.curEnemies);
     this.UI.gameInfoCompletionWalls.innerText = (this.totalWalls - this.curWalls);

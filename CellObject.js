@@ -133,7 +133,6 @@ class CellObjectEnemy extends CellObject {
     this.percent = 100;
     this.state.enemyPower = 1;
     this.tPower = undefined;
-    this.cPower = undefined;
     this.dPower = undefined;
     this.ePower = undefined;
   }
@@ -142,18 +141,15 @@ class CellObjectEnemy extends CellObject {
     this.curTime = curTime;
     const forceLast = this.tPower === undefined;
     this.lasttPower = this.tPower;
-    this.lastcPower = this.cPower;
     this.lastdPower = this.dPower;
     this.lastePower = this.ePower;
     this.tPower = 0;
-    this.cPower = 0;
     this.dPower = 0;
     this.ePower = 0;
 
     for (let i = 0; i < neighbors.length; i++) {
       const ns = neighbors[i].content.state;
       this.tPower += ns.tickPower ?? 0;
-      this.cPower += ns.clickPower ?? 0;
       this.dPower += ns.disPower ?? 0;
       this.ePower += ns.enemyPower ?? 0;
     }
@@ -164,14 +160,13 @@ class CellObjectEnemy extends CellObject {
 
     if (forceLast) {
       this.lasttPower = this.tPower;
-      this.lastcPower = this.cPower;
       this.lastdPower = this.dPower;
       this.lastePower = this.ePower;
     }
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.tPower} C: ${this.cPower} D: ${this.dPower} E: ${this.ePower} Rem: ${Math.ceil(this.percent)}`;
+    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.tPower} D: ${this.dPower} E: ${this.ePower} Rem: ${Math.ceil(this.percent)}`;
   }
 
   isDropable(srcObject) {
@@ -188,13 +183,12 @@ class CellObjectSpot extends CellObject {
     super(cell, dist, 'spot');
     this.state.type = 'spot';
     this.state.tickPower = 1;
-    this.state.clickPower = 1;
     this.state.disPower = 0;
     this.cursor = 'grab';
   }
 
   displayCellInfo(container) {
-    container.innerText = `spot details - T: ${this.state.tickPower} C: ${this.state.clickPower}`;
+    container.innerText = `spot details - T: ${this.state.tickPower}`;
   }
 
   isDragable() {
@@ -214,7 +208,6 @@ class CellObjectBoss extends CellObject {
     super(cell, dist, 'boss');
     this.state.type = 'boss';
     this.state.tickPower = 0;
-    this.state.clickPower = 0;
     this.state.disPower = 1;
     this.cursor = 'grab';
   }
@@ -645,11 +638,9 @@ class CellObjectMerge extends CellObject {
   update(curTime, neighbors) {
     const forceLast = this.tPower === undefined;
     this.lasttPower = this.tPower;
-    this.lastcPower = this.cPower;
     this.lastdPower = this.dPower;
     this.lastePower = this.ePower;
     this.tPower = 0;
-    this.cPower = 0;
     this.dPower = 0;
     this.ePower = 0;
     this.neighbors = neighbors;
@@ -657,29 +648,26 @@ class CellObjectMerge extends CellObject {
     for (let i = 0; i < neighbors.length; i++) {
       const ns = neighbors[i].content.state;
       this.tPower += ns.tickPower ?? 0;
-      this.cPower += ns.clickPower ?? 0;
       this.dPower += ns.disPower ?? 0;
       this.ePower += ns.enemyPower ?? 0;
     }
 
     if (this.ePower > 0) {
       this.tPower = 0;
-      this.cPower = 0;
       this.dPower = 0;
     }
 
     if (forceLast) {
       this.lasttPower = this.tPower;
-      this.lastcPower = this.cPower;
       this.lastdPower = this.dPower;
       this.lastePower = this.ePower;
     }
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - T: ${this.tPower} C: ${this.cPower} D: ${this.dPower} E: ${this.ePower}`;
+    container.innerText = `Object Details - T: ${this.tPower} D: ${this.dPower} E: ${this.ePower}`;
 
-    this.UI.mergeSpot.innerText = `Merge neighboring SPOT. Result - T: ${this.tPower} C: ${this.cPower}`;
+    this.UI.mergeSpot.innerText = `Merge neighboring SPOT. Result - T: ${this.tPower}`;
     this.UI.mergeBoss.innerText = `Merge neighboring BOSS. Result - D: ${this.dPower}`;
   }
 
@@ -710,7 +698,6 @@ class CellObjectMerge extends CellObject {
     objectList.forEach( (n, i) => {
       if (i === 0) {
         n.content.state.tickPower = this.tPower;
-        n.content.state.clickPower = this.cPower;
       } else {
         n.content.merged = true;
       }
