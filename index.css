@@ -639,3 +639,17 @@ dialog {
   height: 460px;
   background-color: red;
 }
+
+.icon {
+  width: 32px;
+  height: 32px;
+  box-shadow: inset -1px -1px 3px black;
+  display: inline-block;
+}
+
+.buildCont {
+  display: grid;
+  grid-template-columns: 32px 180px;
+  grid-column-gap: 5px;
+  margin-bottom: 5px;
+}

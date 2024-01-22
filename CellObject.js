@@ -270,7 +270,6 @@ class CellObjectEnemyWall extends CellObjectEnemy {
       //game over, return spoils
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
 
@@ -329,7 +328,6 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
       //game over, return spoils
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
   }
@@ -443,7 +441,6 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       //game over, return spoils
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
   }
@@ -740,25 +737,29 @@ class CellObjectBuild extends CellObject {
 
   displayCellInfo(container) {
 
-    //TODO: set up button text properly
-    this.UI.buildSpot.innerText = `Build SPOT`;
-    this.UI.buildBoss.innerText = `Build BOSS`;
+    const openNeighborExists = this.getOpenNeighbor() !== undefined;
+
+    this.UI.butSpot.disabled = !openNeighborExists || app.state.tpoints <= 0;
+    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0;
   }
 
   initGame(gameContainer) {
     super.initGame(gameContainer);
-    //TODO: disable buttons when unclickable
 
     //build spot
-    const buildSpot = this.createElement('div', 'buildSpot', gameContainer, 'divButton', 'BUILD SPOT');
-    buildSpot.style.background = 'grey';
-    buildSpot.onclick = () => this.buildSpot();
-
+    const buildSpotCont = this.createElement('div', '', gameContainer, 'buildCont');
+    const buildSpotIcon = this.createElement('span', '', buildSpotCont, 'icon');
+    const buildSpotBut = this.createElement('button', 'butSpot', buildSpotCont, '', 'Build (uses all T points)');
+    applySprite(buildSpotIcon, 'spot');
+    buildSpotBut.onclick = () => this.buildSpot();
 
     //build boss
-    const buildBoss = this.createElement('div', 'buildBoss', gameContainer, 'divButton', 'BUILD BOSS');
-    buildBoss.style.background = 'cyan';
-    buildBoss.onclick = () => this.buildBoss();
+    const buildBossCont = this.createElement('div', '', gameContainer, 'buildCont');
+    const buildBossIcon = this.createElement('span', '', buildBossCont, 'icon');
+    const buildBossBut = this.createElement('button', 'butBoss', buildBossCont, '', 'Build (uses all D points)');
+    applySprite(buildBossIcon, 'boss');
+    buildBossBut.onclick = () => this.buildBoss();
+
   }
 
   getOpenNeighbor() {
@@ -777,6 +778,8 @@ class CellObjectBuild extends CellObject {
     if (openNeighbor === undefined) {return;}
 
     openNeighbor.content = new CellObjectSpot(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
+    openNeighbor.content.state.tickPower = app.state.tpoints;
+    app.state.tpoints = 0;
     
   }
 
@@ -785,6 +788,9 @@ class CellObjectBuild extends CellObject {
     if (openNeighbor === undefined) {return;}
 
     openNeighbor.content = new CellObjectBoss(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
+    openNeighbor.content.state.disPower = app.state.dpoints;
+    app.state.dpoints = 0;
+
   }
 
 }
@@ -956,7 +962,6 @@ class CellObjectSpawn extends CellObject {
 
 class CellObjectInfo extends CellObject {
 
-  //TODO: add some kind of "please review the first lore item"
   static tutorialHTML = `
   <h1 id='tutTitle'>Pauahtan's Pupils' Trial of Prayer</h1>
   <h2>(PPToP 2)</h2>
@@ -1030,10 +1035,7 @@ class CellObjectInfo extends CellObject {
     ['spot', 'boss', 'info', 'wall', 'build', 'merge', 'lore', 'spawn'].forEach( name => {
       document.querySelectorAll(`.${name}Icon`).forEach( e => {
         applySprite(e, name);
-        e.style.width = '32px';
-        e.style.height = '32px';
-        e.style.boxShadow = 'inset -1px -1px 3px black';
-        e.style.display = 'inline-block';
+        e.classList.add('icon');
       });
     });
 
@@ -1227,7 +1229,6 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
       //game over
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
   }
@@ -1535,7 +1536,6 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     if (this.state.totalPower > this.baseStrength) {
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
 
@@ -1996,7 +1996,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
       //game over
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
 
@@ -2362,7 +2361,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       //game over
       return {
         tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
   }
@@ -2866,7 +2864,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       //game over
       return {
         tpoints: 1e3 * Math.pow(rewardDistFactor, this.dist),
-        cpoints: 1e3 * Math.pow(rewardDistFactor, this.dist)
       };
     }
 
