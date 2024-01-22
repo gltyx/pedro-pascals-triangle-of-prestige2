@@ -35,6 +35,7 @@ const SPRITES = {
   business_dogWash: [12, 1],
   business_taco: [13, 1],
   business_cupcake: [14, 1],
+  spawn: [15, 1]
 
 };
 

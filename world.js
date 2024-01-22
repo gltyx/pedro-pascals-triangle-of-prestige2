@@ -3,12 +3,12 @@
 const WORLD = [
  '?b..11111111x1x1x11x1xxxxxx11111',
  'sB.xxx1m1x11x1x1x111111111x1x1x1',
- '..333xxxxx11x111x11x1xxxx1x1x1x1',
+ '.S333xxxxx11x111x11x1xxxx1x1x1x1',
  '.x333x33xx1111x1x11x111111x1x1x1',
  '2x3333333x1111x11x1x1xxxx1x1x1x1',
  '2xxx3x33x11111x1111x111111x1x1x1',
  '22x333x33xxxxxx111x.xxxxx1x1x1x1',
- '2mx333333333333x1x111x111111x1x1',
+ '2mx3333S3333333x1x111x111111x1x1',
  '22xx3x333xxxx333x11x11xxxxxx1111',
  '2xxxx2x3x3333x333x111x11111111xx',
  '222222x3x3xx3x3333x1x11111111x11',
@@ -55,7 +55,8 @@ const CHAR_TO_CLASS_MAP = {
   'r': CellObjectEnemyCrank,
   'l': CellObjectEnemyLawn,
   'a': CellObjectEnemyAnti,
-  'F': CellObjectEnemySnail
+  'F': CellObjectEnemySnail,
+  'S': CellObjectSpawn
 };
 
 //map enemy cell index into a lore index that it unlocks when defeated

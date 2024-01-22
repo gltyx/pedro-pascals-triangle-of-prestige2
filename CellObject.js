@@ -802,6 +802,171 @@ class CellObjectBuild extends CellObject {
 
 }
 
+class CellObjectSpawn extends CellObject {
+
+  static MonthNames = "Imix,Ik',AK'b'al,K'an,Chikchan,Kimi,Manik',Lamat,Muluk,Ok,Chuwen,Eb',B'en,Ix,Men,K'ib',Kab'an,Etz'nab',Kawak,Ajaw".split(',');
+
+  constructor(cell, dist) {
+    super(cell, dist, 'spawn');
+    this.state.type = 'spawn';
+    this.state.tPower = 0;
+    this.state.dPower = 0;
+    this.state.tSac = 0;
+    this.state.dSac = 0;
+    this.state.startTime = (new Date()).getTime() / 1000;
+    this.sacPowerT = 0;
+    this.sacPowerD = 0;
+    this.monthAngle = 0;
+    this.dayAngle = 0;
+    this.rate = 1 / 260;
+    this.harvD = 0;
+    this.harvT = 0;
+  }
+
+  isDropable(srcObject) {
+    return false;
+  }
+
+  update(curTime, neighbors) {
+
+    this.sacPowerT = 0;
+    this.sacPowerD = 0;
+    for (let i = 0; i < neighbors.length; i++) {
+      const ns = neighbors[i].content.state;
+      this.sacPowerT += ns.tickPower ?? 0;
+      this.sacPowerD += ns.disPower ?? 0;
+    }
+    this.neighbors = neighbors;
+
+    const deltaT = curTime - this.state.startTime;
+
+    this.powerT = this.state.tPower + (deltaT * this.state.tSac) * this.rate;
+    this.powerD = this.state.dPower + (deltaT * this.state.dSac) * this.rate;
+
+
+    this.monthAngle = (-(2 * Math.PI ) * curTime * 1/20) % (Math.PI * 2);
+    this.dayAngle = (-(2 * Math.PI ) * curTime * 1/13) % (Math.PI * 2);
+
+    const monthIndex = Math.floor(-20 * this.monthAngle / (Math.PI * 2));
+    const dayIndex = Math.floor(-13 * this.dayAngle / (Math.PI * 2));
+
+    this.monthName = CellObjectSpawn.MonthNames[monthIndex];
+    this.dayName = (dayIndex + 1).toString();
+
+    if (this.harvD > 0 || this.harvT > 0) {
+      const tpoints = this.harvT;
+      const dpoints = this.harvD;
+      this.harvD = 0;
+      this.harvT = 0;
+      return {
+        tpoints,
+        dpoints,
+        harvest: true
+      }
+    }
+  }
+
+  displayCellInfo(container) {
+    this.UI.curPower.innerText = `Current power: {T: ${this.formatValue(this.powerT, 'floor')}, D: ${this.formatValue(this.powerD, 'floor')}}`;
+    this.UI.curRate.innerText = `Current rate: {T: ${this.formatValue(this.state.tSac, 'floor')}, D: ${this.formatValue(this.state.dSac, 'floor')}} / Sacred Round`;
+
+    this.UI.sacPower.innerText = `{T: ${this.formatValue(this.sacPowerT, 'floor')}, D: ${this.formatValue(this.sacPowerD, 'floor')}}`;
+    this.UI.dayName.innerText = `${this.dayName} ${this.monthName}`;
+
+    const canvas = this.UI.calCanvas;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'hsl(60, 48%, 76%)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(this.monthAngle);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.drawImage(this.UI.calendarMonths, 0, 0);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(this.dayAngle);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.drawImage(this.UI.calendarNumerals, 0, 0);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(0);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.drawImage(this.UI.calendarWindow, 0, 0);
+    ctx.restore();
+  }
+
+  initGame(gameContainer) {
+    super.initGame(gameContainer);
+
+    //Current power
+    const curCont = this.createElement('div', 'curCont', gameContainer);
+    this.createElement('span', 'curPower', curCont);
+    const harvBut = this.createElement('button', '', curCont, '', 'Harvest');
+    harvBut.onclick = () => this.harvest();
+
+    //current rate
+    this.createElement('div', 'curRate', gameContainer);
+
+    //Sacrifice neighbors
+    const sacCont = this.createElement('div', '', gameContainer);
+    this.createElement('span', '', sacCont, '', 'Sacrifice neighbors for ');
+    this.createElement('span', 'sacPower', sacCont);
+    const sacBut = this.createElement('button', '', sacCont, '', 'Sacrifice');
+    sacBut.onclick = () => this.sacrifice();
+
+    //Day Name
+    const dayCont = this.createElement('div', '', gameContainer);
+    this.createElement('span', '', dayCont, '', 'Today is: ');
+    this.createElement('span', 'dayName', dayCont);
+
+    //Calendar
+    const calendar = this.createElement('canvas', 'calCanvas', gameContainer, 'spawnCanvas');
+    calendar.width = 481;
+    calendar.height = 481;
+
+    this.UI.calendarMonths = document.getElementById('calendar_months');
+    this.UI.calendarNumerals = document.getElementById('calendar_numerals');
+    this.UI.calendarWindow = document.getElementById('calendar_window');
+  }
+
+  sacrifice() {
+    const curTime = (new Date()).getTime() / 1000;
+    const deltaT = curTime - this.state.startTime;
+    this.state.tPower = this.state.tPower + (deltaT * this.state.tSac) * this.rate;
+    this.state.dPower = this.state.dPower + (deltaT * this.state.dSac) * this.rate;
+    this.state.startTime = curTime;
+
+    for (let i = 0; i < this.neighbors.length; i++) {
+      const ns = this.neighbors[i].content.state;
+      if (ns.type === 'spot') {
+        this.state.tSac += ns.tickPower;
+        this.neighbors[i].content.merged = true;
+      }
+      if (ns.type === 'boss') {
+        this.state.dSac += ns.disPower;
+        this.neighbors[i].content.merged = true;
+      }
+    }
+    
+  }
+
+  harvest() {
+    const curTime = (new Date()).getTime() / 1000;
+    const deltaT = curTime - this.state.startTime;
+    this.harvT = this.state.tPower + (deltaT * this.state.tSac) * this.rate;
+    this.harvD = this.state.dPower + (deltaT * this.state.dSac) * this.rate;
+    this.state.startTime = curTime;
+    this.state.tPower = 0;
+    this.state.dPower = 0;
+    
+  }
+
+}
+
 class CellObjectInfo extends CellObject {
 
   //TODO: add some kind of "please review the first lore item"
@@ -3105,6 +3270,7 @@ const TYPE_TO_CLASS_MAP = {
   'enemyCrank': CellObjectEnemyCrank,
   'enemyLawn': CellObjectEnemyLawn,
   'enemyAnti': CellObjectEnemyAnti,
-  'enemySnail': CellObjectEnemySnail
+  'enemySnail': CellObjectEnemySnail,
+  'spawn': CellObjectSpawn
 };
 

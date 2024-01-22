@@ -634,3 +634,8 @@ dialog {
   border-radius: 8px;
 }
 
+.spawnCanvas {
+  width: 460px;
+  height: 460px;
+  background-color: red;
+}

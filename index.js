@@ -340,7 +340,6 @@ class App {
       const cellOutput = cell.content.update(curTime, cell.neighbors);
 
       if (cellOutput !== undefined) {
-        this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: ${JSON.stringify(cellOutput, null, 1)}`);
         this.state.tpoints += cellOutput.tpoints ?? 0;
         this.state.cpoints += cellOutput.cpoints ?? 0;
         this.state.dpoints += cellOutput.dpoints ?? 0;
@@ -350,14 +349,20 @@ class App {
           this.addToLog(`Lore ${loreUnlock} unlocked!`);
           document.getElementById(`loreIcon${i}`).style.display = 'none';
         }
-        cell.content.closeGame();
-        const dist = cell.x + cell.y;
-        cell.content = new CellObject(cell.ui, dist);
-        if (this.selectedCellIndex === i) {
-          this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
-          this.displayCellInfo(this.cells[i]);
+
+        if (cellOutput.harvest !== true) {
+          this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: ${JSON.stringify(cellOutput, null, 1)}`);
+          cell.content.closeGame();
+          const dist = cell.x + cell.y;
+          cell.content = new CellObject(cell.ui, dist);
+          if (this.selectedCellIndex === i) {
+            this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
+            this.displayCellInfo(this.cells[i]);
+          }
+          reflowNeeded = true;
+        } else {
+          this.addToLog(`Harvested ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: ${JSON.stringify(cellOutput, null, 1)}`);
         }
-        reflowNeeded = true;
       }
 
       const type = cell.content.state.type;
