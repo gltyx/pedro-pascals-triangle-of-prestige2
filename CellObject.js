@@ -637,7 +637,7 @@ class CellObjectMerge extends CellObject {
   constructor(cell, dist) {
     super(cell, dist, 'merge');
     this.state.type = 'merge';
-    this.scalingFactor = 1.2;
+    this.scalingFactor = 0.4;
   }
 
   isDropable(srcObject) {
@@ -653,13 +653,34 @@ class CellObjectMerge extends CellObject {
     this.dPower = 0;
     this.ePower = 0;
     this.neighbors = neighbors;
+    this.tMergePower = 0;
+    this.dMergePower = 0;
+    let tMin = Infinity;
+    let dMin = Infinity;
+    let tCount = 0;
+    let dCount = 0;
 
     for (let i = 0; i < neighbors.length; i++) {
       const ns = neighbors[i].content.state;
-      this.tPower += ns.tickPower ?? 0;
-      this.dPower += ns.disPower ?? 0;
-      this.ePower += ns.enemyPower ?? 0;
+      const tPower = ns.tickPower ?? 0;
+      const dPower = ns.dPower ?? 0;
+      const enemyPower = ns.enemyPower ?? 0;
+      this.tPower += tPower;
+      this.dPower += dPower;
+      this.ePower += enemyPower;
+      
+      if (tPower > 0) {
+        tMin = Math.min(tMin, tPower);
+        tCount++;
+      }
+      if (dPower > 0) {
+        dMin = Math.min(dMin, dPower);
+        dCount++;
+      }
     }
+
+    this.tMergePower = (this.tPower > 0 && tCount > 1) ? (this.tPower + this.scalingFactor * tMin) : 0;
+    this.dMergePower = (this.dPower > 0 && dCount > 1) ? (this.dPower + this.scalingFactor * dMin) : 0;
 
     if (this.ePower > 0) {
       this.tPower = 0;
@@ -676,11 +697,11 @@ class CellObjectMerge extends CellObject {
   displayCellInfo(container) {
     container.innerText = `Object Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(this.percent, 'ceil')}`;
 
-    this.UI.butSpot.disabled = this.tPower <= 0;
-    this.UI.butBoss.disabled = this.dPower <= 0;
+    this.UI.butSpot.disabled = this.tMergePower <= 0;
+    this.UI.butBoss.disabled = this.dMergePower <= 0;
 
-    this.UI.butSpot.innerText = `Merge neighboring SPOTs.\nResult - T: ${this.formatValue(this.tPower * this.scalingFactor, 'floor')}`;
-    this.UI.butBoss.innerText = `Merge neighboring BOSSs.\nResult - D: ${this.formatValue(this.dPower * this.scalingFactor, 'floor')}`;
+    this.UI.butSpot.innerText = `Merge neighboring SPOTs.\nResult - T: ${this.formatValue(this.tPower, 'floor')} => ${this.formatValue(this.tMergePower, 'floor')}`;
+    this.UI.butBoss.innerText = `Merge neighboring BOSSs.\nResult - D: ${this.formatValue(this.dPower, 'floor')} => ${this.formatValue(this.dMergePower, 'floor')}`;
 
     this.UI.neighborCount.innerText = `${this.ePower} neighboring enemies`;
   }
@@ -716,7 +737,7 @@ class CellObjectMerge extends CellObject {
 
     objectList.forEach( (n, i) => {
       if (i === 0) {
-        n.content.state.tickPower = this.tPower * this.scalingFactor;
+        n.content.state.tickPower = this.tMergePower;
       } else {
         n.content.merged = true;
       }
@@ -734,7 +755,7 @@ class CellObjectMerge extends CellObject {
 
     objectList.forEach( (n, i) => {
       if (i === 0) {
-        n.content.state.disPower = this.dPower * this.scalingFactor;
+        n.content.state.disPower = this.dMergePower;
       } else {
         n.content.merged = true;
       }
