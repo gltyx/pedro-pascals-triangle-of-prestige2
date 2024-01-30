@@ -340,6 +340,15 @@ class App {
     this.curWalls = 0;
     this.curEnemies = 0;
     this.cells.forEach( (cell, i) => {
+      const type = cell.content.state.type;
+      if (type === 'wall') {
+        this.curWalls++;
+      }
+
+      if (type.substring(0, 5) === 'enemy') {
+        this.curEnemies++;
+      }
+
       if (!cell.selectable) {return;}
 
       const cellOutput = cell.content.update(curTime, cell.neighbors);
@@ -369,14 +378,6 @@ class App {
         }
       }
 
-      const type = cell.content.state.type;
-      if (type === 'wall') {
-        this.curWalls++;
-      }
-
-      if (type.substring(0, 5) === 'enemy') {
-        this.curEnemies++;
-      }
 
 
     });
