@@ -1016,16 +1016,17 @@ class CellObjectInfo extends CellObject {
   <h2>Tutorial</h2>
   <ul>
     <li>Return to this text any time by selecting <span class="infoIcon"></span></li>
-    <li>Drag and drop <span class="spotIcon"></span> <span class="bossIcon"></span> 
-        to direct your power to the adjacent 8 squares to control your rate of progress
+    <li>Move <span class="spotIcon"></span> <span class="bossIcon"></span> via 
+        drag and drop or by selecting one and then clicking a destination
+        to direct your power to the adjacent 8 squares and control your rate of progress
         in a game. Multiple units can supply power to the same enemy.</li>
     <li>Defeating an enemy with <span class='spotIcon'></span> gives you points you can use at <span class='buildIcon'></span> 
         to build <span class='spotIcon'></span><span class='bossIcon'></span>. However, you also need points that can be collected by destroying 
         <span class='wallIcon'></span> with <span class='bossIcon'></span>. </li>
     <li>You can pan the grid by holding ctrl while dragging.</li>
     <li>Merge multiple units of the same type with <span class='mergeIcon'></span>.
-        Units to merge must be in the 8 surrounding squares. The resulting unit
-        will be stronger than the sum of the inputs.</li>
+        Units to merge must be in the 8 surrounding squares. The strength of the resulting 
+        unit will be the sum of all the inputs plus 40% of the weakest one.</li>
     <li>There are 3 paths through the grid that correspond to the 3 main characters in the story.
         Unlock more of a character's dialog by defeating enemies in their path 
         with the <span class='loreIcon'></span> icon.</li>
