@@ -304,6 +304,8 @@ class App {
     }
   }
 
+  
+
   oncelldragover(evt, cellIndex) {
     if (this.cells[cellIndex].reachable && this.cells[cellIndex].content.isDropable(this.cells[this.dragSrcIndex].content)) {
       evt.preventDefault(); //call this if drop on this cell is ok
@@ -311,16 +313,20 @@ class App {
     }
   }
 
+  moveCell(srcIndex, dstIndex, noClick) {
+    [this.cells[srcIndex].content,this.cells[dstIndex].content] = [
+      this.cells[dstIndex].content, this.cells[srcIndex].content];
+    this.drawCell(this.cells[srcIndex]);
+    this.drawCell(this.cells[dstIndex]);
+    if (srcIndex === this.selectedCellIndex && noClick !== true) {
+      this.clickCell({ctrlKey: false}, dstIndex);
+    }
+  }
+
   oncelldrop(evt, cellIndex) {
     evt.preventDefault(); //call this always 
     const srcIndex = this.dragSrcIndex;
-    [this.cells[srcIndex].content,this.cells[cellIndex].content] = [
-      this.cells[cellIndex].content, this.cells[srcIndex].content];
-    this.drawCell(this.cells[srcIndex]);
-    this.drawCell(this.cells[cellIndex]);
-    if (srcIndex === this.selectedCellIndex) {
-      this.clickCell({ctrlKey: false}, cellIndex);
-    }
+    this.moveCell(srcIndex, cellIndex);
   }
 
   tick() {
@@ -411,6 +417,13 @@ class App {
 
   clickCell(evt, cellIndex) {
     const notCtrl = evt === undefined || !evt.ctrlKey;
+    if (this.selectedCellIndex !== undefined) {
+      const prevCanMove = this.cells[this.selectedCellIndex].content.isDragable();
+      const canMoveHere = this.cells[cellIndex].reachable && this.cells[cellIndex].content.isDropable();
+      if (prevCanMove && canMoveHere && this.selectedCellIndex !== cellIndex) {
+        this.moveCell(this.selectedCellIndex, cellIndex, true);
+      }
+    }
     if (notCtrl && cellIndex !== this.selectedCellIndex && this.cells[cellIndex].selectable) {
       const cell = this.cells[cellIndex];
       const e = cell.ui;
