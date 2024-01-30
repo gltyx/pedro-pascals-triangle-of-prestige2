@@ -195,6 +195,10 @@ class CellObjectSpot extends CellObject {
     return true;
   }
 
+  isDropable(srcObject) {
+    return false;
+  }
+
   update(curTime, neighbors) {
     if (this.merged) {
       //merged, trigger removal
@@ -218,6 +222,10 @@ class CellObjectBoss extends CellObject {
 
   isDragable() {
     return true;
+  }
+
+  isDropable(srcObject) {
+    return false;
   }
 
   update(curTime, neighbors) {
@@ -1602,7 +1610,9 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.createElement('div', 'crankBall', crankContainer, 'crankBall');
 
     crankContainer.onmousedown = evt => this.crankMouseDown(evt);
+    crankContainer.ontouchstart = evt => this.crankMouseDown(evt);
     crankContainer.onmouseup = evt => this.crankMouseUp(evt);
+    crankContainer.ontouchend = evt => this.crankMouseUp(evt);
     crankContainer.onmouseleave = evt => this.crankMouseLeave(evt);
 
 
@@ -1688,14 +1698,14 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
   }
 
   crankMouseDown(evt) {
-    if (evt.button === 0) {
+    //if (evt.button === 0) {
       this.crankForce = 1;
-    }
+   // }
   }
   crankMouseUp(evt) {
-    if (evt.button === 0) {
+    //if (evt.button === 0) {
       this.crankForce = 0;
-    }
+    //}
   }
   crankMouseLeave(evt) {
     this.crankForce = 0;
