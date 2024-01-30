@@ -188,7 +188,7 @@ class CellObjectSpot extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `spot details - T: ${this.state.tickPower}`;
+    container.innerText = `spot details - T: ${this.formatValue(this.state.tickPower, 'floor')}`;
   }
 
   isDragable() {
@@ -217,7 +217,7 @@ class CellObjectBoss extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = 'boss details - D: ' + this.state.disPower;
+    container.innerText = `boss details - D: ${this.formatValue(this.state.disPower, 'floor')}`;
   }
 
   isDragable() {
@@ -637,6 +637,7 @@ class CellObjectMerge extends CellObject {
   constructor(cell, dist) {
     super(cell, dist, 'merge');
     this.state.type = 'merge';
+    this.scalingFactor = 1.2;
   }
 
   isDropable(srcObject) {
@@ -673,25 +674,35 @@ class CellObjectMerge extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - T: ${this.tPower} D: ${this.dPower} E: ${this.ePower}`;
+    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(this.percent, 'ceil')}`;
 
-    this.UI.mergeSpot.innerText = `Merge neighboring SPOT. Result - T: ${this.tPower}`;
-    this.UI.mergeBoss.innerText = `Merge neighboring BOSS. Result - D: ${this.dPower}`;
+    this.UI.butSpot.disabled = this.tPower <= 0;
+    this.UI.butBoss.disabled = this.dPower <= 0;
+
+    this.UI.butSpot.innerText = `Merge neighboring SPOTs.\nResult - T: ${this.formatValue(this.tPower * this.scalingFactor, 'floor')}`;
+    this.UI.butBoss.innerText = `Merge neighboring BOSSs.\nResult - D: ${this.formatValue(this.dPower * this.scalingFactor, 'floor')}`;
+
+    this.UI.neighborCount.innerText = `${this.ePower} neighboring enemies`;
   }
 
   initGame(gameContainer) {
     super.initGame(gameContainer);
-    //TODO: disable buttons when unclickable
 
     //spot merge
-    const mergeSpot = this.createElement('div', 'mergeSpot', gameContainer, 'divButton', 'MERGE SPOT');
-    mergeSpot.style.background = 'grey';
-    mergeSpot.onclick = () => this.mergeSpot();
+    const mergeSpotCont = this.createElement('div', '', gameContainer, 'buildCont');
+    const mergeSpotIcon = this.createElement('span', '', mergeSpotCont, 'icon');
+    const mergeSpotBut = this.createElement('button', 'butSpot', mergeSpotCont, '', 'merge ()');
+    applySprite(mergeSpotIcon, 'spot');
+    mergeSpotBut.onclick = () => this.mergeSpot();
 
     //boss merge
-    const mergeBoss = this.createElement('div', 'mergeBoss', gameContainer, 'divButton', 'MERGE BOSS');
-    mergeBoss.style.background = 'cyan';
-    mergeBoss.onclick = () => this.mergeBoss();
+    const mergeBossCont = this.createElement('div', '', gameContainer, 'buildCont');
+    const mergeBossIcon = this.createElement('span', '', mergeBossCont, 'icon');
+    const mergeBossBut = this.createElement('button', 'butBoss', mergeBossCont, '', 'merge (uses all D points, 1 T point)');
+    applySprite(mergeBossIcon, 'boss');
+    mergeBossBut.onclick = () => this.mergeBoss();
+
+    this.createElement('div', 'neighborCount', gameContainer);
   }
 
   mergeSpot() {
@@ -705,7 +716,7 @@ class CellObjectMerge extends CellObject {
 
     objectList.forEach( (n, i) => {
       if (i === 0) {
-        n.content.state.tickPower = this.tPower;
+        n.content.state.tickPower = this.tPower * this.scalingFactor;
       } else {
         n.content.merged = true;
       }
@@ -723,7 +734,7 @@ class CellObjectMerge extends CellObject {
 
     objectList.forEach( (n, i) => {
       if (i === 0) {
-        n.content.state.disPower = this.dPower;
+        n.content.state.disPower = this.dPower * this.scalingFactor;
       } else {
         n.content.merged = true;
       }
@@ -1266,7 +1277,7 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
     super.displayCellInfo(container);
 
     this.UI.coins.innerText = Math.floor(this.coins);
-    this.UI.gain.innerText = this.getGain() * this.tPower;
+    this.UI.gain.innerText = this.formatValue(this.getGain() * this.tPower, 'floor');
 
     this.state.prestiges.forEach( (p, i) => {
       this.UI[`tier${i}btn`].disabled = !this.canActivatePrestige(i);
