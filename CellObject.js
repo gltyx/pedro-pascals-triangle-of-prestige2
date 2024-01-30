@@ -562,7 +562,6 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
   }
 
   startLevel(level) {
-    console.log('start', level);
     const state = this.state.level[level];
     if (state.count > 0 && state.start == Infinity && this.tPower > 0) {
       state.start = (new Date()).getTime() / 1000;
@@ -663,7 +662,7 @@ class CellObjectMerge extends CellObject {
     for (let i = 0; i < neighbors.length; i++) {
       const ns = neighbors[i].content.state;
       const tPower = ns.tickPower ?? 0;
-      const dPower = ns.dPower ?? 0;
+      const dPower = ns.disPower ?? 0;
       const enemyPower = ns.enemyPower ?? 0;
       this.tPower += tPower;
       this.dPower += dPower;
@@ -1526,13 +1525,15 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const batteryPercent = Math.max(0, curTime - state.batteryStart) * this.tPower * batteryRate + state.previousBatteryProgress;
 
     if (metalPercent >= 100) {
-      if (state.metalQueue > 0) {
-        state.metalQueue--;
-        state.metalStart = curTime;
-        this.UI.metalQueueSlider.value = state.metalQueue;
-      } else {
+      //state.metalQueue--;
+      //this.UI.metalQueueSlider.value = state.metalQueue;
+      
+      //if (state.metalQueue > 0 && state.powerLevel >= this.metalCost) {
+      //  state.metalStart = curTime;
+      //  state.powerLevel -= this.metalCost;
+      //} else {
         state.metalStart = Infinity;
-      }
+      //}
       state.previousMetalProgress = 0;
       state.metalCount += 1;
       this.metalProgress = 0;
@@ -1541,13 +1542,15 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     }
 
     if (batteryPercent >= 100) {
-      if (state.batteryQueue > 0) {
-        state.batteryQueue--;
-        state.batteryStart = curTime;
-        this.UI.batteryQueueSlider.value = state.batteryQueue;
-      } else {
+      //state.batteryQueue--;
+      //this.UI.batteryQueueSlider.value = state.batteryQueue;
+      //if (state.batteryQueue > 0 && state.powerLevel >= this.batteryPowerCost && state.metalCount >= this.batteryMetalCost) {
+      //  state.batteryStart = curTime;
+      //  state.powerLevel -= this.batteryPowerCost;
+      //  state.metalCount -= this.batteryMetalCost;
+      //} else {
         state.batteryStart = Infinity;
-      }
+      //}
       state.previousBatteryProgress = 0;
       state.batteryCount += 1;
       this.batteryProgress = 0;
@@ -1592,6 +1595,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       this.state.powerLevel -= this.batteryPowerCost;
       state.metalCount -= this.batteryMetalCost;
       state.batteryStart = (new Date()).getTime() / 1000;
+      state.batteryQueue -= 1;
+      this.UI.batteryQueueSlider.value = state.batteryQueue;
     }
 
     this.percent = 100 * (1 - this.state.totalPower / this.baseStrength);
@@ -1675,7 +1680,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     metalQueueSlider.min = 0;
     metalQueueSlider.max = this.state.metalQueueMax;
     metalQueueSlider.value = this.state.metalQueue;
-    metalQueueSlider.onchange = () => this.state.metalQueue = metalQueueSlider.value;
+    metalQueueSlider.onchange = () => this.state.metalQueue = parseInt(metalQueueSlider.value);
 
     //[battery button] [battery progress]
     //Battery: [battery count]
@@ -1694,7 +1699,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     batteryQueueSlider.min = 0;
     batteryQueueSlider.max = this.state.batteryQueueMax;
     batteryQueueSlider.value = this.state.batteryQueue;
-    batteryQueueSlider.onchange = () => this.state.batteryQueue = batteryQueueSlider.value;
+    batteryQueueSlider.onchange = () => this.state.batteryQueue = parseInt(batteryQueueSlider.value);
 
     //[comp upgrade button] [comp target selection]
     const compTargetSection = this.createElement('div', 'compTargetSection', gameContainer, 'crankColumns');
@@ -1729,7 +1734,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     compPowerSlider.min = 0;
     compPowerSlider.max = this.state.compPowerMax;
     compPowerSlider.value = this.state.compPower;
-    compPowerSlider.onchange = () => this.state.compPower = compPowerSlider.value;
+    compPowerSlider.onchange = () => this.state.compPower = parseInt(compPowerSlider.value);
 
     //[comp progress]
     const compProgressSecton = this.createElement('div', 'compProgressSection', gameContainer);
