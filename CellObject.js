@@ -249,7 +249,6 @@ class CellObjectEnemyWall extends CellObjectEnemy {
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
 
-
     //if disassembly power has changed and disassembly has already started
     if (this.dPower !== this.lastdPower && this.state.start < Infinity) {
       //if was already disassembling, save the previous time
@@ -277,7 +276,8 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     if (this.timeRem <= 0) {
       //game over, return spoils
       return {
-        tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        //tpoints: 1 * Math.pow(rewardDistFactor, this.dist),
+        dpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
 
@@ -292,6 +292,8 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     } else {
       this.UI.timeRem.innerText = 'never';
     }
+
+    this.UI.neighborCount.innerText = `${this.ePower} neighboring enemies`;
   }
 
   initGame(gameContainer) {
@@ -299,6 +301,7 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     this.createElement('span', '', gameContainer, '', 'Disassembling ');
     this.createElement('span', 'timeRem', gameContainer, '', '');
     this.createElement('span', '', gameContainer, '', ' more seconds');
+    this.createElement('div', 'neighborCount', gameContainer);
   }
 
 }
@@ -747,8 +750,8 @@ class CellObjectBuild extends CellObject {
 
     const openNeighborExists = this.getOpenNeighbor() !== undefined;
 
-    this.UI.butSpot.disabled = !openNeighborExists || app.state.tpoints <= 0;
-    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0;
+    this.UI.butSpot.disabled = !openNeighborExists || app.state.tpoints <= 0 || app.state.dpoints <= 1;
+    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0 || app.state.tpoints <= 1;
   }
 
   initGame(gameContainer) {
@@ -757,14 +760,14 @@ class CellObjectBuild extends CellObject {
     //build spot
     const buildSpotCont = this.createElement('div', '', gameContainer, 'buildCont');
     const buildSpotIcon = this.createElement('span', '', buildSpotCont, 'icon');
-    const buildSpotBut = this.createElement('button', 'butSpot', buildSpotCont, '', 'Build (uses all T points)');
+    const buildSpotBut = this.createElement('button', 'butSpot', buildSpotCont, '', 'Build (uses all T points, 1 D point)');
     applySprite(buildSpotIcon, 'spot');
     buildSpotBut.onclick = () => this.buildSpot();
 
     //build boss
     const buildBossCont = this.createElement('div', '', gameContainer, 'buildCont');
     const buildBossIcon = this.createElement('span', '', buildBossCont, 'icon');
-    const buildBossBut = this.createElement('button', 'butBoss', buildBossCont, '', 'Build (uses all D points)');
+    const buildBossBut = this.createElement('button', 'butBoss', buildBossCont, '', 'Build (uses all D points, 1 T point)');
     applySprite(buildBossIcon, 'boss');
     buildBossBut.onclick = () => this.buildBoss();
 
@@ -788,6 +791,7 @@ class CellObjectBuild extends CellObject {
     openNeighbor.content = new CellObjectSpot(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
     openNeighbor.content.state.tickPower = app.state.tpoints;
     app.state.tpoints = 0;
+    app.state.dpoints -= 1;
     
   }
 
@@ -798,6 +802,7 @@ class CellObjectBuild extends CellObject {
     openNeighbor.content = new CellObjectBoss(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
     openNeighbor.content.state.disPower = app.state.dpoints;
     app.state.dpoints = 0;
+    app.state.tpoints -= 1;
 
   }
 
