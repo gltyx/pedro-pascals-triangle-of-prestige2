@@ -166,7 +166,7 @@ class CellObjectEnemy extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.tPower} D: ${this.dPower} E: ${this.ePower} Rem: ${Math.ceil(this.percent)}`;
+    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(this.percent, 'ceil')}`;
   }
 
   isDropable(srcObject) {

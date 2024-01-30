@@ -396,9 +396,26 @@ class App {
     }
   }
 
+  roundToVal(value, roundType, roundVal) {
+    if (roundType === undefined) {roundType = 'round';}
+    return Math[roundType](value / roundVal) * roundVal;
+  }
+
+  formatCurrency(value, roundType) {
+    return this.formatValue(value, roundType, '$');
+  }
+
+  formatValue(value, roundType, prefix = '', suffix = '') {
+    if (value < 1000) {
+      return `${prefix}${this.roundToVal(value, roundType, 0.01).toFixed(2)}${suffix}`;
+    } else {
+      return `${prefix}${value.toExponential(3)}${suffix}`;
+    }
+  }
+
   draw() {
-    this.UI.gameInfoTPoints.innerText = this.state.tpoints;
-    this.UI.gameInfoDPoints.innerText = this.state.dpoints;
+    this.UI.gameInfoTPoints.innerText = this.formatValue(this.state.tpoints, 'floor');
+    this.UI.gameInfoDPoints.innerText = this.formatValue(this.state.dpoints, 'floor');
     this.UI.gameInfoCompletionEnemies.innerText = (this.totalEnemies - this.curEnemies);
     this.UI.gameInfoCompletionWalls.innerText = (this.totalWalls - this.curWalls);
   }
