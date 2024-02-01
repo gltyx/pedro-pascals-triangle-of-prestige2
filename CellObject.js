@@ -1654,7 +1654,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.createElement('span', '', topSection, '', 'Total power: ');
     this.createElement('span', 'totalPower', topSection, '', '?');
     this.createElement('span', '', topSection, '', ' / ');
-    this.createElement('span', '', topSection, '', this.baseStrength);
+    this.createElement('span', '', topSection, '', this.formatValue(this.baseStrength, 'ceil'));
 
     //[crank] [power gen level]
     const crankSection = this.createElement('div', 'crankSection', gameContainer, 'crankColumns');
