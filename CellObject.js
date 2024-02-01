@@ -216,7 +216,7 @@ class CellObjectSpot extends CellObject {
   update(curTime, neighbors) {
     if (this.merged) {
       //merged, trigger removal
-      return {};
+      return {merged: true};
     }
   }
 }
@@ -254,7 +254,7 @@ class CellObjectBoss extends CellObject {
   update(curTime, neighbors) {
     if (this.merged) {
       //merged, trigger removal
-      return {};
+      return {merged: true};
     }
   }
 }
@@ -763,6 +763,8 @@ class CellObjectMerge extends CellObject {
         n.content.merged = true;
       }
     });
+
+    app.addToLog(`Merged ${objectList.length} SPOT into 1 x ${this.formatValue(this.tMergePower, 'floor')}`);
   }
 
   mergeBoss() {
@@ -781,6 +783,8 @@ class CellObjectMerge extends CellObject {
         n.content.merged = true;
       }
     });
+
+    app.addToLog(`Merged ${objectList.length} BOSS into 1 x ${this.formatValue(this.dMergePower, 'floor')}`);
   }
 
 }
@@ -804,7 +808,7 @@ class CellObjectBuild extends CellObject {
     const openNeighborExists = this.getOpenNeighbor() !== undefined;
 
     this.UI.butSpot.disabled = !openNeighborExists || app.state.tpoints <= 0 || app.state.dpoints <= 0;
-    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0 || app.state.tpoints <= 0;
+    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0;
 
     const spotPower = Math.min(app.state.tpoints, app.state.dpoints * 2);
     this.UI.butSpot.innerText = `Build SPOT ${this.formatValue(spotPower, 'floor')} x power`;
@@ -857,6 +861,7 @@ class CellObjectBuild extends CellObject {
     app.state.tpoints -= power;
     app.state.dpoints -= power / 2;
     
+    app.addToLog(`Built SPOT x ${this.formatValue(power, 'floor')}`);
   }
 
   buildBoss() {
@@ -868,6 +873,8 @@ class CellObjectBuild extends CellObject {
     openNeighbor.content.state.disPower = power;
     //app.state.tpoints -= 1;
     app.state.dpoints = 0;
+
+    app.addToLog(`Built BOSS x ${this.formatValue(power, 'floor')}`);
 
   }
 
@@ -1011,17 +1018,26 @@ class CellObjectSpawn extends CellObject {
     this.state.dPower = this.state.dPower + (deltaT * this.state.dSac) * this.rate;
     this.state.startTime = curTime;
 
+    let totalTPower = 0;
+    let totalDPower = 0;
+    let spotCount = 0;
+    let bossCount = 0;
     for (let i = 0; i < this.neighbors.length; i++) {
       const ns = this.neighbors[i].content.state;
       if (ns.type === 'spot') {
         this.state.tSac += ns.tickPower;
         this.neighbors[i].content.merged = true;
+        totalTPower += ns.tickPower;
+        spotCount++;
       }
       if (ns.type === 'boss') {
         this.state.dSac += ns.disPower;
         this.neighbors[i].content.merged = true;
+        totalDPower += ns.disPower;
+        bossCount++;
       }
     }
+    app.addToLog(`Sacrificed ${spotCount} SPOTs and ${bossCount} BOSSes for ${this.formatValue(totalTPower, 'floor')} T, ${this.formatValue(totalDPower, 'floor')} D`);
     
   }
 
@@ -1033,6 +1049,8 @@ class CellObjectSpawn extends CellObject {
     this.state.startTime = curTime;
     this.state.tPower = 0;
     this.state.dPower = 0;
+    this.state.tSac = 0;
+    this.state.dSac = 0;
     
   }
 
