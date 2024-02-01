@@ -5,6 +5,7 @@ const rewardDistFactor = 1.2;
 
 class CellObject {
   constructor(cell, dist, bgSpriteName) {
+    this.cell = cell;
     this.state = {type: 'none'};
     this.bgSpriteName = bgSpriteName ?? 'border1';
     this.updateBackground(cell);
@@ -48,6 +49,10 @@ class CellObject {
 
   updateBackground(cell) {
     applySprite(cell, this.bgSpriteName);
+    if (this.bgColor !== undefined) {
+      cell.style.backgroundColor = this.bgColor;
+    }
+
   }
 
   displayCellInfo(container) {
@@ -191,6 +196,15 @@ class CellObjectSpot extends CellObject {
     container.innerText = `spot details - T: ${this.formatValue(this.state.tickPower, 'floor')}`;
   }
 
+  postLoad() {
+    const tickOOM = Math.log10(this.state.tickPower);
+    const h = (tickOOM * 30) % 360;
+    const s = 30 + (tickOOM % 1) * 70;
+    const l = 50;
+    this.bgColor = `hsl(${h},${s}%,${l}%)`;
+    this.updateBackground(this.cell);
+  }
+
   isDragable() {
     return true;
   }
@@ -218,6 +232,15 @@ class CellObjectBoss extends CellObject {
 
   displayCellInfo(container) {
     container.innerText = `boss details - D: ${this.formatValue(this.state.disPower, 'floor')}`;
+  }
+
+  postLoad() {
+    const tickOOM = Math.log10(this.state.disPower);
+    const h = (tickOOM * 30) % 360;
+    const s = 30 + (tickOOM % 1) * 70;
+    const l = 50;
+    this.bgColor = `hsl(${h},${s}%,${l}%)`;
+    this.updateBackground(this.cell);
   }
 
   isDragable() {
