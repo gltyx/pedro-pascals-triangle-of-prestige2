@@ -619,7 +619,6 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
   }
 
   buy(level) {
-    console.log('buy', level);
     const buyCount = 1;
     const cost = this.getPrice(level, buyCount);
     //TODO: determine buyCount
@@ -781,8 +780,12 @@ class CellObjectBuild extends CellObject {
 
     const openNeighborExists = this.getOpenNeighbor() !== undefined;
 
-    this.UI.butSpot.disabled = !openNeighborExists || app.state.tpoints <= 0 || app.state.dpoints <= 1;
-    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0 || app.state.tpoints <= 1;
+    this.UI.butSpot.disabled = !openNeighborExists || app.state.tpoints <= 0 || app.state.dpoints <= 0;
+    this.UI.butBoss.disabled = !openNeighborExists || app.state.dpoints <= 0 || app.state.tpoints <= 0;
+
+    const spotPower = Math.min(app.state.tpoints, app.state.dpoints * 2);
+    this.UI.butSpot.innerText = `Build SPOT ${this.formatValue(spotPower, 'floor')} x power`;
+    this.UI.butBoss.innerText = `Build BOSS ${this.formatValue(app.state.dpoints, 'floor')} x power`;
   }
 
   initGame(gameContainer) {
@@ -791,16 +794,22 @@ class CellObjectBuild extends CellObject {
     //build spot
     const buildSpotCont = this.createElement('div', '', gameContainer, 'buildCont');
     const buildSpotIcon = this.createElement('span', '', buildSpotCont, 'icon');
-    const buildSpotBut = this.createElement('button', 'butSpot', buildSpotCont, '', 'Build (uses all T points, 1 D point)');
+    const buildSpotBut = this.createElement('button', 'butSpot', buildSpotCont, '', 'Build (uses all T, 1/2 D)');
     applySprite(buildSpotIcon, 'spot');
     buildSpotBut.onclick = () => this.buildSpot();
 
     //build boss
     const buildBossCont = this.createElement('div', '', gameContainer, 'buildCont');
     const buildBossIcon = this.createElement('span', '', buildBossCont, 'icon');
-    const buildBossBut = this.createElement('button', 'butBoss', buildBossCont, '', 'Build (uses all D points, 1 T point)');
+    const buildBossBut = this.createElement('button', 'butBoss', buildBossCont, '', 'Build (uses 0 T, All D)');
     applySprite(buildBossIcon, 'boss');
     buildBossBut.onclick = () => this.buildBoss();
+
+    const infoDiv = this.createElement('div', '', gameContainer);
+    infoDiv.innerText = `When building SPOT, the new strength will be Tnew=min(T,D*2).\n
+    The T cost will be Tnew and the D cost will be Tnew/2.\n
+    When building BOSS, the new strength will be Dnew=D.\n
+    The T cost will be 0 and the D cost will be Dnew.`;
 
   }
 
@@ -820,9 +829,10 @@ class CellObjectBuild extends CellObject {
     if (openNeighbor === undefined) {return;}
 
     openNeighbor.content = new CellObjectSpot(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
-    openNeighbor.content.state.tickPower = app.state.tpoints;
-    app.state.tpoints = 0;
-    app.state.dpoints -= 1;
+    const power = Math.min(app.state.tpoints, app.state.dpoints * 2);
+    openNeighbor.content.state.tickPower = power;
+    app.state.tpoints -= power;
+    app.state.dpoints -= power / 2;
     
   }
 
@@ -831,9 +841,10 @@ class CellObjectBuild extends CellObject {
     if (openNeighbor === undefined) {return;}
 
     openNeighbor.content = new CellObjectBoss(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
-    openNeighbor.content.state.disPower = app.state.dpoints;
+    const power = app.state.dpoints;
+    openNeighbor.content.state.disPower = power;
+    //app.state.tpoints -= 1;
     app.state.dpoints = 0;
-    app.state.tpoints -= 1;
 
   }
 
