@@ -1608,7 +1608,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     }
 
     const powerLeak = Math.max(0, 1 * deltaTime - 0.05 * this.state.crankLevels);
-    const compLeak = (this.state.compTarget === 3 ? (Math.pow(10, this.state.compPowerMax) / this.state.compPowerMax) : 0) * (this.state.compPower * deltaTime);
+    const compLeak = (this.state.compTarget === 3 ? (Math.pow(10, this.state.compPowerMax) / this.state.compPowerMax) : 1) * (this.state.compPower * deltaTime);
     const compCost = this.getCompTargetCost();
     
 
