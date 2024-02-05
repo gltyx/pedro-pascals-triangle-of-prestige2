@@ -1561,7 +1561,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     }
 
     const powerLeak = Math.max(0, 1 * deltaTime - 0.05 * this.state.crankLevels);
-    const compLeak = this.state.compPower * deltaTime;
+    const compLeak = (this.state.compTarget === 3 ? (Math.pow(10, this.state.compPowerMax) / this.state.compPowerMax) : 0) * (this.state.compPower * deltaTime);
     const compCost = this.getCompTargetCost();
     
 
@@ -1575,7 +1575,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     if (this.state.powerLevel >= compLeak) {
       this.state.powerLevel -= compLeak;
       //compPercent = Math.max(0, curTime - state.compStart) * this.tPower * compRate * this.state.compPower + state.previousCompProgress;
-      this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 100 / compCost;
+      this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 1 / compCost;
     }
 
     const metalPercent = Math.max(0, curTime - state.metalStart) * this.tPower * metalRate + state.previousMetalProgress;
@@ -1627,6 +1627,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
         case 2: 
           this.state.batteryLevels++;
           this.state.batteryQueueMax++;
+          break;
+        case 3: 
           break;
       }
 
@@ -1784,6 +1786,12 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     compTargetRadioBattery.checked = this.state.compTarget === 2;
     compTargetRadioBattery.onchange = () => this.radioChange(2);
     this.createElement('label', '', compTargetRadioContainer, '', 'Battery');
+    const compTargetRadioHeat = this.createElement('input', 'radioHeat', compTargetRadioContainer, '');
+    compTargetRadioHeat.type = 'radio';
+    compTargetRadioHeat.name = 'target';
+    compTargetRadioHeat.checked = this.state.compTarget === 3;
+    compTargetRadioHeat.onchange = () => this.radioChange(3);
+    this.createElement('label', '', compTargetRadioContainer, '', 'Heat');
 
     //[comp power #] [comp power slider]
     const compPowerSection = this.createElement('div', 'compPowerSection', gameContainer, 'crankColumns');
@@ -1866,6 +1874,9 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       }
       case 2: {
         return 100 + 50 * this.state.batteryLevels;
+      }
+      case 3: {
+        return 100; 
       }
     }
   }
