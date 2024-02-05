@@ -1115,6 +1115,16 @@ class CellObjectInfo extends CellObject {
 
   initGame(gameContainer) {
     super.initGame(gameContainer);
+
+    const extraUI = 'exportContainer,importContainer,exportBtnClose,exportText,importText,importBtnImport,importBtnClose'.split(',');
+    extraUI.forEach( id => {
+      this.UI[id] = document.getElementById(id);
+    });
+
+    this.UI.exportBtnClose.onclick = () => this.exportClose();
+    this.UI.importBtnClose.onclick = () => this.importClose();
+    this.UI.importBtnImport.onclick = () => this.doImport();
+
     const tabContainer = this.createElement('div', 'tabContainer', gameContainer);
     const tabTutorial = this.createElement('div', 'tabTutorial', tabContainer, 'infoTab', 'Tutorial');
     const tabLog = this.createElement('div', 'tabLog', tabContainer, 'infoTab' ,'Log');
@@ -1142,8 +1152,12 @@ class CellObjectInfo extends CellObject {
 
     const saveBtn = this.createElement('button', '', tabBodySettings, '', 'Save');
     const resetBtn = this.createElement('button', '', tabBodySettings, '', 'Reset');
+    const exportBtn = this.createElement('button', '', tabBodySettings, '', 'Export');
+    const importBtn = this.createElement('button', '', tabBodySettings, '', 'Import');
     saveBtn.onclick = () => this.save();
     resetBtn.onclick = () => this.reset();
+    exportBtn.onclick = () => this.export();
+    importBtn.onclick = () => this.import();
     const extraText = this.createElement('div', '', tabBodySettings);
     extraText.innerHTML = `
     <a href='./attributions.html'>Attributions</a> 
@@ -1290,6 +1304,32 @@ class CellObjectInfo extends CellObject {
 
   resetNo() {
     this.UI.resetDlg.close();
+    document.querySelector('body').classList.remove('blur2px');
+  }
+
+  export() {
+    document.querySelector('body').classList.add('blur2px');
+    this.UI.exportText.value = app.getExportString();
+    this.UI.exportContainer.showModal();
+  }
+
+  exportClose() {
+    this.UI.exportContainer.close();
+    document.querySelector('body').classList.remove('blur2px');
+  }
+
+  import() {
+    document.querySelector('body').classList.add('blur2px');
+    this.UI.importContainer.showModal();
+  }
+
+  doImport() {
+    const importString = this.UI.importText.value;
+    app.importFromString(importString);
+  }
+
+  importClose() {
+    this.UI.importContainer.close();
     document.querySelector('body').classList.remove('blur2px');
   }
 }
