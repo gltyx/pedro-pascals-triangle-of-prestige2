@@ -855,7 +855,9 @@ class CellObjectBuild extends CellObject {
     const openNeighbor = this.getOpenNeighbor();
     if (openNeighbor === undefined) {return;}
 
+    openNeighbor.content.closeGame();
     openNeighbor.content = new CellObjectSpot(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
+    openNeighbor.content.postLoad();
     const power = Math.min(app.state.tpoints, app.state.dpoints * 2);
     openNeighbor.content.state.tickPower = power;
     app.state.tpoints -= power;
@@ -868,7 +870,9 @@ class CellObjectBuild extends CellObject {
     const openNeighbor = this.getOpenNeighbor();
     if (openNeighbor === undefined) {return;}
 
+    openNeighbor.content.closeGame();
     openNeighbor.content = new CellObjectBoss(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
+    openNeighbor.content.postLoad();
     const power = app.state.dpoints;
     openNeighbor.content.state.disPower = power;
     //app.state.tpoints -= 1;
