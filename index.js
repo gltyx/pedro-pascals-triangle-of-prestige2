@@ -241,6 +241,8 @@ class App {
           content: new worldClass(cell, x + y)
         };
 
+        newCell.content.postLoad();
+
         this.cells[cellIndex] = newCell;
 
         cell.onmousemove = (evt) => this.cellonmousemove(evt, newCell);

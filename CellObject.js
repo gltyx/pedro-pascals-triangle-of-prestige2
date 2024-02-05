@@ -1,7 +1,9 @@
 "use strict";
 
-const strengthDistFactor = 1.5;
-const rewardDistFactor = 1.2;
+const strengthDistFactor = 1.5; //how much harder enemies get per dist (factor^dist)
+const rewardDistFactor = 1.2;   //how much more reward you get per dist (factor^dist)
+const powerDistFactor = 0.95;   //how much immunity enemies have per dist (factor^dist)
+const activeFactor = 0.75;      //how much harder active enemies are than normal
 
 class CellObject {
   constructor(cell, dist, bgSpriteName) {
@@ -158,6 +160,9 @@ class CellObjectEnemy extends CellObject {
       this.dPower += ns.disPower ?? 0;
       this.ePower += ns.enemyPower ?? 0;
     }
+
+    this.tPower = this.tPower * Math.pow(powerDistFactor, (this.dist - 4));
+    this.dPower = this.dPower * Math.pow(powerDistFactor, (this.dist - 4));
 
     if (this.ePower > 0) {
       this.dPower = 0;
@@ -405,11 +410,11 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
 class CellObjectEnemyBusiness extends CellObjectEnemy {
 
   static levelInfo = {
-    limeade: {priceBase: 4,      priceFactor: 1.07, revenue: 1,     duration: 0.6},
-    spam:    {priceBase: 60,     priceFactor: 1.15, revenue: 60,    duration: 3},
-    dogWash: {priceBase: 720,    priceFactor: 1.14, revenue: 540,   duration: 6},
-    taco:    {priceBase: 8640,   priceFactor: 1.13, revenue: 4320,  duration: 12},
-    cupcake: {priceBase: 103680, priceFactor: 1.12, revenue: 51840, duration: 24}
+    limeade: {priceBase: 4,      priceFactor: 1.07, revenue: 1,     duration: 1},
+    spam:    {priceBase: 60,     priceFactor: 1.15, revenue: 60,    duration: 5},
+    dogWash: {priceBase: 720,    priceFactor: 1.14, revenue: 540,   duration: 10},
+    taco:    {priceBase: 8640,   priceFactor: 1.13, revenue: 4320,  duration: 20},
+    cupcake: {priceBase: 103680, priceFactor: 1.12, revenue: 51840, duration: 40}
   };
 
   static levelOrder = ['limeade', 'spam', 'dogWash', 'taco', 'cupcake'];
@@ -419,7 +424,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'business');
     this.state.type = 'enemyBusiness';
-    this.baseStrength = this.roundToVal(100 * Math.pow(strengthDistFactor, dist), 'round', 0.01);
+    this.baseStrength = this.roundToVal(activeFactor * 100 * Math.pow(strengthDistFactor, dist), 'round', 0.01);
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
     this.state.cash = 0;
@@ -857,9 +862,9 @@ class CellObjectBuild extends CellObject {
 
     openNeighbor.content.closeGame();
     openNeighbor.content = new CellObjectSpot(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
-    openNeighbor.content.postLoad();
     const power = Math.min(app.state.tpoints, app.state.dpoints * 2);
     openNeighbor.content.state.tickPower = power;
+    openNeighbor.content.postLoad();
     app.state.tpoints -= power;
     app.state.dpoints -= power / 2;
     
@@ -872,9 +877,9 @@ class CellObjectBuild extends CellObject {
 
     openNeighbor.content.closeGame();
     openNeighbor.content = new CellObjectBoss(openNeighbor.ui, openNeighbor.x + openNeighbor.y);
-    openNeighbor.content.postLoad();
     const power = app.state.dpoints;
     openNeighbor.content.state.disPower = power;
+    openNeighbor.content.postLoad();
     //app.state.tpoints -= 1;
     app.state.dpoints = 0;
 
@@ -1075,6 +1080,8 @@ class CellObjectInfo extends CellObject {
         drag and drop or by selecting one and then clicking a destination
         to direct your power to the adjacent 8 squares and control your rate of progress
         in a game. Multiple units can supply power to the same enemy.</li>
+    <li>Enemies that are farther (Manhattan distance) from <span class='infoIcon'></span> have more immunity from
+        <span class="spotIcon"></span> <span class="bossIcon"></span>. The immunity factor is ${powerDistFactor.toFixed(2)}^(dist-4).</li>
     <li>Defeating an enemy with <span class='spotIcon'></span> gives you points you can use at <span class='buildIcon'></span> 
         to build <span class='spotIcon'></span><span class='bossIcon'></span>. However, you also need points that can be collected by destroying 
         <span class='wallIcon'></span> with <span class='bossIcon'></span>. </li>
@@ -1408,7 +1415,7 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
     const header = this.createElement('h1', '', headerDiv);
     this.createElement('span', 'coins', header);
     this.createElement('span', '', header, '', ' / ');
-    this.createElement('span', 'coinReq', header, '', this.baseStrength);
+    this.createElement('span', 'coinReq', header, '', this.formatValue(this.baseStrength, 'ceil'));
     this.createElement('span', '', header, '', ' coins');
 
     const rateHeader = this.createElement('h3', '', headerDiv);
@@ -1492,7 +1499,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'crank');
     this.state.type = 'enemyCrank';
-    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.baseStrength = activeFactor * 10 * Math.pow(strengthDistFactor, dist);
     this.state.metalStart = Infinity;
     this.state.metalStrength = 100;
     this.state.previousMetalProgress = 0;
@@ -1615,7 +1622,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     if (this.state.powerLevel >= compLeak) {
       this.state.powerLevel -= compLeak;
       //compPercent = Math.max(0, curTime - state.compStart) * this.tPower * compRate * this.state.compPower + state.previousCompProgress;
-      this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 1 / compCost;
+      this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 100 / compCost;
     }
 
     const metalPercent = Math.max(0, curTime - state.metalStart) * this.tPower * metalRate + state.previousMetalProgress;
@@ -2467,7 +2474,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'anti');
     this.state.type = 'enemyAnti';
-    this.baseStrength = 10 * Math.pow(strengthDistFactor, dist);
+    this.baseStrength = activeFactor * 100 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
     this.state.maxDimUnlocked = 3;
