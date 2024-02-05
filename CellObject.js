@@ -1476,6 +1476,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.state.scrapLevels = 0;
     this.state.batteryLevels = 0;
     this.state.totalPower = 0;
+    this.state.compTarget = 0;
+
 
     this.metalCost = 5;
     this.metalBoostCost = 1;
@@ -1490,7 +1492,6 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.compProgress = 0;
     this.powerMax = 100;
     this.lastCompPower = this.state.compPower;
-    this.compTarget = 0;
   }
 
   /*
@@ -1615,7 +1616,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     }
 
     if (this.compProgress >= 100) {
-      switch (this.compTarget) {
+      switch (this.state.compTarget) {
         case 0: 
           this.state.crankLevels++; 
           break;
@@ -1768,17 +1769,19 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const compTargetRadioCrank = this.createElement('input', 'radioCrank', compTargetRadioContainer, '');
     compTargetRadioCrank.type = 'radio';
     compTargetRadioCrank.name = 'target';
-    compTargetRadioCrank.checked = 'true';
+    compTargetRadioCrank.checked = this.state.compTarget === 0;
     compTargetRadioCrank.onchange = () => this.radioChange(0);
     this.createElement('label', '', compTargetRadioContainer, '', 'Crank');
     const compTargetRadioScrap = this.createElement('input', 'radioScrap', compTargetRadioContainer, '');
     compTargetRadioScrap.type = 'radio';
     compTargetRadioScrap.name = 'target';
+    compTargetRadioScrap.checked = this.state.compTarget === 1;
     compTargetRadioScrap.onchange = () => this.radioChange(1);
     this.createElement('label', '', compTargetRadioContainer, '', 'Scrap');
     const compTargetRadioBattery = this.createElement('input', 'radioBattery', compTargetRadioContainer, '');
     compTargetRadioBattery.type = 'radio';
     compTargetRadioBattery.name = 'target';
+    compTargetRadioBattery.checked = this.state.compTarget === 2;
     compTargetRadioBattery.onchange = () => this.radioChange(2);
     this.createElement('label', '', compTargetRadioContainer, '', 'Battery');
 
@@ -1850,12 +1853,11 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.state.compStart = Infinity;
     this.compProgress = 0;
     this.lastCompPower = 0;
-    this.compTarget = target;
-    console.log(target);
+    this.state.compTarget = target;
   }
 
   getCompTargetCost() {
-    switch (this.compTarget) {
+    switch (this.state.compTarget) {
       case 0: {
         return 100 + 50 * this.state.crankLevels;
       }
