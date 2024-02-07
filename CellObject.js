@@ -1,7 +1,10 @@
 "use strict";
 
+//total reward from all enemies is about 1.2e8
+//power of snail is about 8.2e11
+//power factor at snail is about 5.1e-2
 const strengthDistFactor = 1.5; //how much harder enemies get per dist (factor^dist)
-const rewardDistFactor = 1.2;   //how much more reward you get per dist (factor^dist)
+const rewardDistFactor = 1.3;   //how much more reward you get per dist (factor^dist)
 const powerDistFactor = 0.95;   //how much immunity enemies have per dist (factor^dist)
 const activeFactor = 0.75;      //how much harder active enemies are than normal
 
@@ -905,7 +908,7 @@ class CellObjectSpawn extends CellObject {
     this.sacPowerD = 0;
     this.monthAngle = 0;
     this.dayAngle = 0;
-    this.rate = 1 / 260;
+    this.rate = 1 / (260 * 60); //multiples of sacrificed power per second. this is 1 multiple every 260 min=4.3hr
     this.harvD = 0;
     this.harvT = 0;
   }
@@ -931,8 +934,8 @@ class CellObjectSpawn extends CellObject {
     this.powerD = this.state.dPower + (deltaT * this.state.dSac) * this.rate;
 
 
-    this.monthAngle = (-(2 * Math.PI ) * curTime * 1/20) % (Math.PI * 2);
-    this.dayAngle = (-(2 * Math.PI ) * curTime * 1/13) % (Math.PI * 2);
+    this.monthAngle = (-(2 * Math.PI ) * curTime * 1/(20 * 60)) % (Math.PI * 2);
+    this.dayAngle = (-(2 * Math.PI ) * curTime * 1/(13 * 60)) % (Math.PI * 2);
 
     const monthIndex = Math.floor(-20 * this.monthAngle / (Math.PI * 2));
     const dayIndex = Math.floor(-13 * this.dayAngle / (Math.PI * 2));
@@ -1095,7 +1098,7 @@ class CellObjectInfo extends CellObject {
     <li>Unlocked dialog can be viewed in the Lore tab above</li>
     <li>You can sacrifice <span class='spotIcon'></span><span class='bossIcon'></span>
         to increase the power of <span class='spawnIcon'></span>. It will generate
-        an amount of power equal to that which was sacrificed every 260 "days". To access
+        an amount of power equal to that which was sacrificed every 260 "days" (minutes). To access
         the power, you must harvest it which converts it into points and sets the generation rate back
         to zero.
         </li>
@@ -1608,7 +1611,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     }
 
     const powerLeak = Math.max(0, 1 * deltaTime - 0.05 * this.state.crankLevels);
-    const compLeak = (this.state.compTarget === 3 ? (Math.pow(10, this.state.compPowerMax) / this.state.compPowerMax) : 1) * (this.state.compPower * deltaTime);
+    const compLeak = (this.state.compTarget === 3 ? (Math.pow(10, this.state.compPower) / this.state.compPower) : 1) * (this.state.compPower * deltaTime);
     const compCost = this.getCompTargetCost();
     
 
