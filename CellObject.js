@@ -565,7 +565,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       progress.style.height = '100%';
       progress.style.backgroundColor = 'green';
       progress.style.width = '50%';
-      progress.style.transition = 'width 0.2s';
+      progress.style.transition = 'width 0.1s';
       const revenue = this.createElement('div', `levelRevenue${level}`, progressContainer, '', `${this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count)}`);
       revenue.style.position = 'absolute';
       revenue.style.top = '0px';
