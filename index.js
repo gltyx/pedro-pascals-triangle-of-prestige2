@@ -412,21 +412,23 @@ class App {
           document.getElementById(`loreIcon${i}`).style.display = 'none';
         }
 
-        if (cellOutput.harvest !== true && cellOutput.merged !== true) {
-          this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: T: ${this.formatValue(cellOutput.tpoints ?? 0, 'floor')}, D: ${this.formatValue(cellOutput.dpoints ?? 0, 'floor')}`);
+        if (cellOutput.harvest !== true) {
+          if (cellOutput.merged !== true) {
+            this.addToLog(`Completed ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: T: ${this.formatValue(cellOutput.tpoints ?? 0, 'floor')}, D: ${this.formatValue(cellOutput.dpoints ?? 0, 'floor')}`);
+          }
+          cell.content.closeGame();
+          const dist = cell.x + cell.y;
+          cell.content = new CellObject(cell.ui, dist);
+          if (this.selectedCellIndex === i) {
+            this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
+            this.displayCellInfo(this.cells[i]);
+          }
+        reflowNeeded = true;
         } else {
           if (cellOutput.harvest === true) {
             this.addToLog(`Harvested ${cell.content.state.type} @ (${cell.x},${cell.y}). Reward: T: ${this.formatValue(cellOutput.tpoints ?? 0, 'floor')}, D: ${this.formatValue(cellOutput.dpoints ?? 0, 'floor')}`);
           }
         }
-        cell.content.closeGame();
-        const dist = cell.x + cell.y;
-        cell.content = new CellObject(cell.ui, dist);
-        if (this.selectedCellIndex === i) {
-          this.cells[i].content.initGame(this.UI.cellInfoGameContainer);
-          this.displayCellInfo(this.cells[i]);
-        }
-        reflowNeeded = true;
       }
 
 

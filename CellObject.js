@@ -50,6 +50,7 @@ class CellObject {
     const effectivePercent = this.percent >= 100 ? 0 : this.percent;
     const percentStr = `${Math.ceil(effectivePercent)}%`;
     this.updateStyle(progress.style, 'width', percentStr);
+    this.cell = cell;
   }
 
   updateBackground(cell) {
@@ -767,6 +768,7 @@ class CellObjectMerge extends CellObject {
     objectList.forEach( (n, i) => {
       if (i === 0) {
         n.content.state.tickPower = this.tMergePower;
+        n.content.postLoad();
       } else {
         n.content.merged = true;
       }
@@ -787,6 +789,7 @@ class CellObjectMerge extends CellObject {
     objectList.forEach( (n, i) => {
       if (i === 0) {
         n.content.state.disPower = this.dMergePower;
+        n.content.postLoad();
       } else {
         n.content.merged = true;
       }
