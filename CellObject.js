@@ -845,7 +845,7 @@ class CellObjectBuild extends CellObject {
 
     const infoDiv = this.createElement('div', '', gameContainer);
     infoDiv.innerText = `When building SPOT, the new strength will be Tnew=min(T,D*2).\n
-    The T cost will be Tnew and the D cost will be Tnew/2.\n
+    The T cost will be Tnew and the D cost will be Tnew/4.\n
     When building BOSS, the new strength will be Dnew=D.\n
     The T cost will be 0 and the D cost will be Dnew.`;
 
@@ -872,7 +872,7 @@ class CellObjectBuild extends CellObject {
     openNeighbor.content.state.tickPower = power;
     openNeighbor.content.postLoad();
     app.state.tpoints -= power;
-    app.state.dpoints -= power / 2;
+    app.state.dpoints -= power / 4;
     
     app.addToLog(`Built SPOT x ${this.formatValue(power, 'floor')}`);
   }
@@ -1064,8 +1064,8 @@ class CellObjectSpawn extends CellObject {
     this.state.startTime = curTime;
     this.state.tPower = 0;
     this.state.dPower = 0;
-    this.state.tSac = 0;
-    this.state.dSac = 0;
+    this.state.tSac = this.state.tSac * 0.5 ;
+    this.state.dSac = this.state.dSac * 0.5;
     
   }
 
@@ -1102,8 +1102,8 @@ class CellObjectInfo extends CellObject {
     <li>You can sacrifice <span class='spotIcon'></span><span class='bossIcon'></span>
         to increase the power of <span class='spawnIcon'></span>. It will generate
         an amount of power equal to that which was sacrificed every 260 "days" (minutes). To access
-        the power, you must harvest it which converts it into points and sets the generation rate back
-        to zero.
+        the power, you must harvest it which converts it into points and costs half of
+        the previously sacrificed power.
         </li>
   </ul>
   `;
