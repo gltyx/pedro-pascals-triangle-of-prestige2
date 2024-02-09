@@ -6,7 +6,7 @@
 const strengthDistFactor = 1.5; //how much harder enemies get per dist (factor^dist)
 const rewardDistFactor = 1.3;   //how much more reward you get per dist (factor^dist)
 const powerDistFactor = 0.95;   //how much immunity enemies have per dist (factor^dist)
-const activeFactor = 0.75;      //how much harder active enemies are than normal
+const activeFactor = 0.5;      //how much harder active enemies are than normal
 
 class CellObject {
   constructor(cell, dist, bgSpriteName) {
@@ -1625,10 +1625,15 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const deltaPowerLevel = Math.max(0, this.state.powerLevel - origPowerLevel);
     this.state.totalPower += deltaPowerLevel;
     let compPercent;
-    if (this.state.powerLevel >= compLeak) {
-      this.state.powerLevel -= compLeak;
-      //compPercent = Math.max(0, curTime - state.compStart) * this.tPower * compRate * this.state.compPower + state.previousCompProgress;
+    if (this.state.compTarget === 3) {
+      this.state.powerLevel -= Math.min(compLeak, this.state.powerLevel);
       this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 100 / compCost;
+    } else {
+      if (this.state.powerLevel >= compLeak) {
+        this.state.powerLevel -= compLeak;
+        //compPercent = Math.max(0, curTime - state.compStart) * this.tPower * compRate * this.state.compPower + state.previousCompProgress;
+        this.compProgress = this.compProgress + deltaTime * this.tPower * compRate * this.state.compPower * 100 / compCost;
+      }
     }
 
     const metalPercent = Math.max(0, curTime - state.metalStart) * this.tPower * metalRate + state.previousMetalProgress;
