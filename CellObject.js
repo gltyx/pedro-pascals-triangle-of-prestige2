@@ -1366,7 +1366,7 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
     super(cell, dist, 'prestige');
     this.state.type = 'enemyPrestige';
     this.baseStrength = Math.round(100 * Math.pow(strengthDistFactor, dist));
-    this.state.start = (new Date()).getTime() / 1000;
+    this.state.start = Infinity;
     this.state.lastPrestigeTime = Infinity;
     this.state.savedCoins = 0;
     this.state.prestiges = (new Array(10)).fill(0);
@@ -1377,6 +1377,10 @@ class CellObjectEnemyPrestige extends CellObjectEnemy {
 
     const gain = this.getGain();
     const rate = this.tPower * gain;
+
+    if (this.state.start === Infinity && this.tPower > 0) {
+      this.state.start = (new Date()).getTime() / 1000;
+    }
 
     //if tick power has changed and this level has already started
     if (this.tPower !== this.lasttPower && this.state.start < Infinity) {
@@ -1960,7 +1964,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.state.savedTotalMoney = 0;
 
     this.state.mulch = 0;
-    this.state.start = (new Date()).getTime() / 1000;
     this.state.displayField = 0;
     this.state.highestUnlock = 0;
     this.machinei = 0;
@@ -1972,10 +1975,6 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
     this.initUpgrades();
     this.nextTick = 0;
   }
-
-  /*
-    TODO:
-  */
 
   initUpgrades() {
     this.upgradeConsts = {};
@@ -2147,6 +2146,10 @@ class CellObjectEnemyLawn extends CellObjectEnemy {
 
     const gain = this.state.fields.reduce( (acc, f, i) => acc + this.getFieldRate(f, i), 0);
     const rate = this.tPower * gain;
+
+    if (this.state.start === Infinity && this.tPower > 0) {
+      this.state.start = (new Date()).getTime() / 1000;
+    }
 
     //this is used elsewhere to determine if the cell is active
     this.rate = rate;
