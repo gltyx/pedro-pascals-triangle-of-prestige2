@@ -22,7 +22,7 @@ class App {
     this.UI = {};
     this.rndBags = {};
 
-    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoDPoints,toastRight';
+    const uiIDs = 'gameGrid,sprites,cellInfoTitle,cellInfoDetails,cellInfoGameContainer,gameInfoCompletionEnemies,gameInfoTotalEnemies,gameInfoCompletionWalls,gameInfoTotalWalls,gameInfoTPoints,gameInfoDPoints,toastRight,gameInfoPlayTime';
     uiIDs.split`,`.forEach( id => {
       this.UI[id] = document.getElementById(id);
     });
@@ -466,11 +466,48 @@ class App {
     }
   }
 
+  timeToObj(t) {
+    const result = {};
+
+    result.y = Math.floor(t / (365 * 24 * 60 * 60));
+    t = t % (365 * 24 * 60 * 60);
+    result.d = Math.floor(t / (24 * 60 * 60));
+    t = t % (24 * 60 * 60);
+    result.h = Math.floor(t / (60 * 60));
+    t = t % (60 * 60);
+    result.m = Math.floor(t / 60);
+    t = t % 60;
+    result.s = t;
+
+    return result;
+  }
+
+  remainingToStr(ms, full) {
+    if (ms === Infinity) {
+      return 'Infinity';
+    }
+
+    const timeObj = this.timeToObj(ms / 1000);
+
+    if (full) {
+      return `${timeObj.y}:${timeObj.d.toString().padStart(3,0)}:${timeObj.h.toString().padStart(2,0)}:${timeObj.m.toString().padStart(2,0)}:${timeObj.s.toFixed(1).padStart(4,0)}`;
+    }
+
+    if (timeObj.y > 0 || timeObj.d > 0 || timeObj.h > 0) {
+      return `${timeObj.y}:${timeObj.d.toString().padStart(3,0)}:${timeObj.h.toString().padStart(2,0)}:${timeObj.m.toString().padStart(2,0)}`;
+    } else {
+      return `${timeObj.m.toString().padStart(2,0)}:${timeObj.s.toFixed(1).padStart(4,0)}`;
+    }
+  }
+
   draw() {
     this.UI.gameInfoTPoints.innerText = this.formatValue(this.state.tpoints, 'floor');
     this.UI.gameInfoDPoints.innerText = this.formatValue(this.state.dpoints, 'floor');
     this.UI.gameInfoCompletionEnemies.innerText = (this.totalEnemies - this.curEnemies);
     this.UI.gameInfoCompletionWalls.innerText = (this.totalWalls - this.curWalls);
+    const curTime = (new Date()).getTime();
+    const playTime = (curTime - this.state.gameStart); //ms
+    this.UI.gameInfoPlayTime.innerText = this.remainingToStr(playTime, true);
   }
 
   clearAllSelectedCells() {

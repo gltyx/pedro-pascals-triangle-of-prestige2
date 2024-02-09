@@ -58,6 +58,10 @@ dialog {
   padding: 0.5em;
 }
 
+.bold {
+  font-weight: 600;
+}
+
 #gameContainer {
   background: tan;
 }
