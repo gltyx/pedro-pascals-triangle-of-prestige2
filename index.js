@@ -596,6 +596,7 @@ class App {
     const toast = document.createElement('div');
     toast.classList.add('toastMsg');
     toast.innerText = msg;
+    toast.onclick = () => this.removeToast(toast);
     this.UI.toastRight.prepend(toast);
 
     setTimeout(() => this.removeToast(toast), 5000);
