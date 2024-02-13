@@ -5,7 +5,7 @@
 //power factor at snail is about 5.1e-2
 const strengthDistFactor = 1.5; //how much harder enemies get per dist (factor^dist)
 const rewardDistFactor = 1.3;   //how much more reward you get per dist (factor^dist)
-const powerDistFactor = 0.95;   //how much immunity enemies have per dist (factor^dist)
+const powerDistFactor = 0.95;   //how much immunity enemies have per dist (factor^(dist - 4))
 const activeFactor = 0.5;      //how much harder active enemies are than normal
 
 class CellObject {
@@ -1338,7 +1338,7 @@ class CellObjectInfo extends CellObject {
 
   doImport() {
     const importString = this.UI.importText.value;
-    app.importFromString(importString);
+    app.importFromString(importString.trim());
   }
 
   importClose() {
@@ -1586,7 +1586,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
-    const vmax = 0.1 + 0.1 * this.state.crankLevels;
+    //const vmax = 0.1 + 0.1 * this.state.crankLevels;
+    const vmax = 0.1 * this.state.crankLevels + 0.1 * (Math.pow(1.0010500, this.state.crankLevels));
     const cranka = 0.001 + 0.0001 * this.state.crankLevels;
     const crankm = 1000;
     const crankFriction = 0.0005;
@@ -1625,7 +1626,11 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.crankVelocity = Math.max(0, Math.min(vmax, this.crankVelocity + this.tPower * this.crankForce / crankm - crankFriction));
     this.crankAngle += this.crankVelocity;
     const origPowerLevel = this.state.powerLevel;
-    this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
+    if (this.state.compTarget === 3) {
+      this.state.powerLevel = Math.max(0, Math.min(Infinity, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
+    } else {
+      this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
+    }
     const deltaPowerLevel = Math.max(0, this.state.powerLevel - origPowerLevel);
     this.state.totalPower += deltaPowerLevel;
     let compPercent;
@@ -1736,8 +1741,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.UI.crankBar.style.transform = `rotate(${this.crankAngle}rad)`;
     this.UI.crankBall.style.transform = `rotate(${this.crankAngle}rad)`;
 
-    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${this.state.powerLevel.toFixed(1) * 100 / this.powerMax}%`);
-    this.UI.crankLevelValue.innerText = `${this.state.powerLevel.toFixed(1)} / ${this.powerMax}`;
+    this.updateStyle(this.UI.crankLevelProgress.style, 'width', `${Math.min(100, this.state.powerLevel * 100 / this.powerMax)}%`);
+    this.UI.crankLevelValue.innerText = `${this.formatValue(this.state.powerLevel, 'floor')} / ${this.formatValue(this.powerMax, 'floor')}`;
 
     this.updateStyle(this.UI.metalProgress.style, 'width', `${this.metalProgress.toFixed(1)}%`);
     this.updateStyle(this.UI.batteryProgress.style, 'width', `${this.batteryProgress.toFixed(1)}%`);
@@ -1753,7 +1758,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.UI.batteryQueueSlider.max = this.state.batteryQueueMax;
     this.UI.compPowerSlider.max = this.state.compPowerMax;
 
-    this.UI.totalPower.innerText = `${this.state.totalPower.toFixed(1)}`;
+    this.UI.totalPower.innerText = this.formatValue(this.state.totalPower, 'floor');
   }
 
   initGame(gameContainer) {
@@ -2729,7 +2734,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       cumulativeMul *= m[i];
       return v * cumulativeMul;
     });
-    const val = (
+    let val = (
         Math.pow(t,8)*(d[7])
       + Math.pow(t,7)*(8*d[6]-28*d[7])
       + Math.pow(t,6)*(56*d[5]-168*d[6]+322*d[7])
@@ -2739,6 +2744,9 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       + Math.pow(t,2)*(20160*d[1]-20160*d[2]+18480*d[3]-16800*d[4]+15344*d[5]-14112*d[6]+13068*d[7])
       + Math.pow(t,1)*(40320*d[0]-20160*d[1]+13440*d[2]-10080*d[3]+8064*d[4]-6720*d[5]+5760*d[6]-5040*d[7])
       ) / 40320;
+    if (isNaN(val)) {
+      val = Infinity;
+    }
     return Math.max(0, val);
   }
 
@@ -2959,7 +2967,9 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.cellCount = 0;
     this.completeCount = 0;
     this.activated = 0;
-    this.tPowerScale = 0.5;
+    //this should make the 192073 seconds in the critical path of the triangle
+    //take 604800s (7 days) when the spot has tpower=1e8
+    this.tPowerScale = 6.220985e-8;
 
     for (let i = 0; i < this.rowCount; i++) {
       for (let j = 0; j <= i; j++) {
@@ -3005,6 +3015,19 @@ class CellObjectEnemySnail extends CellObjectEnemy {
         this.tPowerScale
         should take between 1 to 7 days to finish
         do something to indicate the scaling factor on spot's power
+        power of 1e7 should take 14 days, 
+
+        longest path time is 92778+ 48620+24310+12870+6435+3432+1716+924+462+252+126+70+35+20+10+6+3+2+1+1=192073
+        192073  1
+        604800  3.1488
+
+        dist factor here is 5.105e-2
+        1e8 * distFactor x = 1/3.1488
+
+        
+
+
+
       
   */
 
