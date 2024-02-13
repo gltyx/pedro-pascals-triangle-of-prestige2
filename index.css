@@ -168,7 +168,7 @@ dialog {
   width: 100vw;
   display: grid;
   grid-template-columns: 1fr 300px;
-  /*pointer-events: none;*/
+  pointer-events: none;
 }
 
 #toastRight {
