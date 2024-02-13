@@ -180,7 +180,7 @@ class CellObjectEnemy extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `Object Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(this.percent, 'ceil')}`;
+    container.innerText = `Enemy Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(this.percent, 'ceil')}`;
   }
 
   isDropable(srcObject) {
@@ -202,7 +202,7 @@ class CellObjectSpot extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `spot details - T: ${this.formatValue(this.state.tickPower, 'floor')}`;
+    container.innerText = `SPOT details - T: ${this.formatValue(this.state.tickPower, 'floor')}`;
   }
 
   postLoad() {
@@ -240,7 +240,7 @@ class CellObjectBoss extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `boss details - D: ${this.formatValue(this.state.disPower, 'floor')}`;
+    container.innerText = `BOSS details - D: ${this.formatValue(this.state.disPower, 'floor')}`;
   }
 
   postLoad() {
@@ -413,6 +413,7 @@ class CellObjectEnemyCheese extends CellObjectEnemy {
 
 class CellObjectEnemyBusiness extends CellObjectEnemy {
 
+  /*
   static levelInfo = {
     limeade: {priceBase: 4,      priceFactor: 1.07, revenue: 1,     duration: 1},
     spam:    {priceBase: 60,     priceFactor: 1.15, revenue: 60,    duration: 5},
@@ -420,10 +421,31 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     taco:    {priceBase: 8640,   priceFactor: 1.13, revenue: 4320,  duration: 20},
     cupcake: {priceBase: 103680, priceFactor: 1.12, revenue: 51840, duration: 40}
   };
+  */
+  /*
+    at the beginning, goal is 253, powerDistFactor is 1, tPower is 1
+    at the end, goal is 1.2e12, powerDistFactor is 5.95e-2, tPower is 1e8
+  */
+  /*
+  static levelInfo = {
+    limeade: {priceBase: 4,      priceFactor: 1.07, revenue: 1,       duration: 1},
+    spam:    {priceBase: 300,    priceFactor: 1.15, revenue: 60e0,    duration: 5e2},
+    dogWash: {priceBase: 3240,   priceFactor: 1.14, revenue: 540e2,   duration: 10e4},
+    taco:    {priceBase: 30240,  priceFactor: 1.13, revenue: 4320e4,  duration: 20e6},
+    cupcake: {priceBase: 414720, priceFactor: 1.12, revenue: 51840e6, duration: 40e8}
+  };
+  */
+  static levelInfo = {
+    limeade: {priceBase: 4,         priceFactor: 1.17, revenue: 1,      duration: 1},
+    spam:    {priceBase: 240,       priceFactor: 1.17, revenue: 60,     duration: 5e2},
+    dogWash: {priceBase: 19200,     priceFactor: 1.17, revenue: 5.4e4,  duration: 1e5},
+    taco:    {priceBase: 1920000,   priceFactor: 1.17, revenue: 5.4e7,  duration: 2e7},
+    cupcake: {priceBase: 230400000, priceFactor: 1.17, revenue: 8.1e10, duration: 4e9}
+  };
 
   static levelOrder = ['limeade', 'spam', 'dogWash', 'taco', 'cupcake'];
 
-  static durationFactorMilestones = [25, 50, 100, 200, 300, 400];
+  static durationFactorMilestones = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
 
   constructor(cell, dist) {
     super(cell, dist, 'business');
@@ -455,6 +477,10 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       const state = this.state.level[level];
       const levelDuration = CellObjectEnemyBusiness.levelInfo[level].duration * this.getDurationFactor(level) / this.tPower;
 
+      if (this.tPower > 0) {
+        let a = 1;
+      }
+
       //if tick power has changed and this level has already started
       if (this.tPower !== this.lasttPower && state.start < Infinity) {
         //save previous progress
@@ -463,7 +489,8 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
         state.start = curTime;
       }
 
-      const curDuration = Math.max(0, curTime - state.start) * this.tPower + state.previousProgress;
+      //const curDuration = Math.max(0, curTime - state.start) * this.tPower + state.previousProgress;
+      const curDuration = Math.max(0, curTime - state.start) + state.previousProgress;
 
       if (curDuration >= levelDuration) {
         state.start = Infinity;
@@ -573,7 +600,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       revenue.style.width = '100%';
       const rightBottom = this.createElement('div', '', rightSide);
       rightBottom.style.display = 'grid';
-      rightBottom.style.gridTemplateColumns = '1fr 5em';
+      rightBottom.style.gridTemplateColumns = '1fr 7em';
       const buyContainer = this.createElement('div', `levelBuy${level}`, rightBottom);
       buyContainer.style.display = 'grid';
       buyContainer.style.gridTemplateColumns = '3em 1fr';
