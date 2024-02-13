@@ -34,7 +34,6 @@ body {
 
 .bodyGameWide {
   grid-template-columns: 800px 1fr;
-  background-image: url('./bg.png');
 }
 
 
