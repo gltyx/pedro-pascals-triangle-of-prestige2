@@ -276,16 +276,19 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     this.state.enemyPower = 0;
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
+    this.state.clicks = 0;
   }
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
+    const clickScale = 0.10;
 
     //if disassembly power has changed and disassembly has already started
     if (this.dPower !== this.lastdPower && this.state.start < Infinity) {
       //if was already disassembling, save the previous time
       if (this.lastdPower > 0) {
-        this.state.strength = this.state.strength - (curTime - this.state.start) * this.lastdPower;
+        this.state.strength = this.state.strength - (curTime - this.state.start) * this.lastdPower - (this.state.clicks * this.lastdPower * clickScale);
+        this.state.clicks = 0;
       }
       //if already started, set the new base time to now
       if (this.state.start !== Infinity) {
@@ -298,9 +301,10 @@ class CellObjectEnemyWall extends CellObjectEnemy {
       }
     }
 
-    this.timeRem = (this.state.strength / this.dPower) - (curTime - this.state.start);
+    this.timeRem = (this.state.strength - (this.state.clicks * this.dPower * clickScale)) / (this.dPower) - (curTime - this.state.start);
+    this.fractionRemaining = this.timeRem / this.state.strength;
     if (this.state.start < Infinity) {
-      this.percent = 100 * (this.state.strength - (curTime - this.state.start) * this.dPower) / this.baseStrength;
+      this.percent = 100 * ((this.state.strength - (this.state.clicks * this.dPower * clickScale)) - (curTime - this.state.start) * (this.dPower)) / this.baseStrength;
     } else {
       this.percent = 100;
     }
@@ -312,7 +316,6 @@ class CellObjectEnemyWall extends CellObjectEnemy {
         dpoints: 1 * Math.pow(rewardDistFactor, this.dist)
       };
     }
-
 
   }
 
@@ -326,6 +329,31 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     }
 
     this.UI.neighborCount.innerText = `${this.ePower} neighboring enemies`;
+
+    const ctx = this.ctx;
+    //ctx.fillStyle = 'hsl(205,36%,68%)';
+    ctx.fillStyle = 'hsl(60, 48%, 76%)';
+    ctx.fillRect(0, 0, this.UI.canvas.width, this.UI.canvas.height);
+
+    ctx.strokeStyle = 'black';
+    const blockPercent = 100 * 1 / (12 * 12);
+    for (let yi = 0; yi < 12; yi++) {
+      for (let xi = 0; xi < 12; xi++) {
+        const p = 100 * (yi * 12 + xi) / (12 * 12);
+        if ((100 - p) <= this.percent) {
+          ctx.drawImage(this.UI.sprites, SPRITES.wall[0] * 32, SPRITES.wall[1] * 32, 32, 32, xi * 32, yi * 32, 32, 32);
+        } else {
+          const pnext = 100 * ( yi * 12 + xi + 1 ) / (12 * 12);
+          if ((100 - pnext) <= this.percent) {
+            ctx.fillStyle = 'green';
+            const pdiff = this.percent - (100 - pnext);
+            const fillFrac = pdiff / blockPercent;
+            const fillHeight = fillFrac * 32;
+            ctx.drawImage(this.UI.sprites, SPRITES.wall[0] * 32, SPRITES.wall[1] * 32, 32, 32, xi * 32, (yi + 1) * 32 - fillHeight, 32, 32);
+          }
+        }
+      }
+    }
   }
 
   initGame(gameContainer) {
@@ -334,6 +362,20 @@ class CellObjectEnemyWall extends CellObjectEnemy {
     this.createElement('span', 'timeRem', gameContainer, '', '');
     this.createElement('span', '', gameContainer, '', ' more seconds');
     this.createElement('div', 'neighborCount', gameContainer);
+
+    const canvas = this.createElement('canvas', 'canvas', gameContainer, 'wallCanvas');
+    canvas.width = '384';
+    canvas.height = '384';
+    this.ctx = canvas.getContext('2d');
+    canvas.onclick = () => this.canvasClick();
+
+    this.UI.sprites = document.getElementById('sprites');
+  }
+
+  canvasClick() {
+    if (this.dPower > 0) {
+      this.state.clicks++;
+    }
   }
 
 }
@@ -1626,7 +1668,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
 
     const state = this.state;
 
-    this.powerMax = 100 + state.batteryCount * 10;
+    //this.powerMax = 100 + state.batteryCount * 10;
+    this.powerMax = state.batteryCount * 10 + 100 * Math.pow(1.02, state.batteryCount);
 
     if (this.tPower !== this.lasttPower && state.metalStart < Infinity) {
       state.previousMetalProgress += (curTime - state.metalStart) * this.lasttPower * metalRate;
@@ -1649,7 +1692,7 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     let compLeak;
     if (this.state.compTarget === 3) {
       if (this.state.compPower > 0) {
-        compLeak = ((Math.pow(10, this.state.compPower) / this.state.compPower)) * (this.state.compPower * deltaTime);
+        compLeak = ((Math.pow(1, this.state.compPower) )) * ( deltaTime);
       } else {
         compLeak = 0;
       }
@@ -1663,7 +1706,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.crankAngle += this.crankVelocity;
     const origPowerLevel = this.state.powerLevel;
     if (this.state.compTarget === 3) {
-      this.state.powerLevel = Math.max(0, Math.min(Infinity, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
+      //this.state.powerLevel = Math.max(0, Math.min(Infinity, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
+      this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
     } else {
       this.state.powerLevel = Math.max(0, Math.min(this.powerMax, this.state.powerLevel + (this.tPower * this.crankVelocity * crankPower / 0.1) - powerLeak));
     }
