@@ -1178,7 +1178,7 @@ class CellObjectInfo extends CellObject {
     <li>Return to this text any time by selecting <span class="infoIcon"></span></li>
     <li>Move <span class="spotIcon"></span> <span class="bossIcon"></span> via 
         drag and drop or by selecting one and then clicking a destination
-        to direct your <b>T</b>ick or <b>D</b>ismantle power to the adjacent 8 squares
+        to direct your <b>T</b>ick or <b>D</b>isassembly power to the adjacent 8 squares
         and control your attack power against enemies.
         Multiple units can supply power against the same enemy.</li>
     <li>Enemies that are farther (Manhattan distance) from <span class='infoIcon'></span> have more immunity from
