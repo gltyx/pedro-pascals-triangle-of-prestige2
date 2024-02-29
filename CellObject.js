@@ -3240,7 +3240,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       this.partialCompleteTime += (cell.baseDuration - remaining);
     });
 
-
     this.clickableCount = this.activated - (this.completeCount + this.state.activeCells.length);
 
     if (this.state.winClosed !== undefined) {
@@ -3289,7 +3288,6 @@ class CellObjectEnemySnail extends CellObjectEnemy {
     this.state.reverseActiveCells.forEach( cell => {
       minRemaining = Math.min(minRemaining, this.displayCellInProgress(cell, true));
     });
-
 
     this.state.activeCells = this.state.activeCells.filter( cell => cell.complete !== true );
     this.state.reverseActiveCells = this.state.reverseActiveCells.filter( cell => cell.reverseComplete !== true );
@@ -3516,7 +3514,10 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       cell.classList.add('snailCellClickable');
       this.activated--;
     }
-    this.UI[`cellButton${row}_${col}`].style.backgroundColor = '';
+
+    if (this.UI[`cellButton${row}_${col}`]) {
+      this.UI[`cellButton${row}_${col}`].style.backgroundColor = '';
+    }
     //this.timeElements[`${row},${col}`].innerText = this.remainingToStr(this.getCellVal(row, col) * 1000);
 
     if (this.completeCount <= 0 && this.state.endTime === undefined) {
