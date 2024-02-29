@@ -510,10 +510,28 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       this.levelPercent[level] = '0%';
       this.timeRemaining[level] = '';
     });
+
+    this.clickStart = undefined;
+    this.buyStart = undefined;
+    this.clickHoldDuration = 0.5;
+  }
+
+  closeGame() {
+    super.closeGame();
+    this.clickStart = undefined;
+    this.buyStart = undefined;
   }
 
   update(curTime, neighbors) {
     super.update(curTime, neighbors);
+
+    if (this.clickStart !== undefined) {
+      this.startLevel(this.clickStart);
+    }
+
+    if (this.buyStart !== undefined && (curTime >= this.buyStartTime + this.clickHoldDuration)) {
+      this.buy(this.buyStart);
+    }
 
     CellObjectEnemyBusiness.levelOrder.forEach( level => {
       const state = this.state.level[level];
@@ -563,7 +581,6 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
 
     this.UI.cash.innerText = `${this.formatCurrency(cash, 'floor')} / ${this.formatCurrency(this.baseStrength)}` ;
 
-    //TODO: set buy count properly
     const buyCount = 1;
     CellObjectEnemyBusiness.levelOrder.forEach( level => {
       const state = this.state.level[level];
@@ -591,7 +608,6 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     wrapper.style.display = 'grid';
     wrapper.style.gridTemplateColumns = '1fr';
     wrapper.style.gridRowGap = '0.5em';
-    //TODO: allow buying multiples
 
     const buyCount = 1;
     CellObjectEnemyBusiness.levelOrder.forEach( level => {
@@ -611,7 +627,9 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       leftSide.style.gridTemplateColumns = '1fr';
       leftSide.style.justifyItems = 'center';
       leftSide.style.background = 'white';
-      leftSide.onclick = () => this.startLevel(level);
+      this.clickStart = undefined;
+      leftSide.onmousedown = () => {this.clickStart = level;};
+      leftSide.onmouseup = () => {this.clickStart = undefined;};
       leftSide.classList.add('divButton');
 
       const rightSide = this.createElement('div', '', levelRow);
@@ -648,7 +666,14 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       buyContainer.style.gridTemplateColumns = '3em 1fr';
       buyContainer.style.backgroundColor = 'orange';
       buyContainer.style.alignItems = 'center';
-      buyContainer.onclick = () => this.buy(level);
+      this.buyStart = undefined;
+      buyContainer.onmousedown = () => {this.buyStart = level; this.buyStartTime = this.curTime;};
+      buyContainer.onmouseup = () => {
+        if (this.curTime < this.buyStartTime + this.clickHoldDuration) {
+          this.buy(this.buyStart);
+        }
+        this.buyStart = undefined;
+      };
       buyContainer.classList.add('divButton');
       this.createElement('span', '', buyContainer, '', 'Buy');
       const cost = this.createElement('span', `levelCost${level}`, buyContainer, '', this.formatCurrency(this.getPrice(level, buyCount)));
