@@ -1843,7 +1843,9 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       this.state.powerLevel -= this.metalCost;
       state.metalStart = (new Date()).getTime() / 1000;
       state.metalQueue -= 1;
-      this.UI.metalQueueSlider.value = state.metalQueue;
+      if (this.UI.metalQueueSlider && !this.mqsMoving) {
+        this.UI.metalQueueSlider.value = state.metalQueue;
+      }
     }
 
     if (state.batteryStart === Infinity && this.state.powerLevel >= this.batteryPowerCost && state.metalCount >= this.batteryMetalCost && state.batteryQueue > 0) {
@@ -1851,7 +1853,9 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
       state.metalCount -= this.batteryMetalCost;
       state.batteryStart = (new Date()).getTime() / 1000;
       state.batteryQueue -= 1;
-      this.UI.batteryQueueSlider.value = state.batteryQueue;
+      if (this.UI.batteryQueueSlider && !this.bqsMoving) {
+        this.UI.batteryQueueSlider.value = state.batteryQueue;
+      }
     }
 
     this.percent = 100 * (1 - this.state.totalPower / this.baseStrength);
@@ -1942,6 +1946,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     metalQueueSlider.max = this.state.metalQueueMax;
     metalQueueSlider.value = this.state.metalQueue;
     metalQueueSlider.onchange = () => this.state.metalQueue = parseInt(metalQueueSlider.value);
+    metalQueueSlider.onmousedown = () => this.mqsMoving = true;
+    metalQueueSlider.onmouseup = () => this.mqsMoving = false;
 
     //[battery button] [battery progress]
     //Battery: [battery count]
@@ -1967,6 +1973,8 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     batteryQueueSlider.max = this.state.batteryQueueMax;
     batteryQueueSlider.value = this.state.batteryQueue;
     batteryQueueSlider.onchange = () => this.state.batteryQueue = parseInt(batteryQueueSlider.value);
+    batteryQueueSlider.onmousedown = () => this.bqsMoving = true;
+    batteryQueueSlider.onmouseup = () => this.bqsMoving = false;
 
     //[comp upgrade button] [comp target selection]
     const compTargetSection = this.createElement('div', 'compTargetSection', gameContainer, 'crankColumns');
@@ -2001,12 +2009,14 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     compTargetRadioBattery.checked = this.state.compTarget === 2;
     compTargetRadioBattery.onchange = () => this.radioChange(2);
     this.createElement('label', '', compTargetRadioContainer, '', 'Battery');
+    /*
     const compTargetRadioHeat = this.createElement('input', 'radioHeat', compTargetRadioContainer, '');
     compTargetRadioHeat.type = 'radio';
     compTargetRadioHeat.name = 'target';
     compTargetRadioHeat.checked = this.state.compTarget === 3;
     compTargetRadioHeat.onchange = () => this.radioChange(3);
     this.createElement('label', '', compTargetRadioContainer, '', 'Heat');
+    */
 
     //[comp power #] [comp power slider]
     const compPowerSection = this.createElement('div', 'compPowerSection', gameContainer, 'crankColumns');
