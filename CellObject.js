@@ -1173,13 +1173,14 @@ class CellObjectInfo extends CellObject {
   In this game, you observe the story of 3 strangers in Belize while controlling
     two entities to help them make progress. You can read parts of the story as
     they unlock in the Lore tab above. The first of which is already unlocked.
-  <h2>Tutorial</h2>
+  <h2>How To Play</h2>
   <ul>
     <li>Return to this text any time by selecting <span class="infoIcon"></span></li>
     <li>Move <span class="spotIcon"></span> <span class="bossIcon"></span> via 
         drag and drop or by selecting one and then clicking a destination
-        to direct your power to the adjacent 8 squares and control your rate of progress
-        in a game. Multiple units can supply power to the same enemy.</li>
+        to direct your <b>T</b>ick or <b>D</b>ismantle power to the adjacent 8 squares
+        and control your attack power against enemies.
+        Multiple units can supply power against the same enemy.</li>
     <li>Enemies that are farther (Manhattan distance) from <span class='infoIcon'></span> have more immunity from
         <span class="spotIcon"></span> <span class="bossIcon"></span>. The immunity factor is ${powerDistFactor.toFixed(2)}^(dist-4).</li>
     <li>Defeating an enemy with <span class='spotIcon'></span> gives you points you can use at <span class='buildIcon'></span> 
@@ -1271,14 +1272,14 @@ class CellObjectInfo extends CellObject {
     <div>
       Inspirations/references:
       <ul>
+        <li><a href='https://play.google.com/store/apps/details?id=com.redcell.goldandgoblins'>Gold & Goblins: Idle Merger</a></li>
+        <li><a href='https://asteriskman7.github.io/PedroPascalsTriangleOfPrestige/'>Pedro Pascal's Triangle of Prestige</a></li>
         <li><a href='https://makiki99.github.io/prestige/'>Prestige</a></li>
         <li><a href='https://unihedro.github.io/cheese-game/'>Cheese Game</a></li>
         <li><a href='https://www.firefliesalco.com/lawnmower-game/'>Lawnmower Game</a></li>
         <li><a href='https://faedine.com/games/crank/'>Crank</a></li>
         <li><a href='https://ivark.github.io/'>Antimater Dimensions</a></li>
         <li><a href='https://hyperhippo.com/games/adventure-capitalist/'>Adventure Capitalist</a></li>
-        <li><a href='https://play.google.com/store/apps/details?id=com.redcell.goldandgoblins'>Gold & Goblins: Idle Merger</a></li>
-        <li><a href='https://asteriskman7.github.io/PedroPascalsTriangleOfPrestige/'>Pedro Pascal's Triangle of Prestige</a></li>
         <li><a href='https://asteriskman7.github.io/SnailGame/'>Snail Game</a></li>
         <li><a href='https://asteriskman7.github.io/spot-and-boss/'>S.P.O.T. & B.O.S.S.</a></li>
       </ul>
