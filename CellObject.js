@@ -1643,6 +1643,18 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     this.compProgress = 0;
     this.powerMax = 100;
     this.lastCompPower = this.state.compPower;
+
+    this.metalPress = false;
+    this.batteryPress = false;
+    this.cpuPress = false;
+    this.clickHoldDuration = 0.5;
+  }
+
+  closeGame() {
+    super.closeGame();
+    this.metalPress = false;
+    this.batteryPress = false;
+    this.cpuPress = false;
   }
 
   /*
@@ -1693,6 +1705,18 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
 
     const state = this.state;
 
+    if (this.metalPress && (curTime >= this.metalPressStartTime + this.clickHoldDuration)) {
+      this.metalClick();
+    }
+
+    if (this.batteryPress && (curTime >= this.batteryPressStartTime + this.clickHoldDuration)) {
+      this.batteryClick();
+    }
+
+    if (this.cpuPress && (curTime >= this.cpuPressStartTime + this.clickHoldDuration)) {
+      this.compUpgradeClick();
+    }
+    
     //this.powerMax = 100 + state.batteryCount * 10;
     this.powerMax = state.batteryCount * 10 + 100 * Math.pow(1.02, state.batteryCount);
 
@@ -1901,7 +1925,13 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const metalProgressContainer = this.createElement('div', '', metalMainSection, 'crankProgressContainer');
     const metalProgress = this.createElement('div', 'metalProgress', metalProgressContainer, 'crankProgress');
     const metalProgressValue = this.createElement('div', 'metalProgressValue', metalMainSection);
-    metalButton.onclick = () => this.metalClick();
+    metalButton.onmousedown = () => {this.metalPress = true; this.metalPressStartTime = this.curTime;};
+    metalButton.onmouseup = () => {
+      if (this.curTime < this.metalPressStartTime + this.clickHoldDuration) {
+        this.metalClick();
+      }
+      this.metalPress = false;
+    };
 
     //[metal queue #] [metal queue slider]
     const metalQueueSection = this.createElement('div', 'metalQueueSection', gameContainer, 'crankColumns');
@@ -1920,7 +1950,13 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     const batteryProgressContainer = this.createElement('div', '', batteryMainSection, 'crankProgressContainer');
     const batteryProgress = this.createElement('div', 'batteryProgress', batteryProgressContainer, 'crankProgress');
     const batteryProgressValue = this.createElement('div', 'batteryProgressValue', batteryMainSection);
-    batteryButton.onclick = () => this.batteryClick();
+    batteryButton.onmousedown = () => {this.batteryPress = true; this.batteryPressStartTime = this.curTime;};
+    batteryButton.onmouseup = () => {
+      if (this.curTime < this.batteryPressStartTime + this.clickHoldDuration) {
+        this.batteryClick();
+      }
+      this.batteryPress = false;
+    };
 
     //[battery queue #] [battery queue slider]
     const batteryQueueSection = this.createElement('div', 'batteryQueueSection', gameContainer, 'crankColumns');
@@ -1935,7 +1971,14 @@ class CellObjectEnemyCrank extends CellObjectEnemy {
     //[comp upgrade button] [comp target selection]
     const compTargetSection = this.createElement('div', 'compTargetSection', gameContainer, 'crankColumns');
     const compUpgradeButton = this.createElement('div', 'compButton', compTargetSection, 'crankButton', `CPU (${15 + 5 * this.state.compPowerMax})`);
-    compUpgradeButton.onclick = () => this.compUpgradeClick();
+    compUpgradeButton.onmousedown = () => {this.cpuPress = true; this.cpuPressStartTime = this.curTime;};
+    compUpgradeButton.onmouseup = () => {
+      if (this.curTime < this.cpuPressStartTime + this.clickHoldDuration) {
+        this.compUpgradeClick();
+      }
+      this.cpuPress = false;
+    };
+
     const compProgressContainer = this.createElement('div', '', compTargetSection, 'crankProgressContainer');
     const compProgress = this.createElement('div', 'compProgress', compProgressContainer, 'crankProgress');
     const compTargetLabel = this.createElement('div', '', compTargetSection, '', 'CPU Target');
