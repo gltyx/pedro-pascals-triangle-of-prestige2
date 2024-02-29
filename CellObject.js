@@ -1269,7 +1269,7 @@ class CellObjectInfo extends CellObject {
     extraText.innerHTML = `
     <a href='./attributions.html'>Attributions</a> 
     <div>
-      Inspirations:
+      Inspirations/references:
       <ul>
         <li><a href='https://makiki99.github.io/prestige/'>Prestige</a></li>
         <li><a href='https://unihedro.github.io/cheese-game/'>Cheese Game</a></li>
@@ -1278,6 +1278,9 @@ class CellObjectInfo extends CellObject {
         <li><a href='https://ivark.github.io/'>Antimater Dimensions</a></li>
         <li><a href='https://hyperhippo.com/games/adventure-capitalist/'>Adventure Capitalist</a></li>
         <li><a href='https://play.google.com/store/apps/details?id=com.redcell.goldandgoblins'>Gold & Goblins: Idle Merger</a></li>
+        <li><a href='https://asteriskman7.github.io/PedroPascalsTriangleOfPrestige/'>Pedro Pascal's Triangle of Prestige</a></li>
+        <li><a href='https://asteriskman7.github.io/SnailGame/'>Snail Game</a></li>
+        <li><a href='https://asteriskman7.github.io/spot-and-boss/'>S.P.O.T. & B.O.S.S.</a></li>
       </ul>
     </div>
     `;
