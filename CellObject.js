@@ -119,8 +119,17 @@ class CellObject {
   }
 
   roundToVal(value, roundType, roundVal) {
-    if (roundType === undefined) {roundType = 'round';}
+    //if (roundType === undefined) {roundType = 'round';}
     return Math[roundType](value / roundVal) * roundVal;
+  }
+
+  roundExp(val, roundType) {
+    if (Math.abs(val) === Infinity) {return val.toString();}
+    const e = Math.floor(Math.log10(val));
+    const m = val / Math.pow(10.0, e);
+    const roundm = this.roundToVal(m, roundType, 0.001);
+    const result = `${roundm.toFixed(3)}e+${e}`;
+    return result;
   }
 
   formatCurrency(value, roundType) {
@@ -131,7 +140,8 @@ class CellObject {
     if (value < 1000) {
       return `${prefix}${this.roundToVal(value, roundType, 0.01).toFixed(2)}${suffix}`;
     } else {
-      return `${prefix}${value.toExponential(3)}${suffix}`;
+      //return `${prefix}${value.toExponential(3)}${suffix}`;
+      return `${prefix}${this.roundExp(value, roundType)}${suffix}`;
     }
   }
 }
