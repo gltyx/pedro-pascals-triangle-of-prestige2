@@ -2651,7 +2651,11 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
     super(cell, dist, 'anti');
     this.state.type = 'enemyAnti';
     //furthest strength is 2.4e11
-    this.baseStrength = activeFactor * 100 * Math.pow(strengthDistFactor, dist);
+    //nearest strength is 379.69
+    //this.baseStrength = activeFactor * 100 * Math.pow(strengthDistFactor, dist);
+    //strength @ 5 = 400
+    //strength @ 61 = 4e300
+    this.baseStrength = activeFactor * (400 / 0.5) * Math.pow(strengthDistFactor * 210000 / 1.5, (dist - 5));
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
     this.state.maxDimUnlocked = 3;
@@ -2677,7 +2681,6 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   /*
   TODO: 
-    scale goal more agressively so that most of the game isn't worthless
   */
 
   update(curTime, neighbors) {
@@ -3003,6 +3006,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   buyMaxTickspeed() {
     //TODO: this may be very slow if buying a lot...
+    if (this.anti === Infinity) {return;}
     while (true) {
       if (!this.buyTickspeed()) {
         break;
@@ -3013,6 +3017,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   buyMaxDimension(i) {
     //TODO: this may be very slow if buying a lot ...
     //this is called with buySize always = 10
+    if (this.anti === Infinity) {return;}
     while (true) {
       if (!this.buyDimension(i, true)) {
         break;
