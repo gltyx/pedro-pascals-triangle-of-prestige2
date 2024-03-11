@@ -132,7 +132,7 @@ class CellObject {
     return result;
   }
 
-  formatCurrency(value, roundType) {
+  formatCurrency(value, roundType = 'round') {
     return this.formatValue(value, roundType, '$');
   }
 
@@ -589,7 +589,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     super.displayCellInfo(container);
     const cash = this.state.cash;
 
-    this.UI.cash.innerText = `${this.formatCurrency(cash, 'floor')} / ${this.formatCurrency(this.baseStrength)}` ;
+    this.UI.cash.innerText = `${this.formatCurrency(cash, 'floor')} / ${this.formatCurrency(this.baseStrength, 'ceil')}` ;
 
     const buyCount = 1;
     CellObjectEnemyBusiness.levelOrder.forEach( level => {
@@ -663,7 +663,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       progress.style.backgroundColor = 'green';
       progress.style.width = '50%';
       progress.style.transition = 'width 0.1s';
-      const revenue = this.createElement('div', `levelRevenue${level}`, progressContainer, '', `${this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count)}`);
+      const revenue = this.createElement('div', `levelRevenue${level}`, progressContainer, '', `${this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count, 'floor')}`);
       revenue.style.position = 'absolute';
       revenue.style.top = '0px';
       revenue.style.textAlign = 'center';
@@ -686,7 +686,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       };
       buyContainer.classList.add('divButton');
       this.createElement('span', '', buyContainer, '', 'Buy');
-      const cost = this.createElement('span', `levelCost${level}`, buyContainer, '', this.formatCurrency(this.getPrice(level, buyCount)));
+      const cost = this.createElement('span', `levelCost${level}`, buyContainer, '', this.formatCurrency(this.getPrice(level, buyCount), 'ceil'));
       cost.style.textAlign = 'right';
       const progressTimer = this.createElement('div', `levelTimer${level}`, rightBottom, '', '00:00:00');
       progressTimer.style.textAlign = 'center';
@@ -761,8 +761,8 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
     if (this.state.cash >= cost) {
       this.state.cash -= cost;
       this.state.level[level].count += buyCount;
-      this.UI[`levelCost${level}`].innerText = this.formatCurrency(this.getPrice(level, buyCount));
-      this.UI[`levelRevenue${level}`].innerText = this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count);
+      this.UI[`levelCost${level}`].innerText = this.formatCurrency(this.getPrice(level, buyCount), 'ceil');
+      this.UI[`levelRevenue${level}`].innerText = this.formatCurrency(CellObjectEnemyBusiness.levelInfo[level].revenue * this.state.level[level].count, 'floor');
     }
   }
 }
@@ -2650,6 +2650,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
   constructor(cell, dist) {
     super(cell, dist, 'anti');
     this.state.type = 'enemyAnti';
+    //furthest strength is 2.4e11
     this.baseStrength = activeFactor * 100 * Math.pow(strengthDistFactor, dist);
     this.state.start = Infinity;
     this.state.strength = this.baseStrength;
