@@ -190,7 +190,7 @@ class CellObjectEnemy extends CellObject {
   }
 
   displayCellInfo(container) {
-    container.innerText = `Enemy Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(this.percent, 'ceil')}`;
+    container.innerText = `Enemy Details - Dist: ${this.dist} T: ${this.formatValue(this.tPower, 'floor')} D: ${this.formatValue(this.dPower, 'floor')} E: ${this.ePower} Rem: ${this.formatValue(Math.max(0, this.percent), 'ceil')}`;
   }
 
   isDropable(srcObject) {
@@ -2676,8 +2676,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   /*
   TODO: 
-    figure out of the game might accidentally result in Infinity antimatter and deal
-    requirement for buying dimension boost after D8 is unlocked is not right
+    scale goal more agressively so that most of the game isn't worthless
   */
 
   update(curTime, neighbors) {
@@ -2867,9 +2866,19 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
 
   }
 
+  getBasePer10(n) {
+    const maxn = this.basePer10.length - 1;
+    if (n <= maxn) {
+      return this.basePer10[n];
+    } else {
+      return this.basePer10[maxn] * Math.pow(1e3, n - maxn);
+    }
+  }
+
   getDimCost(index) {
     const dimBought = this.state.boughtDims[index];
-    return this.dimBasePrice[index] * this.basePer10[Math.floor(dimBought / 10)];
+    //return this.dimBasePrice[index] * this.basePer10[Math.floor(dimBought / 10)];
+    return this.dimBasePrice[index] * this.getBasePer10(Math.floor(dimBought / 10));
   }
 
   getDimUntil10Size(index) {
@@ -3037,7 +3046,7 @@ class CellObjectEnemyAnti extends CellObjectEnemy {
       return {count: 20, type: this.state.boosts + 3};
     } else {
       const count = -40 + 15 * this.state.boosts;
-      return {count, type: 8};
+      return {count, type: 7};
     }
   }
 
