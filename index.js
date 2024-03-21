@@ -347,7 +347,7 @@ class App {
     if (!this.cells[cellIndex].content.isDragable()) {
       evt.preventDefault(); //call this if drag is not ok
     }
-    if (evt.ctrlKey) {
+    if (evt.ctrlKey || evt.metaKey) {
       //don't drag if trying to pan
       evt.preventDefault();
     }
@@ -368,7 +368,7 @@ class App {
     this.drawCell(this.cells[srcIndex]);
     this.drawCell(this.cells[dstIndex]);
     if (srcIndex === this.selectedCellIndex && noClick !== true) {
-      this.clickCell({ctrlKey: false}, dstIndex);
+      this.clickCell({ctrlKey: false, metaKey: false}, dstIndex);
     }
   }
 
@@ -524,7 +524,7 @@ class App {
   }
 
   clickCell(evt, cellIndex) {
-    const notCtrl = evt === undefined || !evt.ctrlKey;
+    const notCtrl = evt === undefined || (!evt.ctrlKey && !evt.metaKey);
     if (this.selectedCellIndex !== undefined) {
       const prevCanMove = this.cells[this.selectedCellIndex].content.isDragable();
       const canMoveHere = this.cells[cellIndex].reachable && this.cells[cellIndex].content.isDropable();
@@ -550,8 +550,8 @@ class App {
   }
 
   onmousemove(evt) {
-    document.body.style.cursor = evt.ctrlKey ? 'move' : '';
-    if (evt.buttons === 1 && evt.ctrlKey) {
+    document.body.style.cursor = (evt.ctrlKey || evt.metaKey) ? 'move' : '';
+    if (evt.buttons === 1 && (evt.ctrlKey || evt.metaKey)) {
       const zoom = window.outerWidth / window.innerWidth;
       this.bgPosition.x += evt.movementX / zoom;
       this.bgPosition.y += evt.movementY / zoom;
@@ -568,7 +568,7 @@ class App {
   }
 
   onkeydown(evt) {
-    if (evt.ctrlKey) {
+    if (evt.ctrlKey || evt.metaKey) {
       this.UI.gameGrid.classList.add('gameGridMovable');
     } else {
       this.UI.gameGrid.classList.remove('gameGridMovable');
@@ -576,7 +576,7 @@ class App {
   }
 
   onkeyup(evt) {
-    if (evt.ctrlKey) {
+    if (evt.ctrlKey || evt.metaKey) {
       this.UI.gameGrid.classList.add('gameGridMovable');
     } else {
       this.UI.gameGrid.classList.remove('gameGridMovable');

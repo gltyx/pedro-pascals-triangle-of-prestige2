@@ -1196,7 +1196,7 @@ class CellObjectInfo extends CellObject {
     <li>Defeating an enemy with <span class='spotIcon'></span> gives you points you can use at <span class='buildIcon'></span> 
         to build <span class='spotIcon'></span><span class='bossIcon'></span>. However, you also need points that can be collected by destroying 
         <span class='wallIcon'></span> with <span class='bossIcon'></span>. </li>
-    <li>You can pan the grid by holding ctrl while dragging.</li>
+    <li>You can pan the grid by holding ctrl/cmd while dragging.</li>
     <li>Merge multiple units of the same type with <span class='mergeIcon'></span>.
         Units to merge must be in the 8 surrounding squares. The strength of the resulting 
         unit will be the sum of all the inputs plus 40% of the weakest one.</li>
