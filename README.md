@@ -1,6 +1,6 @@
 # PPToP2
 
-<img src="favicon.png?raw=true" width="64">
+<img src="favicon2.png?raw=true" width="64">
 
 Incremental game.
 
