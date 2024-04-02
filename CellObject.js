@@ -1243,6 +1243,13 @@ class CellObjectInfo extends CellObject {
     this.UI.importBtnClose.onclick = () => this.importClose();
     this.UI.importBtnImport.onclick = () => this.doImport();
 
+    this.UI.importContainer.onclose = () => {
+      document.querySelector('body').classList.remove('blur2px');
+    }
+    this.UI.exportContainer.onclose = () => {
+      document.querySelector('body').classList.remove('blur2px');
+    }
+
     const tabContainer = this.createElement('div', 'tabContainer', gameContainer);
     const tabTutorial = this.createElement('div', 'tabTutorial', tabContainer, 'infoTab', 'Tutorial');
     const tabLog = this.createElement('div', 'tabLog', tabContainer, 'infoTab' ,'Log');
@@ -1302,6 +1309,9 @@ class CellObjectInfo extends CellObject {
     const resetNo = this.createElement('button', '', resetBtnContainer, '', 'No');
     resetYes.onclick = () => this.resetYes();
     resetNo.onclick = () =>  this.resetNo();
+    resetDlg.onclose = () => {
+      document.querySelector('body').classList.remove('blur2px');
+    };
 
 
     this.updateHistory(true);
@@ -3512,6 +3522,12 @@ class CellObjectEnemySnail extends CellObjectEnemy {
       document.querySelector('body').classList.remove('blur2px');
       this.state.winClosed = true;
     };
+
+    document.querySelector('#winContainer').onclose = () => {
+      document.querySelector('#winContainer').close();
+      document.querySelector('body').classList.remove('blur2px');
+      this.state.winClosed = true;
+    }
   }
 
   progressReverseComplete(row, col) {
