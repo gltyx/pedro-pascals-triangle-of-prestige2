@@ -679,7 +679,7 @@ class CellObjectEnemyBusiness extends CellObjectEnemy {
       this.buyStart = undefined;
       buyContainer.onpointerdown = () => {this.buyStart = level; this.buyStartTime = this.curTime;};
       buyContainer.onpointerup = () => {
-        if (this.curTime < this.buyStartTime + this.clickHoldDuration) {
+        if ((this.buyStart in this.state.level) && (this.curTime < (this.buyStartTime + this.clickHoldDuration))) {
           this.buy(this.buyStart);
         }
         this.buyStart = undefined;
