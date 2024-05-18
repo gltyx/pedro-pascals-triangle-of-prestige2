@@ -1295,7 +1295,7 @@ class CellObjectInfo extends CellObject {
         <li><a href='https://unihedro.github.io/cheese-game/'>Cheese Game</a></li>
         <li><a href='https://www.firefliesalco.com/lawnmower-game/'>Lawnmower Game</a></li>
         <li><a href='https://faedine.com/games/crank/'>Crank</a></li>
-        <li><a href='https://ivark.github.io/'>Antimater Dimensions</a></li>
+        <li><a href='https://ivark.github.io/'>Antimatter Dimensions</a></li>
         <li><a href='https://hyperhippo.com/games/adventure-capitalist/'>Adventure Capitalist</a></li>
         <li><a href='https://asteriskman7.github.io/SnailGame/'>Snail Game</a></li>
         <li><a href='https://asteriskman7.github.io/spot-and-boss/'>S.P.O.T. & B.O.S.S.</a></li>
