@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>PPToP 2</title>
+    <link rel="icon" href="favicon2.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+    <div id='mainUI'>
+      <div id='gameInfoContainer'>
+        <div>
+          <span class='bold'>Progress:</span> <span id='gameInfoCompletionEnemies'>?</span>/<span id='gameInfoTotalEnemies'>?</span> Enemies,
+                      <span id='gameInfoCompletionWalls'>?</span>/<span id='gameInfoTotalWalls'>?</span> Walls
+                      <span class='bold'>Play time:</span> <span id='gameInfoPlayTime'></span>
+          <span class='bold'>Points:</span> T: <span id='gameInfoTPoints'>?</span> D: <span id='gameInfoDPoints'>?</span>
+        </div>
+        <div>
+        </div>
+      </div>
+      <div id='cellInfoContainer'>
+        <div id='cellInfoInfo'>
+          <div id='cellInfoTitle'></div>
+          <div id='cellInfoDetails'></div>
+        </div>
+        <div id='cellInfoGameContainer'></div>
+      </div>
+    </div>
+    <div id='gameContainer'>
+      <div id='gameGrid'>
+      </div>
+    </div>
+    <div id='toastContainer'>
+      <div id='toastLeft'></div>
+      <div id='toastRight'>
+      </div>
+    </div>
+    <dialog id='winContainer'>
+      <div id='winImg'></div>
+      <div id='winLore'></div>
+      <div id='winBCont'>
+        <button id='winBtn'>Close</button>
+      </div>
+    </dialog>
+    <dialog id='importContainer'>
+      <div>
+        <textarea id='importText' rows='8' cols='60'></textarea>
+      </div>
+      <div>
+        <button id='importBtnImport'>Import</button><button id='importBtnClose'>Close</button>
+      </div>
+    </dialog>
+    <dialog id='exportContainer'>
+      <div>
+        <textarea id='exportText' rows='8' cols='60'></textarea>
+      </div>
+      <div>
+        <button id='exportBtnClose'>Close</button>
+      </div>
+    </dialog>
+    <img class='hidden' id='sprites' src='./sprites.png'>
+    <img class='hidden' id='calendar_months' src='./calendar_months.png'>
+    <img class='hidden' id='calendar_numerals' src='./calendar_numerals.png'>
+    <img class='hidden' id='calendar_window' src='./calendar_window.png'>
+    <script src='sprites.js'></script>
+    <script src='lawnRates.js'></script>
+    <script src='CellObject.js'></script>
+    <script src='world.js'></script>
+    <script src="index.js"></script>
+  </body>
+</html>

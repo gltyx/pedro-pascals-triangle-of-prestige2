@@ -1,0 +1,658 @@
+/*
+  .class
+  #id
+*/
+
+:root {
+  --loreAssBg: hsl(208, 100%, 70%);
+  --loreCulBg: hsl(268, 100%, 70%);
+  --loreAdvBg: hsl(148, 100%, 70%);
+  --loreUnkBg: hsl(0, 0%, 70%);
+  --bg: hsl(60, 48%, 76%);
+  --uiBg: hsl(176, 48%, 54%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100vw;
+  height: 100vh;
+}
+
+body {
+  display: grid;
+  grid-template-columns: 512px 1fr;
+  width: 100vw;
+  height: 100vh;
+  margin: 0px;
+  user-select: none;
+  overflow: hidden;
+  transition: 1s grid-template-columns;
+}
+
+.bodyGameWide {
+  grid-template-columns: 800px 1fr;
+}
+
+
+.hidden {
+  display: none;
+}
+
+.blur2px {
+  filter: blur(2px);
+}
+
+dialog {
+  background: yellow;
+  box-shadow: 6px 6px 5px black;
+  border-radius: 6px
+}
+
+#gameInfoContainer {
+  background: var(--bg);
+  box-shadow: inset 1px 1px 3px black;
+  padding: 0.5em;
+}
+
+.bold {
+  font-weight: 600;
+}
+
+#gameContainer {
+  background: tan;
+}
+
+#gameGrid {
+  position: absolute;
+  transform: translate(0px, 0px);
+  display: grid;
+  grid-template-columns: repeat(32, 1fr);
+  background: white;
+}
+
+.gameGridMovable {
+  cursor: move;
+}
+
+#mainUI {
+  background: cyan;
+  background: var(--uiBg);
+  z-index: 100;
+  padding: 0.5em;
+  box-shadow: inset -2px -2px 3px black;
+  display: grid;
+  grid-template-rows: 50px 1fr;
+  height: 100vh;  
+}
+
+.cell {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  box-shadow: -1px -1px 3px black;
+}
+
+.cellUnreachable {
+  filter: brightness(0.3);
+}
+
+.cellSelected {
+  transform: translate(-1px, -1px);
+  box-shadow: inset -1px -1px 3px black;
+  background-color: yellow !important;
+}
+
+.progressContainer {
+  width: 100%;
+}
+
+.progress {
+  background: green;
+  height: 4px;
+}
+
+.loreMark {
+  width: 32px;
+  height: 32px;
+  position: absolute;
+}
+
+#cellInfoContainer {
+  display: grid;
+  grid-template-rows: 50px 1fr;
+  grid-row-gap: 5px;
+  overflow-y: hidden;
+}
+
+#cellInfoInfo {
+  background: var(--bg);
+  padding: 0.5em;
+  box-shadow: inset 1px 1px 3px black;
+}
+
+#cellInfoGameContainer {
+  background: var(--bg);
+  padding: 0.5em;
+  box-shadow: inset 1px 1px 3px black;
+  overflow-y: scroll;
+}
+
+.cellInfoGameContainerSnail {
+  background: hsl(176, 48%, 31%) !important;
+}
+
+.divButton {
+  outline: 1px solid black;
+}
+
+.divButton:hover {
+  filter: brightness(0.9);
+}
+
+.divButton:active {
+  filter: brightness(1.1);
+}
+
+.divButtonDisabled {
+  filter: brightness(0.5) !important;
+}
+
+#toastContainer {
+  position: fixed;
+  z-index: 100;
+  padding: 0.5em;
+  box-sizing: border-box;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  pointer-events: none;
+}
+
+#toastRight {
+  display: grid;
+  grid-row-gap: 0.5em;
+}
+
+.toastMsg {
+  background: yellow;
+  padding: 0.5em;
+  box-shadow: 6px 6px 5px black;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+  transition: filter 1s;
+}
+
+#tutTitle {
+  font-size: 30px;
+}
+
+.prestigeCenter {
+  text-align: center;
+}
+
+.prestigeTable {
+  width: 100%;
+}
+
+#tabContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.infoTab {
+  background-color: #a0a0a0;
+}
+
+.infoTab:hover {
+  background-color: #707070;
+}
+
+.infoTab:active {
+  background-color: #d0d0d0;
+}
+
+.infoTabSelected {
+  background-color: #c0c0c0;
+}
+
+.infoTabBody {
+  display: none;
+}
+
+.infoTabBodySelected {
+  display: block;
+}
+
+.logDate {
+  background-color: lightcyan;
+}
+
+#infoContainerLore {
+  padding-top: 0.5em;
+}
+
+.infoLoreNew {
+  /*
+  font-weight: 800;
+  text-shadow: 1px 1px white;
+  */
+}
+
+.infoLoreMsg {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  grid-template-rows: 18px 1fr;
+  grid-template-areas: "empty name" "icon msg";
+  grid-column-gap: 18px;
+  padding-bottom: 0.5em;
+  align-items: start;
+  position: relative;
+}
+
+.infoLoreIcon {
+  grid-area: icon;
+  width: 32px;
+  height: 32px;
+  border-radius: 32px;
+}
+
+.infoLoreText {
+  grid-area: msg;
+  border-radius: 8px;
+  padding: 0.5em;
+}
+
+.infoLoreName {
+  grid-area: name;
+  font-size: 14px;
+  color: #707070;
+  padding-left: 8px;
+}
+
+.infoLoreLocked {
+  filter: blur(5px);
+}
+
+.infoLoreTextAdv {
+  background-color: var(--loreAdvBg);
+}
+
+.infoLoreTextAdv:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreAdvBg);
+  border-bottom: 10px solid var(--loreAdvBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.infoLoreTextCul {
+  background-color: var(--loreCulBg);
+}
+
+.infoLoreTextCul:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreCulBg);
+  border-bottom: 10px solid var(--loreCulBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.infoLoreTextAss {
+  background-color: var(--loreAssBg);
+}
+
+.infoLoreTextAss:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreAssBg);
+  border-bottom: 10px solid var(--loreAssBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.infoLoreTextUnk {
+  background-color: var(--loreUnkBg);
+}
+
+.infoLoreTextUnk:before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid var(--loreUnkBg);
+  border-bottom: 10px solid var(--loreUnkBg);
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 35px;
+}
+
+.crankColumns {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas: "tl tr" "bl br";
+}
+
+#crankSection {
+}
+
+.crankContainer {
+  position: relative;
+  grid-area: 1 / 1 / 3 / 1;
+}
+
+.crankBase {
+  width: 70px;
+  height: 70px;
+  border-radius: 70px;
+  background-color: gray;
+}
+
+.crankBar {
+  background-color: #b7b7b7;
+  width: 38px;
+  height: 6px;
+  border-radius: 3px;
+  position: absolute;
+  top: 32px;
+  transform-origin: 35px 3px;
+  transform: rotate(3.141rad);
+}
+
+.crankBall {
+  width: 10px;
+  height: 10px;
+  background-color: #e5e5e5;
+  border-radius: 5px;
+  outline: 1px solid gray;
+  position: absolute;
+  top: 30px;
+  left: -5px;
+  transform-origin: 40px 5px;
+  transform: rotate(3.141rad);
+}
+
+.crankProgressContainer {
+  width: 100%;
+  height: 22px;
+  background-color: #565656;
+}
+
+.crankProgress {
+  height: 100%;
+  background-color: gray;
+}
+
+#crankLevelProgress {
+  width: 0%;
+  height: 100%;
+  background-color: yellow;
+}
+
+.crankButton {
+  background-color: gray;
+  border: 1px solid black;
+}
+
+.crankButton:hover {
+  filter: brightness(0.9);
+}
+
+.crankButton:active {
+  filter: brightness(1.1);
+}
+
+#metalMainSection {
+}
+
+/*
+#metalProgress {
+  width: 50%;
+  height: 100%;
+  background-color: gray;
+}
+*/
+
+.crankSlider {
+  appearance: none;
+  height: 22px;
+  width: 100%;
+  background-color: #565656;
+}
+
+.crankSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 30px;
+  height: 22px;
+  background: gray;
+}
+
+.crankSlider::-moz-range-thumb {
+  appearance: none;
+  width: 30px;
+  height: 22px;
+  background: gray;
+  border-radius: 0px;
+  border: none;
+}
+
+.lawnContainer {
+  display: grid;
+  grid-template-columns: 1fr 256px;
+}
+
+#lawnLeft {
+  margin-right: 0.5em;
+}
+
+.lawnCanvas {
+  width: 256px;
+  height: 256px;
+  background: green;
+  outline: 2px solid black;
+}
+
+.lawnUpgradeButton {
+  width: 100%;
+  text-align: left;
+  font-size: 11px;
+}
+
+.antiCenter {
+  text-align: center;
+}
+
+.antiTable {
+  width: 100%;
+}
+
+.antiRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.snailInfoBox {
+  position: fixed;
+  background-color: hsl(60, 48%, 54%);
+  outline: 1px solid black;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+  width: 250px;
+  padding: 3px;
+  position: fixed;
+  z-index: 100;
+}
+
+.snailInfoBoxTitle {
+  font-weight: bold;
+}
+
+.snailInfoBoxProgressContainer {
+  width: 100%;
+  height: 13px;
+  background: white;
+  box-shadow: inset 1px 1px 3px -1px black;
+}
+
+.snailInfoBoxProgress {
+  width: 10%;
+  height: 13px;
+  background: hsl(123, 48%, 54%);
+}
+
+.snailInfoDialogCont {
+  display: grid;
+  grid-template-columns: 80px auto;
+  grid-column-gap: 15px;
+  margin-top: 4px;
+}
+
+.snailInfoDialogImg {
+  font-size: 64px;
+  filter: hue-rotate(45deg);
+}
+
+.snailInfoDialogText {
+  border-radius: 8px;
+  padding: 4px;
+  background-color: grey;
+  text-align: center;
+  font-size: 14px;
+}
+
+.snailInfoDialogText::before {
+  content: "";
+  width: 0px;
+  height: 0px;
+  position: absolute;
+  border-right: 10px solid grey;
+  border-bottom: 10px solid grey;
+  border-top: 10px solid transparent;
+  border-left: 10px solid transparent;
+  left: 81px;
+  top: 50px;
+}
+
+.snailRow {
+  display: flex;
+  justify-content: center;
+  height: 24px;
+}
+
+/*
+86.66:53.33
+*/
+.snailCell {
+  width: 38px;
+  height: 23px;
+  outline: 1px solid black;
+  position: relative;
+  background-color: hsl(151, 0%, 54%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: not-allowed;
+  font-size: 9px;
+}
+
+.snailCellContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 30;
+}
+
+.snailProgress {
+  width: 100%;
+  height: 0%;
+  background-color: limegreen;
+  position: absolute;
+  background: url('./p1.png');
+  background-size: cover;
+  background-position: center;
+  filter: opacity(0.5);
+}
+
+.snailCellTime {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 30;
+  background: hsla(0, 0%, 100%, 0.5);
+}
+
+.snailCellRowEnd {
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+}
+
+.snailCellClickable {
+  background-color: hsl(123, 0%, 74%);
+  cursor: default;
+}
+
+#winContainer {
+  position: fixed;
+  z-index: 300;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+  padding: 0.5em;
+  outline: 1px solid black;
+  background-color: hsl(39, 71%, 67%);
+}
+
+#winLore {
+  width: 512px;
+  background-color: grey;
+  border-radius: 8px;
+  padding: 4px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-style: italic;
+  color: white;
+  text-shadow: 2px 2px 2px black;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+
+}
+
+#winImg {
+  width: 512px;
+  height: 288px;
+  background-image: url('./win.png');
+  background-size: cover;
+  box-shadow: 6px 6px 5px hsla(0, 0%, 0%, 0.5);
+  border-radius: 8px;
+}
+
+.spawnCanvas {
+  width: 460px;
+  height: 460px;
+  background-color: red;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  box-shadow: inset -1px -1px 3px black;
+  display: inline-block;
+}
+
+.buildCont {
+  display: grid;
+  grid-template-columns: 32px 250px;
+  grid-column-gap: 5px;
+  margin-bottom: 5px;
+}
